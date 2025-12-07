@@ -48,9 +48,10 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework", 
     'rest_framework_simplejwt',
-    
+    "corsheaders",
 
-    # Your apps
+
+    # apps
     "project",  
     "accounts",
 ]
@@ -84,9 +85,12 @@ REST_FRAMEWORK = {
 #     "BLACKLIST_AFTER_ROTATION": True,
 # }
 
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
