@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party
-    "rest_framework", 
+    'rest_framework', 
     'rest_framework_simplejwt',
-    "corsheaders",
+    'corsheaders',
+    'djoser',
+
 
 
     # apps
@@ -62,8 +64,8 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
 
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.BasicAuthentication",
-        #"rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework.authentication.BasicAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -78,12 +80,23 @@ REST_FRAMEWORK = {
     }
 }
 
-# SIMPLE_JWT = {
-#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-#     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-#     "ROTATE_REFRESH_TOKENS": True,
-#     "BLACKLIST_AFTER_ROTATION": True,
-# }
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+DJOSER = {
+    # "LOGIN_FIELD": "email",  
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    # "SERIALIZERS": {
+    #     "user_create": "djoser.serializers.UserCreateSerializer",
+    #     "user": "djoser.serializers.UserSerializer",
+    #     "current_user": "djoser.serializers.UserSerializer",
+    # },
+}
+
 
 CORS_ALLOW_ALL_ORIGINS = True
 
