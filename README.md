@@ -44,7 +44,7 @@ Install dependencies
 1. Clone the repo and enter it:
 
 ```bash
-git clone <https://github.com/ran-ibra/GreenBite-backend>
+git clone https://github.com/ran-ibra/GreenBite-backend
 cd GreenBite-backend
 ```
 
