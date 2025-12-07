@@ -46,10 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party
-    "rest_framework",          # Django REST Framework
+    "rest_framework", 
+    'rest_framework_simplejwt',
+    
 
     # Your apps
-    "project",                
+    "project",  
+    "accounts",
 ]
 
 # -------------------------------------------------
