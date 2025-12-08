@@ -87,6 +87,10 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
+# -------------------------------------------------
+# DJOSER
+# -------------------------------------------------
+
 DJOSER = {
     # "LOGIN_FIELD": "email",  
     "USER_CREATE_PASSWORD_RETYPE": True,
@@ -94,28 +98,25 @@ DJOSER = {
     "USER_DELETE_PASSWORD_CONFIRM": True,
     "TOKEN_MODEL": None,
 
-    "PASSWORD_RESET_CONFIRM_URL":"password/reset/confirm/{uid}/{token}/"
+    "PASSWORD_RESET_CONFIRM_URL":"password/reset/confirm/{uid}/{token}/",
 
-    # "SERIALIZERS": {
-    #     "user_create": "djoser.serializers.UserCreateSerializer",
-    #     "user": "djoser.serializers.UserSerializer",
-    #     "current_user": "djoser.serializers.UserSerializer",
-    # },
+    "SERIALIZERS": {
+        "user_create": "accounts.serializers.UserCreateSerializer",
+        "user_create_password_retype": "accounts.serializers.UserCreateSerializer",
+
+    },
 }
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 CORS_ALLOW_ALL_ORIGINS = True
-
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
