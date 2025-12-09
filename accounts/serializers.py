@@ -9,9 +9,11 @@ User = get_user_model()
 
 
 class UserCreateSerializer(DjoserUserCreatePasswordRetypeSerializer):
-    class Meta():
+    frist_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    class Meta(DjoserUserCreatePasswordRetypeSerializer.Meta):
         model = User
-        fields = ["id","username" , "email" , "password" , ]
+        fields = ["id","username" , "email" , "password" ,  "frist_name" , "last_name" ]
     def validate(self, attrs): 
         attrs = super().validate(attrs)
         username = attrs.get("username")
