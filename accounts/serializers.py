@@ -9,6 +9,9 @@ User = get_user_model()
 
 
 class UserCreateSerializer(DjoserUserCreatePasswordRetypeSerializer):
+    class Meta():
+        model = User
+        fields = ["id","username" , "email" , "password" , ]
     def validate(self, attrs): 
         attrs = super().validate(attrs)
         username = attrs.get("username")
