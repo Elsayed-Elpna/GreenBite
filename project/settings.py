@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party
-    "rest_framework", 
+    'rest_framework', 
     'rest_framework_simplejwt',
-    "corsheaders",
+    'corsheaders',
+    'djoser',
+
 
 
     # apps
@@ -63,8 +65,8 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
 
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.BasicAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -80,14 +82,42 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+# -------------------------------------------------
+# DJOSER
+# -------------------------------------------------
 
+DJOSER = {
+    # "LOGIN_FIELD": "email",  
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "USER_DELETE_PASSWORD_CONFIRM": True,
+    "TOKEN_MODEL": None,
+
+    "PASSWORD_RESET_CONFIRM_URL":"password/reset/confirm/{uid}/{token}/",
+
+    "SERIALIZERS": {
+        "user_create": "accounts.serializers.UserCreateSerializer",
+        "user_create_password_retype": "accounts.serializers.UserCreateSerializer",
+
+    },
+}
+
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+CORS_ALLOW_ALL_ORIGINS = True
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
