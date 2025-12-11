@@ -19,7 +19,7 @@ staticfiles/
 *.log
 
 # Env files (secrets)
-.env
+ .env
 
 # VS Code
 .vscode/
