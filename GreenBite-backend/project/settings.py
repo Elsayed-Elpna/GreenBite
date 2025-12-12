@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework', 
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'djoser',
 
@@ -86,6 +87,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+    "TOKEN_OBTAIN_SERIALIZER": "accounts.views.MyTokenObtainPairSerializer"
 }
 
 # -------------------------------------------------
