@@ -3,21 +3,21 @@ import SideMenu from "../components/HomePage/NavMenu/SideMenu";
 import "./HomeLayout.css";
 const HomeLayout = () => {
   return (
-    <div className="min-h-screen grid grid-cols-12 bg-gray-100">
+    <div className="w-screen min-h-screen grid grid-cols-[1fr_3fr_1fr]">
       {/* Left Sidebar */}
-      <aside className="hidden lg:block col-span-2 bg-gray-200 p-4">
+      <div className="col-start-1 col-end-2">
         <SideMenu />
-      </aside>
+      </div>
 
       {/* Main Content */}
-      <main className="col-span-12 lg:col-span-8 bg-white p-6">
+      <div className="col-start-2 col-end-3">
         <Outlet />
-      </main>
+      </div>
 
       {/* Right Sidebar */}
-      <aside className="hidden lg:block col-span-2 bg-gray-200 p-4">
+      <div className="col-start-3 col-end-4">
         <SideMenu />
-      </aside>
+      </div>
     </div>
   );
 };
