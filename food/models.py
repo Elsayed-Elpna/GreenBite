@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 class CategoryChoices(models.TextChoices):
-    FRUIT = 'fruit', 'Fruit'
+    FRUIT = 'fruit', 'Fruit' #left side is what is stored in DB, rs is django display
     VEGETABLE = 'vegetable', 'Vegetable'
     BREAD = 'bread', 'Bread'
     MEAT = 'meat', 'Meat'
