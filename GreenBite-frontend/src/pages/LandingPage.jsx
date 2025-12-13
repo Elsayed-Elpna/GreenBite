@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import NavBar from "../components/HomePage/NavBar";
-const HomePage = () => {
+import NavBar from "../components/LandingPage/NavBar";
+const LandingPage = () => {
   let [i, seti] = useState(50);
   let [att, setAtt] = useState();
   useEffect(() => {
@@ -46,4 +46,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default LandingPage;
