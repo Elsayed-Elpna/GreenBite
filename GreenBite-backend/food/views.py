@@ -100,3 +100,60 @@ def food_log_delete(request, pk):
         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
         status=status.HTTP_204_NO_CONTENT
     )
+from rest_framework.views import APIView
+from .serializers import MealGenerationSerializer, SaveAIMealSerializer
+from .utils.recipes_ai import generate_recipes_with_cache
+
+class GenerateMealsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        input_serializer = MealGenerationSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        ingredients = input_serializer.validated_data["ingredients"]
+
+        ai_recipes = generate_recipes_with_cache(ingredients)
+
+        if not ai_recipes:
+            return Response(
+                {"detail": "Could not generate meals"},
+                status=500
+            )
+
+        meals = []
+        for r in ai_recipes[:5]:
+            meals.append({
+                "recipe": r["description"] + "\n" + "\n".join(r["steps"]),
+                "ingredients": r["ingredients"],
+                "serving": r.get("serving", 2),
+                "calories": r.get("calories"),
+                "cuisine": r.get("cuisine"),
+                "mealTime": "lunch"
+            })
+
+        return Response(meals, status=200)
+
+class SaveAIMealAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = SaveAIMealSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        meal = Meal.objects.create(
+            user=request.user,
+            recipe=serializer.validated_data["recipe"],
+            ingredients=serializer.validated_data["ingredients"],
+            serving=serializer.validated_data.get("serving"),
+            calories=serializer.validated_data.get("calories"),
+            cuisine=serializer.validated_data.get("cuisine"),
+            mealTime=serializer.validated_data["mealTime"],
+            has_leftovers=False
+        )
+
+        return Response(
+            MealSerializer(meal).data,
+            status=201
+        )
+

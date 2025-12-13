@@ -14,4 +14,6 @@ urlpatterns = [
     path('food-logs/create/', views.food_log_create, name='food-log-create'),
     path('food-logs/<int:pk>/update/', views.food_log_update, name='food-log-update'),
     path('food-logs/<int:pk>/delete/', views.food_log_delete, name='food-log-delete'),
+    path("meals/generate/", views.GenerateMealsAPIView.as_view()),
+    path("meals/save-ai/", views.SaveAIMealAPIView.as_view()),
 ]

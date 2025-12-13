@@ -53,7 +53,7 @@ class Meal(models.Model):
     recipe = models.TextField()
     ingredients = models.JSONField()
     serving = models.IntegerField(null=True, blank=True)
-    waste = models.TextField(null=True, blank=True)
+    waste = models.JSONField(default=list, blank=True) 
     calories = models.IntegerField(null=True, blank=True)
     has_leftovers = models.BooleanField(default=False)
      # Track if leftovers were already saved
@@ -105,4 +105,8 @@ class Meal(models.Model):
         verbose_name = "Meal"
         verbose_name_plural = "Meals"
 
- 
+class WasteLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL)
+    items = models.JSONField(default=list)   
+    created_at = models.DateTimeField(auto_now_add=True)
