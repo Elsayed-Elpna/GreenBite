@@ -106,7 +106,18 @@ class Meal(models.Model):
         verbose_name_plural = "Meals"
 
 class WasteLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL)
-    items = models.JSONField(default=list)   
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waste_logs")
+    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL, related_name="waste_logs")
+    items = models.JSONField(default=list, blank = True)   
+    
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        meal_part = f"for meal {self.meal_id}" if self.meal_id else ""
+        return f"WasteLog({self.user_id}){meal_part} @ {self.created_at.date()}"
+    
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Waste Log"
+        verbose_name_plural = "Waste Logs"

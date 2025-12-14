@@ -16,4 +16,5 @@ urlpatterns = [
     path('food-logs/<int:pk>/delete/', views.food_log_delete, name='food-log-delete'),
     path("meals/generate/", views.GenerateMealsAPIView.as_view()),
     path("meals/save-ai/", views.SaveAIMealAPIView.as_view()),
+    path("meals/waste/", views.ai_meal_waste_profile)
 ]
