@@ -98,68 +98,98 @@ def generate_recipes_with_cache(ingredients):
     cache.set(key, recipes, timeout=86400)  # 24 hours
     return recipes
 
+WASTE_PROMPT_TEMPLATE = """
+You are a sustainability & kitchen-waste expert.
 
-# HF_API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct"
-# HF_TOKEN = os.getenv("HF_API_TOKEN")
+TASK:
+Given a meal name (and optional context), predict the MOST LIKELY kitchen waste generated while preparing/eating it.
+Then suggest practical reuse ideas for each waste item.
 
-# HEADERS = {
-#     "Authorization": f"Bearer {HF_TOKEN}",
-#     "Content-Type": "application/json"
-# }
+INPUT:
+- meal: {meal}
+- context: {context}
 
-# def generate_recipes_from_ai(ingredients):
-#     ingredients = ingredients[:10]
+RULES:
+- Return JSON only (no text, no markdown)
+- Be realistic: include ONLY plausible, common waste items.
+- waste_items MUST contain ONLY inedible items (peels, shells, bones, tea bags, eggshells, coffee grounds, etc.).
+  Never list edible food as waste.
+- If the meal can be made with zero prep waste (rare), waste_items must be [].
+- Reuse tips must be safe and practical for home.
+- If an item should NOT be reused, say so and recommend the safest disposal.
 
-#     prompt = f"""
-# You are a professional chef.
+OUTPUT JSON format:
+{{
+  "meal": "string",
+  "waste_items": [
+    {{
+      "name": "string",
+      "why": "string",
+      "estimated_amount": 0,
+      "unit": "g|piece|tbsp",
+      "disposal": "compost|trash|recycle",
+      "reuse_ideas": ["string", "..."]
+    }}
+  ],
+  "general_tips": ["string", "..."]
+}}
+"""
 
-# TASK:
-# Generate EXACTLY 5 simple recipes using ONLY these ingredients:
-# {ingredients}
+#returns a dict of meal, waste_items, general_tips
+def generate_waste_profile_openai(meal: str, context: str = ""):
+  client = get_openai_client()
+  if not client:
+    return {"meal": meal, "waste_items": [], "general_tips":[]}
+  meal_clean = (meal or "").strip()[:120]
+  context_clean = (context or "").strip()[:500]
 
-# RULES:
-# - Maximum recipes: 5
-# - JSON output ONLY
-# - No markdown
-# - Titles max 8 words
-# - Descriptions max 25 words
-# - Steps must be short
-# - No extra commentary
+  prompt = WASTE_PROMPT_TEMPLATE.format(meal=meal_clean, context=context_clean)
 
-# FORMAT:
-# [
-#   {{
-#     "title": "",
-#     "description": "",
-#     "ingredients": [],
-#     "steps": [],
-#     "estimated_time": "",
-#     "difficulty": "easy | medium | hard"
-#   }}
-# ]
-# """
+  try:
+    response = client.chat.completions.create(
+      model= "gpt-4o-mini", 
+      messages = [
+          {"role": "system", "content": "Return JSON only. Do not include markdown."},
+          {"role": "user", "content": prompt},
+      ], temperature=0.5,
+      max_tokens=650,
+    )
 
-#     payload = {
-#         "inputs": prompt,
-#         "parameters": {
-#             "max_new_tokens": 700,
-#             "temperature": 0.5,
-#             "return_full_text": False
-#         }
-#     }
+    content = (response.choices[0].message.content or "").strip()
+    data = json.loads(content)
 
-#     response = requests.post(
-#         HF_API_URL,
-#         headers=HEADERS,
-#         json=payload,
-#         timeout=30
-#     )
+    if not isinstance(data, dict):
+      return {"meal": meal_clean, "waste_items": [], "general_tips":[]}
+    
+    if "meal" not in data:
+      data["meal"] = meal_clean
 
-#     if response.status_code != 200:
-#         return []
+    if "waste_items" not in data or not isinstance(data["waste_items"], list):
+      data["waste_items"] = []
 
-#     try:
-#         text = response.json()[0]["generated_text"]
-#         return json.loads(text)
-#     except:
-#         return []
+    if "general_tips" not in data or not isinstance(data["general_tips"], list):
+      data["general_tips"] = []
+
+    return data
+  
+  except (json.JSONDecodeError, Exception):
+    return {"meal": meal_clean, "waste_items":[], "general_tips": []}
+
+#cache result for 24 hrs
+def generate_waste_profile_with_cache(meal: str, context: str = ""):
+  meal_key = (meal or "").strip().lower()
+  context_key = (context or "").strip().lower()
+
+  key = "meal_waste:" + meal_key[:80] + ":" + context_key[:80]
+
+  cached = cache.get(key)
+  if cached:
+    return cached
+  
+  data = generate_waste_profile_openai(meal=meal, context=context)
+  cache.set(key, data, timeout=86400) #1 day
+  return data
+
+
+
+

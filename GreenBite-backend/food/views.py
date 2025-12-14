@@ -6,6 +6,9 @@ from rest_framework import status
 from .models import FoodLogSys, Meal
 from .serializers import FoodLogSysSerializer, MealSerializer
 
+from rest_framework.views import APIView
+from .serializers import MealGenerationSerializer, SaveAIMealSerializer
+from .utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -100,9 +103,6 @@ def food_log_delete(request, pk):
         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
         status=status.HTTP_204_NO_CONTENT
     )
-from rest_framework.views import APIView
-from .serializers import MealGenerationSerializer, SaveAIMealSerializer
-from .utils.recipes_ai import generate_recipes_with_cache
 
 class GenerateMealsAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -157,3 +157,17 @@ class SaveAIMealAPIView(APIView):
             status=201
         )
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ai_meal_waste_profile(request):
+    meal = request.data.get("meal", "")
+    context = request.data.get("context", "")
+
+    if not isinstance(meal, str) or not meal.strip():
+        return Response({
+            "detail":"meal is required and must be a string"
+        }, status = status.HTTP_400_BAD_REQUEST)
+
+    result = generate_waste_profile_with_cache(meal=meal, context=context)
+
+    return Response(result, status.HTTP_200_OK)
