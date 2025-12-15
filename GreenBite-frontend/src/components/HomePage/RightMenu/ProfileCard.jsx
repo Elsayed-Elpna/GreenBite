@@ -25,7 +25,7 @@ function ProfileCard() {
             </div>
           }
         >
-          <DropdownItem>Dashboard</DropdownItem>
+          <DropdownItem className="bg-red!">Dashboard</DropdownItem>
           <DropdownItem>Settings</DropdownItem>
           <DropdownItem>Earnings</DropdownItem>
           <DropdownDivider />

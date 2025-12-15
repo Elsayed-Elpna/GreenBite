@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 // components
 import LogOutBtn from "@/components/HomePage/NavMenu/LogOutBtn";
 // imgs
-import logo from "@/assets/images/Logos/Verticallogo.svg";
+import logo from "@/assets/images/Logos/Verticallogo.png";
 import logo2 from "@/assets/images/Logos/pac man (1).png";
 
 // icons
