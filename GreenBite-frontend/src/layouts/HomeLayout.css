@@ -16,6 +16,10 @@
 /* Areas */
 .left-sidebar {
   grid-area: left;
+  position: sticky;
+  left: 0;
+  top: 0;
+  bottom: 0;
 }
 
 .center-content {
@@ -28,8 +32,12 @@
 
 /* Transitions */
 .left-sidebar,
-.right-sidebar {
+.right-sidebar,
+.center-content {
+  will-change: transform, opacity;
+
   transition: transform 0.5s ease, opacity 0.3s ease;
+  height: 100%;
 }
 
 /* =========================

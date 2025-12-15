@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
 import SideMenu from "../components/HomePage/NavMenu/SideMenu";
 import "@/layouts/HomeLayout.css";
-import RightMenu from "@/components/HomePage/NavMenu/RightMenu";
+import RightMenu from "@/components/HomePage/RightMenu/RightMenu";
 
 const HomeLayout = () => {
   return (
     <div className="layout">
       {/* Left Sidebar */}
-      <div className="left-sidebar h-screen">
+      <div className="left-sidebar ">
         <SideMenu />
       </div>
 
@@ -17,7 +17,7 @@ const HomeLayout = () => {
       </div>
 
       {/* Right Sidebar */}
-      <div className="right-sidebar h-screen">
+      <div className="right-sidebar ">
         <RightMenu />
       </div>
     </div>
