@@ -7,6 +7,8 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./GreenBite-backend:/app
+    env_file:
+    - ./GreenBite-backend/.env
     ports:
       - "8000:8000"
     depends_on:
@@ -40,11 +42,8 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    ports:
+      - "5433:5432"
 
 volumes:
   postgres_data:
