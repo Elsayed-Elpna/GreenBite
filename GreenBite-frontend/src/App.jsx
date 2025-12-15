@@ -1,11 +1,12 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/LandingPage";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import DashBoardPage from "./pages/HomePages/DashBoardHome";
 import HomeLayout from "./layouts/HomeLayout";
-import NotFound from "./pages/NotFound";
+import RegisterPage from "./pages/RegisterPage";
 // import PrivateRoute from "./utils/PrivateRoute";
+import NotFound from "./pages/NotFound";
 import Testoo from "./pages/HomePages/testoo";
 import Testooo from "./pages/HomePages/testooo";
 
@@ -14,8 +15,9 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<HomePage />} exact />
+          <Route path="/" element={<LandingPage />} exact />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFound />} />
           {/* <Route element={<PrivateRoute />}></Route> */}
           <Route path="/home" element={<HomeLayout />}>

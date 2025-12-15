@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class CategoryChoices(models.TextChoices):
-    FRUIT = 'fruit', 'Fruit'
+    FRUIT = 'fruit', 'Fruit' #left side is what is stored in DB, rs is django display
     VEGETABLE = 'vegetable', 'Vegetable'
     BREAD = 'bread', 'Bread'
     MEAT = 'meat', 'Meat'
@@ -53,7 +53,7 @@ class Meal(models.Model):
     recipe = models.TextField()
     ingredients = models.JSONField()
     serving = models.IntegerField(null=True, blank=True)
-    waste = models.TextField(null=True, blank=True)
+    waste = models.JSONField(default=list, blank=True) 
     calories = models.IntegerField(null=True, blank=True)
     has_leftovers = models.BooleanField(default=False)
      # Track if leftovers were already saved
@@ -105,4 +105,19 @@ class Meal(models.Model):
         verbose_name = "Meal"
         verbose_name_plural = "Meals"
 
- 
+class WasteLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waste_logs")
+    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL, related_name="waste_logs")
+    items = models.JSONField(default=list, blank = True)   
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        meal_part = f"for meal {self.meal_id}" if self.meal_id else ""
+        return f"WasteLog({self.user_id}){meal_part} @ {self.created_at.date()}"
+    
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Waste Log"
+        verbose_name_plural = "Waste Logs"
