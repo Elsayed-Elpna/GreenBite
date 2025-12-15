@@ -122,7 +122,7 @@ class GenerateMealsAPIView(APIView):
             )
 
         meals = []
-        for r in ai_recipes[:5]:
+        for r in (ai_recipes or [])[:5]:
             meals.append({
                 "recipe": r["description"] + "\n" + "\n".join(r["steps"]),
                 "ingredients": r["ingredients"],

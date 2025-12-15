@@ -2,6 +2,7 @@ import json
 import os
 from django.conf import settings
 from django.core.cache import cache
+from .prompts import waste_prompt
 
 try:
     from openai import OpenAI
@@ -88,53 +89,16 @@ def generate_meals_openai(ingredients):
         return []
 
 def generate_recipes_with_cache(ingredients):
-    key = "recipes:" + ",".join(sorted(ingredients))
-    
-    cached = cache.get(key)
-    if cached:
-        return cached
+  key = "recipes:" + ",".join(sorted(ingredients))
+  
+  cached = cache.get(key)
+  if cached:
+    return cached
 
-    recipes = generate_meals_openai(ingredients)
-    cache.set(key, recipes, timeout=86400)  # 24 hours
-    return recipes
+  recipes = generate_meals_openai(ingredients)
+  cache.set(key, recipes, timeout=86400)  # 24 hours
+  return recipes
 
-WASTE_PROMPT_TEMPLATE = """
-You are a sustainability & kitchen-waste expert.
-
-TASK:
-Given a meal name (and optional context), predict the MOST LIKELY kitchen waste generated while preparing/eating it.
-Then suggest practical reuse ideas for each waste item.
-
-INPUT:
-- meal: {meal}
-- context: {context}
-
-RULES:
-- Return JSON only (no text, no markdown)
-- Be realistic: include ONLY plausible, common waste items.
-- waste_items MUST contain ONLY inedible items (peels, shells, bones, tea bags, eggshells, coffee grounds, etc.).
-  Never list edible food as waste.
-- If the meal can be made with zero prep waste (rare), waste_items must be [].
-- Reuse tips must be safe and practical for home.
-- If an item should NOT be reused, say so and recommend the safest disposal.
-- if the prompt is written in an arabic language, return arabic response
-
-OUTPUT JSON format:
-{{
-  "meal": "string",
-  "waste_items": [
-    {{
-      "name": "string",
-      "why": "string",
-      "estimated_amount": 0,
-      "unit": "g|piece|tbsp",
-      "disposal": "compost|trash|recycle",
-      "reuse_ideas": ["string", "..."]
-    }}
-  ],
-  "general_tips": ["string", "..."]
-}}
-"""
 
 #returns a dict of meal, waste_items, general_tips
 def generate_waste_profile_openai(meal: str, context: str = ""):
@@ -144,7 +108,7 @@ def generate_waste_profile_openai(meal: str, context: str = ""):
   meal_clean = (meal or "").strip()[:120]
   context_clean = (context or "").strip()[:500]
 
-  prompt = WASTE_PROMPT_TEMPLATE.format(meal=meal_clean, context=context_clean)
+  prompt = waste_prompt(meal, context).format(meal=meal_clean, context=context_clean)
 
   try:
     response = client.chat.completions.create(
