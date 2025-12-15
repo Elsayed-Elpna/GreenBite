@@ -116,9 +116,11 @@ class GenerateMealsAPIView(APIView):
         ai_recipes = generate_recipes_with_cache(ingredients)
 
         if not ai_recipes:
+
             return Response(
-                {"detail": "Could not generate meals"},
-                status=500
+                {"detail": "Could not generate meals",
+                },
+                status=503,  
             )
 
         meals = []
