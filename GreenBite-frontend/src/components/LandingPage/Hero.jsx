@@ -18,6 +18,7 @@ export default function Hero() {
         <Button
           color="gray"
           className="!bg-[#7eb685] !text-white px-8 py-6 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
+          onClick={() => window.location.href = '/register'}
         >
           Get started
         </Button>

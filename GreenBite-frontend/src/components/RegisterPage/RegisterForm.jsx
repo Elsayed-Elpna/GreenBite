@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Label, TextInput, Button, Checkbox } from 'flowbite-react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -224,9 +225,12 @@ export default function RegisterForm() {
         {/* Login Link */}
         <p className="text-center text-sm lg:text-base text-gray-700 pt-1">
           Already have an account?{' '}
-          <a href="#" className="text-red-500 hover:underline font-medium">
+          <Link
+            to="/login"
+            className="text-red-500 hover:underline font-medium"
+          >
             Login
-          </a>
+          </Link>
         </p>
       </div>
     </div>

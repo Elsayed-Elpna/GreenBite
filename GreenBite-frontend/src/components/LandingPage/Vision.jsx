@@ -4,7 +4,7 @@ import p3 from "@/assets/images/landing/zerowaste.svg";
 
 export default function Vision() {
   return (
-    <section className="py-8">
+    <section id="vision" className="py-8">
       <div className="max-w-[95vw] mx-auto px-6 text-center">
         <p className="text-green-600 font-semibold">OUR VISION</p>
         <h2 className="text-3xl font-bold mb-10 py-2">
