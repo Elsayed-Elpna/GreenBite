@@ -9,7 +9,8 @@ export default function CTA() {
             Are you ready to fight against food waste?
           </h2>
 
-          <Button className="!bg-[#7eb685] !text-white px-8 py-3 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer">
+          <Button className="!bg-[#7eb685] !text-white px-8 py-3 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
+            onClick={() => window.location.href = '/register'}>
             Join Now
           </Button>
         </div>

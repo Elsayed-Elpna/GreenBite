@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Label, TextInput, Button, Checkbox } from 'flowbite-react';
+import { Label, TextInput, Button } from 'flowbite-react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
@@ -24,70 +25,55 @@ export default function LoginForm() {
             </div>
 
             {/* Form */}
-            <div className="space-y-2 lg:space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
 
-                {/* Email and Password */}
-                <div className="grid grid-cols-2 gap-3 lg:gap-5">
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                htmlFor="email"
-                                color="black"
-                                className="text-sm lg:text-base"
-                            >
-                                Email
-                            </Label>
-                        </div>
+                {/* Email */}
+                <div>
+                    <Label htmlFor="email" color="black" className="text-sm lg:text-base mb-2 block">
+                        Email
+                    </Label>
+                    <TextInput
+                        id="email"
+                        type="email"
+                        placeholder="john.doe@gmail.com"
+                        required
+                        sizing="md"
+                        color="white"
+                        className="w-full text-sm lg:text-base lg:h-12"
+                    />
+                </div>
+
+                {/* Password */}
+                <div>
+                    <Label htmlFor="password" color="black" className="text-sm lg:text-base mb-2 block">
+                        Password
+                    </Label>
+                    <div className="relative">
                         <TextInput
-                            id="email"
-                            type="email"
-                            placeholder="john.doe@gmail.com"
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••••••••••••••"
                             required
                             sizing="md"
                             color="white"
                             className="w-full text-sm lg:text-base lg:h-12"
                         />
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                htmlFor="password"
-                                color="black"
-                                className="text-sm lg:text-base"
-                            >
-                                Password
-                            </Label>
-                        </div>
-
-                        <div className="relative">
-                            <TextInput
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••••••••••••••"
-                                required
-                                sizing="md"
-                                color="white"
-                                className="w-full text-sm lg:text-base lg:h-12"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 focus:outline-none"
-                            >
-                                {showPassword ? (
-                                    <FaEyeSlash className="w-5 h-5 lg:w-6 lg:h-6" />
-                                ) : (
-                                    <FaEye className="w-5 h-5 lg:w-6 lg:h-6" />
-                                )}
-                            </button>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 focus:outline-none"
+                        >
+                            {showPassword ? (
+                                <FaEyeSlash className="w-5 h-5 lg:w-6 lg:h-6" />
+                            ) : (
+                                <FaEye className="w-5 h-5 lg:w-6 lg:h-6" />
+                            )}
+                        </button>
                     </div>
                 </div>
 
-                {/* Terms and Conditions */}
-                <div className="flex items-start gap-2 pt-1 lg:pt-2">
+                {/* Forgot Password */}
+                <div className="pt-1 lg:pt-2">
                     <a href="#" className="text-red-500 hover:underline">
                         Forgot password
                     </a>
@@ -96,22 +82,22 @@ export default function LoginForm() {
                 {/* Submit Button */}
                 <Button
                     type="submit"
-                    onClick={handleSubmit}
-                    className="w-full h-11 lg:h-12 text-sm lg:text-base font-semibold mt-5 cursor-pointer"
+                    className="w-full h-11 lg:h-12 text-sm lg:text-base font-semibold cursor-pointer"
                     color="green"
                     outline
                 >
                     Login
                 </Button>
 
-                {/* Login Link */}
+                {/* Signup Link */}
                 <p className="text-center text-sm lg:text-base text-gray-700 pt-1">
                     Don't have an account?{' '}
-                    <a href="#" className="text-green-500 hover:underline font-medium">
+                    <Link to="/register" className="text-green-500 hover:underline font-medium">
                         Sign Up
-                    </a>
+                    </Link>
                 </p>
-            </div>
+
+            </form>
         </div>
     );
 }

@@ -16,7 +16,8 @@ export default function AppNavbar() {
       </NavbarBrand>
 
       <div className="flex md:order-2 items-center gap-3">
-        <Button color="gray" className="!bg-[#7eb685] !text-white px-8 py-5 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer">
+        <Button color="gray" className="!bg-[#7eb685] !text-white px-8 py-5 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
+          onClick={() => window.location.href = '/register'}>
           Sign up
         </Button>
         <NavbarToggle />
@@ -31,13 +32,13 @@ export default function AppNavbar() {
 
             <span className="text-white">|</span>
 
-            <NavbarLink href="#" className={navLinkClass}>
+            <NavbarLink href="/login" className={navLinkClass}>
               Login
             </NavbarLink>
 
             <span className="text-white">|</span>
 
-            <NavbarLink href="#" className={navLinkClass}>
+            <NavbarLink href="#vision" className={navLinkClass}>
               Our Vision
             </NavbarLink>
           </div>
@@ -48,10 +49,10 @@ export default function AppNavbar() {
           <NavbarLink href="#" className={navLinkClass}>
             Home
           </NavbarLink>
-          <NavbarLink href="#" className={navLinkClass}>
+          <NavbarLink href="/login" className={navLinkClass}>
             Login
           </NavbarLink>
-          <NavbarLink href="#" className={navLinkClass}>
+          <NavbarLink href="#vision" className={navLinkClass}>
             Our Vision
           </NavbarLink>
         </div>
