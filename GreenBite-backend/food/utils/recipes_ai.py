@@ -117,6 +117,7 @@ RULES:
 - If the meal can be made with zero prep waste (rare), waste_items must be [].
 - Reuse tips must be safe and practical for home.
 - If an item should NOT be reused, say so and recommend the safest disposal.
+- if the prompt is written in an arabic language, return arabic response
 
 OUTPUT JSON format:
 {{
