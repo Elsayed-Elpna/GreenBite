@@ -1,22 +1,24 @@
 import { Outlet } from "react-router-dom";
 import SideMenu from "../components/HomePage/NavMenu/SideMenu";
-import "./HomeLayout.css";
+import "@/layouts/HomeLayout.css";
+import RightMenu from "@/components/HomePage/NavMenu/RightMenu";
+
 const HomeLayout = () => {
   return (
-    <div className="w-screen min-h-screen grid grid-cols-[1fr_3fr_1fr]">
+    <div className="layout">
       {/* Left Sidebar */}
-      <div className="col-start-1 col-end-2">
+      <div className="left-sidebar h-screen">
         <SideMenu />
       </div>
 
       {/* Main Content */}
-      <div className="col-start-2 col-end-3">
+      <div className="center-content">
         <Outlet />
       </div>
 
       {/* Right Sidebar */}
-      <div className="col-start-3 col-end-4">
-        <SideMenu />
+      <div className="right-sidebar h-screen">
+        <RightMenu />
       </div>
     </div>
   );
