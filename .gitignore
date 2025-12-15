@@ -1,6 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
 # Virtual environments
 .env/
 .venv/
 env/
 venv/
 ENV/
+
+# Django stuff
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Env files (secrets)
+ .env
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Migrations cache (optional to ignore)
+# **/migrations/*.py[cod]
