@@ -29,4 +29,6 @@ urlpatterns = [
     path("auth/", include("djoser.urls.jwt")),
     # Food app endpoints
     path('api/', include('food.urls')),
+    # Recipes app endpoints
+    path('api/', include('recipes.urls')),
 ]

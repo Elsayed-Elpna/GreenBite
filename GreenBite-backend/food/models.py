@@ -1,9 +1,10 @@
 from datetime import timedelta, date
+from decimal import Decimal
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from project.utils.normalize import normalize_ingredient_name
-
+from django.core.validators import MinValueValidator
 User = get_user_model()
 
 class CategoryChoices(models.TextChoices):
@@ -19,10 +20,17 @@ class StorageTypeChoices(models.TextChoices):
     FRIDGE = 'fridge', 'Fridge'
     FREEZER = 'freezer', 'Freezer'
     ROOM_TEMP = 'room_temp', 'Room Temperature'
+
+
 class FoodLogSys(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    quantity = models.FloatField()
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        
+        validators=[MinValueValidator(Decimal("0"))]
+    )
     unit = models.CharField(max_length=20)
     category = models.CharField(
         max_length=20,
@@ -36,6 +44,21 @@ class FoodLogSys(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     name_normalized = models.CharField(max_length=120, blank=True, default="", db_index=True)
+    is_consumed = models.BooleanField(default=False, db_index=True)
+
+    def consume(self, used_qty: Decimal):
+        if used_qty is None or used_qty <= 0:
+            raise ValueError("used_qty must be > 0")
+        if self.is_consumed:
+            raise ValueError("FoodLog already consumed")
+        if self.quantity < used_qty:
+            raise ValueError("Not enough quantity available")
+
+        self.quantity = self.quantity - used_qty
+        if self.quantity <= 0:
+            self.quantity = Decimal("0")
+            self.is_consumed = True
+        self.save(update_fields=["quantity", "is_consumed"])
 
     def save(self, *args, **kwargs):
         self.name_normalized = normalize_ingredient_name(self.name)
@@ -128,3 +151,20 @@ class WasteLog(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Waste Log"
         verbose_name_plural = "Waste Logs"
+class FoodLogUsage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.ForeignKey("recipes.Recipe", on_delete=models.CASCADE)
+    foodlog = models.ForeignKey("food.FoodLogSys", on_delete=models.CASCADE)
+    used_quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-used_at"]
+        indexes = [
+            models.Index(fields=["user", "used_at"]),
+            models.Index(fields=["recipe"]),
+            models.Index(fields=["foodlog"]),
+        ]
+    def __str__(self):
+        return f"FoodLogUsage(user={self.user_id}, recipe={self.recipe_id}, foodlog={self.foodlog_id}, used_quantity={self.used_quantity})"
+    
