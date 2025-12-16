@@ -31,3 +31,4 @@ Thumbs.db
 
 # Migrations cache (optional to ignore)
 # **/migrations/*.py[cod]
+GreenBite-backend/data/foodcom/
