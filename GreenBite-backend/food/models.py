@@ -2,6 +2,7 @@ from datetime import timedelta, date
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from project.utils.normalize import normalize_ingredient_name
 
 User = get_user_model()
 
@@ -34,6 +35,12 @@ class FoodLogSys(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    name_normalized = models.CharField(max_length=120, blank=True, default="", db_index=True)
+
+    def save(self, *args, **kwargs):
+        self.name_normalized = normalize_ingredient_name(self.name)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.name} ({self.quantity} {self.unit}) - Expires on {self.expiry_date}"
     class Meta:
