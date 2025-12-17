@@ -1,4 +1,11 @@
-import { Button, Navbar, NavbarBrand, NavbarCollapse, NavbarLink, NavbarToggle, } from "flowbite-react";
+import {
+  Button,
+  Navbar,
+  NavbarBrand,
+  NavbarCollapse,
+  NavbarLink,
+  NavbarToggle,
+} from "flowbite-react";
 import logo from "@/assets/images/logos/Verticallogo.png";
 
 export default function AppNavbar() {
@@ -8,16 +15,15 @@ export default function AppNavbar() {
   return (
     <Navbar fluid className="!bg-white">
       <NavbarBrand>
-        <img
-          src={logo}
-          className="mr-3 h-10 sm:h-12"
-          alt="GreenBite logo"
-        />
+        <img src={logo} className="mr-3 h-10 sm:h-12" alt="GreenBite logo" />
       </NavbarBrand>
 
       <div className="flex md:order-2 items-center gap-3">
-        <Button color="gray" className="!bg-[#7eb685] !text-white px-8 py-5 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
-          onClick={() => window.location.href = '/register'}>
+        <Button
+          color="gray"
+          className="!bg-[#7eb685] !text-white px-8 py-5 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
+          onClick={() => (window.location.href = "/register")}
+        >
           Sign up
         </Button>
         <NavbarToggle />
@@ -26,7 +32,7 @@ export default function AppNavbar() {
       <NavbarCollapse>
         <div className="hidden md:flex items-center">
           <div className="flex items-center gap-8 !bg-[#7eb685] px-8 py-4 rounded-[15px]">
-            <NavbarLink href="#" active className={navLinkClass}>
+            <NavbarLink href="/home" active className={navLinkClass}>
               Home
             </NavbarLink>
 

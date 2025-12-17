@@ -9,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 import Testoo from "./pages/HomePages/testoo";
 import Testooo from "./pages/HomePages/testooo";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
@@ -19,11 +20,12 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFound />} />
-          {/* <Route element={<PrivateRoute />}></Route> */}
-          <Route path="/home" element={<HomeLayout />}>
-            <Route index element={<DashBoardPage />} />
-            <Route path="testoo" element={<Testoo />} />
-            <Route path="testooo" element={<Testooo />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/home" element={<HomeLayout />}>
+              <Route index element={<DashBoardPage />} />
+              <Route path="testoo" element={<Testoo />} />
+              <Route path="testooo" element={<Testooo />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
