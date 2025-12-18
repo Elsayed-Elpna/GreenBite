@@ -1,24 +1,22 @@
 import requests
-from food.models import Recipe
-from food.utils.mealdb_mapper import mealdb_to_recipe_fields
+from food.models import Mealdb
+from food.utils.mealdb_mapper import mealdb_to_mealdb_fields
 
-MEALDB_LOOKUP_URL = "https://www.themealdb.com/api/json/v1/1/lookup.php"
+LOOKUP_URL = "https://www.themealdb.com/api/json/v1/1/lookup.php"
 
-def import_mealdb_recipe_by_id(id_meal: str) -> Recipe:
-    r = requests.get(MEALDB_LOOKUP_URL, params={"i": id_meal}, timeout=15)
+def import_mealdb_by_id(mealdb_id: str) -> Mealdb:
+    r = requests.get(LOOKUP_URL, params={"i": mealdb_id}, timeout=15)
     r.raise_for_status()
 
     data = r.json()
-    meals = data.get("meals") or []
-    if not meals:
+    meal = (data.get("meals") or [None])[0]
+    if not meal:
         raise ValueError("Meal not found on MealDB")
 
-    meal = meals[0]  
+    fields = mealdb_to_mealdb_fields(meal)
 
-    fields = mealdb_to_recipe_fields(meal)
-
-    recipe, created = Recipe.objects.update_or_create(
-        title=fields["title"],   # better: use external_id if you store it
+    obj, _ = Mealdb.objects.update_or_create(
+        mealdb_id=fields["mealdb_id"],
         defaults=fields
     )
-    return recipe
+    return obj

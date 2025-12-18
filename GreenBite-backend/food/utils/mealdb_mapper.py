@@ -28,8 +28,9 @@ def parse_tags(meal: dict) -> list[str]:
     # "Pasta,Curry" -> ["Pasta", "Curry"]
     return [t.strip() for t in raw.split(",") if t.strip()]
 
-def mealdb_to_recipe_fields(meal: dict) -> dict:
+def mealdb_to_mealdb_fields(meal: dict) -> dict:
     return {
+        "mealdb_id": _clean(meal.get("idMeal")),
         "title": _clean(meal.get("strMeal")),
         "category": _clean(meal.get("strCategory")),
         "cuisine": _clean(meal.get("strArea")),

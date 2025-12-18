@@ -150,6 +150,7 @@ class FoodComRecipe(models.Model):
         GinIndex(fields=["tags"], name="foodcom_tags_gin") ]
 
 class Mealdb(models.Model):
+    mealdb_id = models.CharField(max_length=20, unique=True, db_index=True)  
     title = models.CharField(max_length=255, db_index=True)
     category = models.CharField(max_length=100, blank=True, default="")
     cuisine = models.CharField(max_length=100, blank=True, default="")  # aka strArea
