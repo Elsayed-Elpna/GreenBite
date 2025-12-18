@@ -7,11 +7,14 @@ import {
   NavbarToggle,
 } from "flowbite-react";
 import logo from "@/assets/images/logos/Verticallogo.png";
+import { AuthContext } from "@/context/AuthContext";
+import { Link } from "react-router-dom";
+import { useContext } from "react";
 
 export default function AppNavbar() {
   const navLinkClass =
     "!text-white hover:!text-white transform hover:scale-110 transition-transform duration-200 ease-in-out";
-
+  const { isAuthenticated } = useContext(AuthContext);
   return (
     <Navbar fluid className="!bg-white">
       <NavbarBrand>
@@ -19,13 +22,15 @@ export default function AppNavbar() {
       </NavbarBrand>
 
       <div className="flex md:order-2 items-center gap-3">
-        <Button
-          color="gray"
-          className="!bg-[#7eb685] !text-white px-8 py-5 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
-          onClick={() => (window.location.href = "/register")}
-        >
-          Sign up
-        </Button>
+        {!isAuthenticated && (
+          <Link
+            to="/register"
+            className="!bg-[#7eb685] !text-white px-8 py-3 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
+          >
+            Sign up
+          </Link>
+        )}
+
         <NavbarToggle />
       </div>
 
@@ -38,11 +43,12 @@ export default function AppNavbar() {
 
             <span className="text-white">|</span>
 
-            <NavbarLink href="/login" className={navLinkClass}>
-              Login
-            </NavbarLink>
-
-            <span className="text-white">|</span>
+            {!isAuthenticated && (
+              <NavbarLink href="/login" className={navLinkClass}>
+                Login
+              </NavbarLink>
+            )}
+            {!isAuthenticated && <span className="text-white">|</span>}
 
             <NavbarLink href="#vision" className={navLinkClass}>
               Our Vision
