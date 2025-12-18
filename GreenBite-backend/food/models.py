@@ -148,3 +148,21 @@ class FoodComRecipe(models.Model):
 
         indexes = [ GinIndex(fields = ["ingredients"], name = "foodcom_ingredients_gin"),
         GinIndex(fields=["tags"], name="foodcom_tags_gin") ]
+
+class Mealdb(models.Model):
+    title = models.CharField(max_length=255, db_index=True)
+    category = models.CharField(max_length=100, blank=True, default="")
+    cuisine = models.CharField(max_length=100, blank=True, default="")  # aka strArea
+    instructions = models.TextField(blank=True, default="")
+    thumbnail = models.URLField(blank=True, default="")
+
+    tags = models.JSONField(default=list, blank=True)         # ["Pasta", "Curry"]
+    ingredients = models.JSONField(default=list, blank=True)  # list of objects
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            GinIndex(fields=["ingredients"], name="recipe_ingredients_gin"),
+            GinIndex(fields=["tags"], name="recipe_tags_gin"),
+        ]
