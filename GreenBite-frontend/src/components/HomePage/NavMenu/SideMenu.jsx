@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 
 // components
 import LogOutBtn from "@/components/HomePage/NavMenu/LogOutBtn";
@@ -16,8 +16,10 @@ const SideMenu = () => {
     <div className="h-full w-full flex flex-col justify-between  border-r border-gray-200">
       <aside className=" bg-white h-full">
         <div className="p-2 font-bold text-xl ">
-          <img src={logo} className="hidden md:hidden lg:block" />
-          <img src={logo2} className="hidden md:block lg:hidden" />
+          <Link to="/">
+            <img src={logo} className="hidden md:hidden lg:block" />
+            <img src={logo2} className="hidden md:block lg:hidden" />
+          </Link>
         </div>
         <nav className="">
           <NavLink
@@ -26,7 +28,7 @@ const SideMenu = () => {
             className={({ isActive }) =>
               `flex items-center justify-center px-4 py-2 rounded ${
                 isActive
-                  ? "bg-[#C2E66E] rounded-l-full ml-1 text-white"
+                  ? "bg-[#7eb685] rounded-l-full ml-1 text-white"
                   : "text-gray-700 rounded-l-full ml-1 hover:bg-gray-100"
               }`
             }
@@ -40,7 +42,7 @@ const SideMenu = () => {
             className={({ isActive }) =>
               `flex items-center justify-center px-4 py-2 rounded ${
                 isActive
-                  ? "bg-[#C2E66E] rounded-l-full ml-1 text-white"
+                  ? "bg-[#7eb685] rounded-l-full ml-1 text-white"
                   : "text-gray-700 rounded-l-full ml-1 hover:bg-gray-100"
               }`
             }
