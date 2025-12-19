@@ -135,6 +135,7 @@ class Meal(models.Model):
         verbose_name = "Meal"
         verbose_name_plural = "Meals"
 
+#input get it from ai and make crud operation 
 class WasteLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waste_logs")
     meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL, related_name="waste_logs")

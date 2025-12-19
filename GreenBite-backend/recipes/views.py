@@ -36,10 +36,10 @@ class RecommendRecipesAPIView(APIView):
         limit = max(1, min(limit, 10))
 
         today = timezone.now().date()
-
+#user food log
         inventory_qs = FoodLogSys.objects.filter(
             user=request.user,
-            is_consumed=False,
+            is_consumed=False, #grocery
             expiry_date__gte=today,
         ).order_by("expiry_date")
 
