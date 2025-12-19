@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from .models import FoodLogSys, Meal, FoodComRecipe, Mealdb
+from .models import FoodLogSys, Meal, FoodComRecipe
 from .serializers import FoodLogSysSerializer, MealSerializer, FoodComRecipeSerializer
 
 from rest_framework.views import APIView
@@ -203,51 +203,3 @@ def foodcom_recipe_detail(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"]) #right now it returns 10, but I think it should return only one random meal at each card
-def mealdb_random(request): #but it can definitly be used for posts in the blog
-    raw_n = request.query_params.get("n","1")
-    try:
-        n = int(raw_n)
-    except(TypeError, ValueError):
-        n=1
-
-    if n < 1:
-        n = 1
-    if n > 50:
-        n = 50
-
-    qs = Mealdb.objects.all()
-    total = qs.count()
-    if total == 0:
-        return Response([] if n > 1 else {}, status=status.HTTP_204_NO_CONTENT)
-    
-    n = min(n, total)
-    ids = list(qs.values_list("id", flat = True))
-    picked_ids = random.sample(ids, n)
-
-    meals = list(Mealdb.objects.filter(id__in=picked_ids)
-    .values("mealdb_id", "title", "thumbnail", "instructions")
-    )
-
-    if n == 1:
-        return Response(meals[0], status = status.HTTP_200_OK)
-
-    return Response(meals, status= status.HTTP_200_OK) 
-
-
-@api_view(["GET"]) #Returns the details of one meal upon clicking on the card
-def mealdb_detail(request, mealdb_id: str):
-    meal = get_object_or_404(Mealdb, mealdb_id = mealdb_id)
-
-    data = {
-        "mealdb_id": meal.mealdb_id,
-        "title": meal.title,
-        "category": meal.category,
-        "cuisine": meal.cuisine,
-        "instructions": meal.instructions,
-        "thumbnail": meal.thumbnail,
-        "tags": meal.tags,
-        "ingredients": meal.ingredients,
-        "created_at": meal.created_at,
-    }
-    return Response(data, status= status.HTTP_200_OK)
