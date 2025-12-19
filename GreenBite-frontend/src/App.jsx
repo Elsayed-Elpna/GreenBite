@@ -9,6 +9,8 @@ import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 import Testoo from "./pages/HomePages/testoo";
 import Testooo from "./pages/HomePages/testooo";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicRoute from "./routes/PublicRoute";
 
 function App() {
   return (
@@ -16,14 +18,19 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} exact />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFound />} />
-          {/* <Route element={<PrivateRoute />}></Route> */}
-          <Route path="/home" element={<HomeLayout />}>
-            <Route index element={<DashBoardPage />} />
-            <Route path="testoo" element={<Testoo />} />
-            <Route path="testooo" element={<Testooo />} />
+          {/* public routes user cant access after login */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+          {/* ProtectedRoute use can access after login  */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/home" element={<HomeLayout />}>
+              <Route index element={<DashBoardPage />} />
+              <Route path="testoo" element={<Testoo />} />
+              <Route path="testooo" element={<Testooo />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

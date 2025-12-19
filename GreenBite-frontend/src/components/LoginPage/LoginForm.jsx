@@ -1,6 +1,12 @@
-import { useState } from 'react';
-import { Label, TextInput, Button, Checkbox } from 'flowbite-react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useState, useContext } from "react";
+import { Label, TextInput, Button } from "flowbite-react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "@/context/AuthContext";
+
+const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+const passwordRegex = /^[^\s]{1,128}$/;
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,88 +53,98 @@ export default function LoginForm() {
     }
   };
 
-    return (
-        <div className="w-full max-w-xl lg:max-w-3xl">
+  return (
+    <div className="w-full max-w-xl lg:max-w-3xl">
+      {/* Form Header */}
+      <div className="mb-6 lg:mb-8">
+        <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          Login
+        </h2>
+        <p className="text-gray-600 text-sm lg:text-base">
+          Login to access your GreenBite account.
+        </p>
+      </div>
 
-            {/* Form Header */}
-            <div className="mb-6 lg:mb-8">
-                <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                    Login
-                </h2>
-                <p className="text-gray-600 text-sm lg:text-base">
-                    Login to access your GreenBite account.
-                </p>
-            </div>
+      {/* Form */}
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        {/* Email */}
+        <div>
+          <Label
+            htmlFor="email"
+            color="black"
+            className="text-sm lg:text-base mb-2 block"
+          >
+            Email
+          </Label>
+          <TextInput
+            id="email"
+            type="email"
+            placeholder="john.doe@gmail.com"
+            required
+            sizing="md"
+            color="white"
+            className="w-full text-sm lg:text-base lg:h-12"
+            onChange={(e) => {
+              const value = e.target.value.replace(/[\\<>|{}[\]]/g, "").trim();
+              setFromData({ ...formData, email: value });
+              setFieldErrors({ ...fieldErros, email: "" });
+            }}
+          />
+          {fieldErros.email && (
+            <p className="text-red-500 text-sm mt-1">{fieldErros.email}</p>
+          )}
+        </div>
 
-            {/* Form */}
-            <div className="space-y-2 lg:space-y-4">
+        {/* Password */}
+        <div>
+          <Label
+            htmlFor="password"
+            color="black"
+            className="text-sm lg:text-base mb-2 block"
+          >
+            Password
+          </Label>
+          <div className="relative">
+            <TextInput
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••••••••••••••"
+              required
+              sizing="md"
+              color="white"
+              className="w-full text-sm lg:text-base lg:h-12"
+              onChange={(e) => {
+                const value = e.target.value
+                  .replace(/[\\<>|{}[\]]/g, "")
+                  .trim();
+                setFromData({ ...formData, password: value });
+                setFieldErrors({ ...fieldErros, password: "" });
+              }}
+            />
 
-                {/* Email and Password */}
-                <div className="grid grid-cols-2 gap-3 lg:gap-5">
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                htmlFor="email"
-                                color="black"
-                                className="text-sm lg:text-base"
-                            >
-                                Email
-                            </Label>
-                        </div>
-                        <TextInput
-                            id="email"
-                            type="email"
-                            placeholder="john.doe@gmail.com"
-                            required
-                            sizing="md"
-                            color="white"
-                            className="w-full text-sm lg:text-base lg:h-12"
-                        />
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <div className="mb-2 block">
-                            <Label
-                                htmlFor="password"
-                                color="black"
-                                className="text-sm lg:text-base"
-                            >
-                                Password
-                            </Label>
-                        </div>
-
-                        <div className="relative">
-                            <TextInput
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••••••••••••••"
-                                required
-                                sizing="md"
-                                color="white"
-                                className="w-full text-sm lg:text-base lg:h-12"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 focus:outline-none"
-                            >
-                                {showPassword ? (
-                                    <FaEyeSlash className="w-5 h-5 lg:w-6 lg:h-6" />
-                                ) : (
-                                    <FaEye className="w-5 h-5 lg:w-6 lg:h-6" />
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Terms and Conditions */}
-                <div className="flex items-start gap-2 pt-1 lg:pt-2">
-                    <a href="#" className="text-red-500 hover:underline">
-                        Forgot password
-                    </a>
-                </div>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 focus:outline-none"
+            >
+              {showPassword ? (
+                <FaEyeSlash className="w-5 h-5 lg:w-6 lg:h-6" />
+              ) : (
+                <FaEye className="w-5 h-5 lg:w-6 lg:h-6" />
+              )}
+            </button>
+          </div>
+        </div>
+        {fieldErros.password && (
+          <p className="text-red-500 text-sm mt-1">{fieldErros.password}</p>
+        )}
+        {/* Forgot Password */}
+        <div className="pt-1 lg:pt-2">
+          <p className="text-red-500">{formError}</p>
+          <a href="#" className="text-red-500 hover:underline">
+            Forgot password
+          </a>
+        </div>
 
         {/* Submit Button */}
         <Button
