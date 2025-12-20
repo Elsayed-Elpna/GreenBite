@@ -31,8 +31,13 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG") == "True"
 
+
 # Example: ALLOWED_HOSTS="127.0.0.1 localhost"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split() or []
+
+# just for testing 
+ALLOWED_HOSTS = ["*"]
+
+# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split() or []
 
 
 # Application definition
@@ -52,7 +57,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'djoser',
-
+    'drf_yasg',
+    'django_filters',
 
 
     # apps
@@ -79,8 +85,8 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/day",
-        "user": "1000/day",
+        "anon": "100/minute",
+        "user": "1000/minute",
     }
 }
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -103,13 +109,24 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
     "USER_DELETE_PASSWORD_CONFIRM": True,
     "TOKEN_MODEL": None,
-
+    
     "PASSWORD_RESET_CONFIRM_URL":"password/reset/confirm/{uid}/{token}/",
 
     "SERIALIZERS": {
         "user_create": "accounts.serializers.UserCreateSerializer",
         "user_create_password_retype": "accounts.serializers.UserCreateSerializer",
         
+    },
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Use: Bearer <your_access_token>',
+        }
     },
 }
 

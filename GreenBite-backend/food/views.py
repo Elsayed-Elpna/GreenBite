@@ -9,6 +9,7 @@ from .serializers import FoodLogSysSerializer, MealSerializer, FoodComRecipeSeri
 from rest_framework.views import APIView
 from .serializers import MealGenerationSerializer, SaveAIMealSerializer
 from .utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
+from .filters import FoodLogFilter
 
 import random
 
@@ -21,7 +22,13 @@ def food_log_list_create(request):
     if request.method == 'GET':
         # Get all food logs for the current user
         food_logs = FoodLogSys.objects.filter(user=request.user)
-        serializer = FoodLogSysSerializer(food_logs, many=True)
+        food_filter = FoodLogFilter(request.GET, queryset=food_logs)
+        if not food_filter.is_valid():
+            return Response(
+                food_filter.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = FoodLogSysSerializer(food_filter.qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
