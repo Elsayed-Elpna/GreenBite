@@ -2,13 +2,16 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-from .models import FoodLogSys, Meal
-from .serializers import FoodLogSysSerializer, MealSerializer
+from rest_framework import status, generics, permissions
+from .models import FoodLogSys, Meal, FoodComRecipe
+from .serializers import FoodLogSysSerializer, MealSerializer, FoodComRecipeSerializer
 
 from rest_framework.views import APIView
 from .serializers import MealGenerationSerializer, SaveAIMealSerializer
 from .utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
+from .filters import FoodLogFilter
+
+import random
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -19,7 +22,13 @@ def food_log_list_create(request):
     if request.method == 'GET':
         # Get all food logs for the current user
         food_logs = FoodLogSys.objects.filter(user=request.user)
-        serializer = FoodLogSysSerializer(food_logs, many=True)
+        food_filter = FoodLogFilter(request.GET, queryset=food_logs)
+        if not food_filter.is_valid():
+            return Response(
+                food_filter.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = FoodLogSysSerializer(food_filter.qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
@@ -173,3 +182,31 @@ def ai_meal_waste_profile(request):
     result = generate_waste_profile_with_cache(meal=meal, context=context)
 
     return Response(result, status.HTTP_200_OK)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def foodcom_recipe_list(request):
+    qs = FoodComRecipe.objects.all().order_by("-id")
+    q = request.query_params.get("q") 
+    if q:
+        qs = qs.filter(title__icontains=q)
+    
+    ingredient = request.query_params.get("ingredient")
+    if ingredient:
+        qs.filter(ingredients__contains=[ingredient])
+
+    tag = request.query_params.get("tag")
+    if tag:
+        qs = qs.filter(tags__contains=[tag])  
+
+    serializer = FoodComRecipeSerializer(qs, many = True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def foodcom_recipe_detail(request, pk):
+    recipe = get_object_or_404(FoodComRecipe, pk = pk)
+    serializer = FoodComRecipeSerializer(recipe)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
