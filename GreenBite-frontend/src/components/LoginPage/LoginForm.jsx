@@ -38,11 +38,12 @@ export default function LoginForm() {
     return !errors.email && !errors.password;
   };
 
-  const handleSubmit = async (e) => {
-    setLoading(true);
+const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
     const isValid = validateForm();
     if (!isValid) return;
+    setLoading(true);
     try {
       await login(formData);
       console.log("login succse");
@@ -50,6 +51,8 @@ export default function LoginForm() {
     } catch (error) {
       console.log(`login failed ${error}`);
       setFormError("Invalid email or password ");
+    } finally {
+      setLoading(false);
     }
   };
 
