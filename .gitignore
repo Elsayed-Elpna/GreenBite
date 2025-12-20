@@ -31,3 +31,6 @@ Thumbs.db
 
 # Migrations cache (optional to ignore)
 # **/migrations/*.py[cod]
+RAW_recipes.csv
+GreenBite-backend/RAW_recipes.csv
+RAW_recipes.csv

@@ -30,7 +30,9 @@ class UserCreateSerializer(DjoserUserCreatePasswordRetypeSerializer):
         ############################################
         # password valdation
         ############################################
-        PASSWORD_REGEX = r'[!@#$%^&*()_+\-=\[\]{};\'":\\|,.<>/?`~]'
+        PASSWORD_REGEX = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,40}$'
+
+
         if not re.search(PASSWORD_REGEX, password):
             errors.setdefault("password", []).append("Password must contain at least one special character")
 
