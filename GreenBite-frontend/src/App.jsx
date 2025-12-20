@@ -5,12 +5,14 @@ import LoginPage from "./pages/LoginPage";
 import DashBoardPage from "./pages/HomePages/DashBoardHome";
 import HomeLayout from "./layouts/HomeLayout";
 import RegisterPage from "./pages/RegisterPage";
+import EmailVerification from "./pages/EmailVerification"
 // import PrivateRoute from "./utils/PrivateRoute";
 import NotFound from "./pages/NotFound";
 import Testoo from "./pages/HomePages/testoo";
 import Testooo from "./pages/HomePages/testooo";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
+import Activate from "./pages/Activate";
 
 function App() {
   return (
@@ -19,10 +21,13 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} exact />
           <Route path="*" element={<NotFound />} />
+          <Route path="/verify" element={<EmailVerification />} />
+          <Route path="/activate/:uid/:token" element={<Activate />} />
           {/* public routes user cant access after login */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            
           </Route>
           {/* ProtectedRoute use can access after login  */}
           <Route element={<ProtectedRoute />}>

@@ -46,8 +46,12 @@ export default function LoginForm() {
       console.log("login succse");
       navigate("/home");
     } catch (error) {
-      console.log(`login failed ${error}`);
-      setFormError("Invalid email or password ");
+      if (error.response?.data?.non_field_errors) {
+      alert("Account not activated. Please check your email.");
+      } else {
+        console.log(`login failed ${error}`);
+        setFormError("Invalid email or password ");
+      }
     }
   };
 
