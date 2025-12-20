@@ -1,5 +1,5 @@
 import { Button } from "flowbite-react";
-
+import { Link } from "react-router-dom";
 export default function CTA() {
   return (
     <section className="my-16">
@@ -9,12 +9,14 @@ export default function CTA() {
             Are you ready to fight against food waste?
           </h2>
 
-          <Button className="!bg-[#7eb685] !text-white px-8 py-3 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer">
+          <Link
+            to="/register"
+            className="!bg-[#7eb685] !text-white px-8 py-3 rounded-full hover:!bg-[#6da574] transition-colors cursor-pointer"
+          >
             Join Now
-          </Button>
+          </Link>
         </div>
       </div>
     </section>
   );
 }
-
