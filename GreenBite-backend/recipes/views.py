@@ -71,9 +71,10 @@ class RecommendRecipesAPIView(APIView):
         )
 
         try:
-            # Cast inv_norms to text[] explicitly in the query
+            # Cast both sides to the same array type to avoid type mismatch
+            # Use varchar[] for compatibility since the column is character varying[]
             candidates_qs = candidates_qs.extra(
-                where=["ingredients_norm && %s::text[]"],
+                where=["ingredients_norm::varchar[] && %s::varchar[]"],
                 params=[inv_norms]
             )[:400]
         except Exception:
