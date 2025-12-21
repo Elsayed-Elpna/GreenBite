@@ -19,6 +19,8 @@ urlpatterns = [
     path("meals/waste/", views.ai_meal_waste_profile),
     path("foodcomrecipes/", views.foodcom_recipe_list),
     path("foodcomrecipes/<int:pk>/", views.foodcom_recipe_detail),
+    path("waste-log/", views.waste_log_list_create, name="waste-log-list-create"),
+    path("waste-log/<int:pk>/", views.waste_log_detail, name="waste-log-detail")
     # path("mealdb/random/", views.mealdb_random),
     # path("mealdb/<str:mealdb_id>/", views.mealdb_detail)
 ]
