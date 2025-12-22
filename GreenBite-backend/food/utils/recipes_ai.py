@@ -1,9 +1,13 @@
+
+from django.db.models import Q
+from recipes.models import MealDBRecipe
+from food.utils.meal_fallback import fallback_meals_from_mealdb
 import json
 import os
 import logging
 from django.conf import settings
 from django.core.cache import cache
-from .prompts import waste_prompt
+from .prompts import waste_prompt, recipe_prompt
 
 try:
     from openai import OpenAI
@@ -12,61 +16,6 @@ except ImportError:
     OPENAI_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
-PROMPT_TEMPLATE = """
-You are a professional chef.
-
-Generate EXACTLY 5 recipes using ONLY these ingredients:
-<<INGREDIENTS>>
-
-LANGUAGE RULE:
-- Use ONLY ONE language per response.
-- The language must be either ENGLISH or ARABIC.
-- Do NOT mix languages.
-
-STRICT RULES:
-- Output MUST be valid JSON only. No markdown. No explanations.
-- Do NOT add extra ingredients except: spices, salt, pepper, oil, water.
-- Title must be ≤ 8 words.
-- Description must be ≤ 25 words.
-- Steps must be a list of short clear strings.
-- DO NOT include calories or nutrition fields at all.
-- You MUST analyze each ingredient.
-- If an ingredient naturally produces an inedible part
-  (peel, shell, bone, seed, stem, tea bag),
-  you MUST include it in waste_items.
-- Do NOT skip waste if it exists.
-- ONLY include waste that comes directly from the listed ingredients.
-- If and ONLY IF no ingredient has inedible parts, return [].
-- Each waste item MUST have:
-   - name: name of the waste item (e.g., "banana peel")
-   - reason: why it's waste (e.g., "inedible part only")
-   - disposal: one of [compost, trash, recycle]
-
-RESPONSE FORMAT (exactly this shape):
-
-{
-  "meals": [
-    {
-      "title": "string",
-      "description": "string",
-      "ingredients": ["string"],
-      "steps": ["string"],
-      "servings": 2,
-      "time_minutes": 20,
-      "difficulty": "easy|medium|hard",
-      "cuisine": "string",
-      "meal_time": "breakfast|lunch|dinner|snack|brunch",
-      "waste_items": [
-        {
-          "name": "string",
-          "reason": "inedible part only",
-          "disposal": "compost|trash|recycle"
-        }
-      ]
-    }
-  ]
-}
-"""
 
 
 def get_openai_client():
@@ -78,107 +27,17 @@ def get_openai_client():
         return None
 
     return OpenAI(api_key=api_key)
-
-
-def fallback_meals(ingredients):
-    ing = [str(i).strip() for i in (ingredients or []) if str(i).strip()]
-    ing = ing[:10]
-    base = ", ".join(ing) if ing else "available ingredients"
-    
-    base = ", ".join(ing) if ing else "available ingredients"
-    return [
-        {
-            "name": f"Quick {base} Bowl",
-            "description": "Simple meal suggestion (AI unavailable).",
-            "ingredients": ing,
-            "steps": [
-                "Prep and wash ingredients.",
-                "Cook main ingredient until done.",
-                "Combine and season to taste.",
-            ],
-            "servings": 2,
-            "time_minutes": 25,
-            "difficulty": "easy",
-            "cuisine": "",
-            "meal_time": "lunch",
-            "waste_items": [],
-        },
-        {
-            "name": f"{base} Stir-Fry",
-            "description": "Fast stir-fry style meal suggestion (AI unavailable).",
-            "ingredients": ing,
-            "steps": [
-                "Slice ingredients into bite-size pieces.",
-                "Stir-fry with oil and seasoning.",
-                "Serve hot.",
-            ],
-            "servings": 2,
-            "time_minutes": 20,
-            "difficulty": "easy",
-            "cuisine": "",
-            "meal_time": "dinner",
-            "waste_items": [],
-        },
-        {
-            "name": f"{base} Soup",
-            "description": "Light soup suggestion (AI unavailable).",
-            "ingredients": ing,
-            "steps": [
-                "Simmer ingredients in water/stock.",
-                "Add spices and adjust salt.",
-                "Serve warm.",
-            ],
-            "servings": 3,
-            "time_minutes": 35,
-            "difficulty": "easy",
-            "cuisine": "",
-            "meal_time": "dinner",
-            "waste_items": [],
-        },
-        {
-            "name": f"{base} Omelet",
-            "description": "Quick omelet-style idea (AI unavailable).",
-            "ingredients": ing,
-            "steps": [
-                "Whisk eggs (if available) and prep fillings.",
-                "Cook on a pan with oil.",
-                "Fold and serve.",
-            ],
-            "servings": 1,
-            "time_minutes": 12,
-            "difficulty": "easy",
-            "cuisine": "",
-            "meal_time": "breakfast",
-            "waste_items": [],
-        },
-        {
-            "name": f"{base} Sandwich",
-            "description": "Quick sandwich idea (AI unavailable).",
-            "ingredients": ing,
-            "steps": [
-                "Prepare fillings.",
-                "Assemble in bread/wrap (if available).",
-                "Serve.",
-            ],
-            "servings": 1,
-            "time_minutes": 10,
-            "difficulty": "easy",
-            "cuisine": "",
-            "meal_time": "snack",
-            "waste_items": [],
-        },
-    ]
-
 def generate_meals_openai(ingredients):
     client = get_openai_client()
     if not client:
         logger.warning("OpenAI client unavailable; using fallback meals")
-        return fallback_meals(ingredients)
+        scored = fallback_meals_from_mealdb(ingredients)
+        return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
     ing = [str(i).strip() for i in (ingredients or []) if str(i).strip()]
     ing = ing[:10]  # HARD LIMIT
 
-    prompt = PROMPT_TEMPLATE.replace("<<INGREDIENTS>>", ", ".join(ing) if ing else "")
+    prompt = recipe_prompt(", ".join(ing) if ing else "")
 
     try:
         response = client.chat.completions.create(
@@ -228,11 +87,11 @@ def generate_meals_openai(ingredients):
                         data = json.loads(content)
                         logger.info("Successfully fixed truncated JSON")
                     except:
-                        return fallback_meals(ing)
-                else:
-                    return fallback_meals(ing)
+                        scored = fallback_meals_from_mealdb(ingredients)
+                        return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
             else:
-                return fallback_meals(ing)
+                # scored = fallback_meals_from_mealdb(ingredients)
+                return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
         # Accept either {"meals": [...]} or a raw list
         meals = None
@@ -243,14 +102,14 @@ def generate_meals_openai(ingredients):
 
         if not isinstance(meals, list):
             logger.warning("No valid meals list found in response")
-            return fallback_meals(ing)
+            return [mealdb_recipe_to_ai_shape(m) for _, m in fallback_meals_from_mealdb(ing)]
 
         normalized = []
         for m in meals[:5]:
             if not isinstance(m, dict):
                 continue
 
-            name = (m.get("name") or m.get("title") or m.get("recipe") or "").strip()
+            recipe = (m.get("name") or m.get("title") or m.get("recipe") or "").strip()
             description = (m.get("description") or "").strip()
             ingredients_list = m.get("ingredients") or []
             steps = m.get("steps") or m.get("instructions") or []
@@ -265,7 +124,7 @@ def generate_meals_openai(ingredients):
 
             normalized.append(
                 {
-                    "name": name or "Meal suggestion",
+                    "recipe": recipe or "Meal suggestion",
                     "description": description,
                     "ingredients": ingredients_list,
                     "steps": [str(s) for s in steps if str(s).strip()],
@@ -273,28 +132,77 @@ def generate_meals_openai(ingredients):
                     "time_minutes": int(m.get("time_minutes") or 20),
                     "difficulty": (m.get("difficulty") or "easy"),
                     "cuisine": (m.get("cuisine") or ""),
-                    "meal_time": (m.get("meal_time") or m.get("mealTime") or "lunch"),
+                    "mealTime": (m.get("meal_time") or m.get("mealTime") or "lunch"),
                     "waste_items": waste_items,
                 }
             )
 
-        return normalized if normalized else fallback_meals(ing)
+        scored = fallback_meals_from_mealdb(ingredients)
+        return normalized if normalized else [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
     except Exception as e:
         logger.exception("Meal generation failed; using fallback meals. Error: %s", e)
-        return fallback_meals(ing)
+        scored = fallback_meals_from_mealdb(ing)
+        return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
+
+def mealdb_recipe_to_ai_shape(meal: MealDBRecipe):
+    ingredient_names = [
+        it.get("name")
+        for it in (meal.ingredients or [])
+        if it.get("name")
+    ]
+
+    steps = [
+        s.strip()
+        for s in (meal.instructions or "").split("\n")
+        if s.strip()
+    ]
+
+    return {
+        "recipe": meal.recipe,
+        "description": meal.category or "",
+        "ingredients": ingredient_names,
+        "steps": steps[:12],
+        "servings": 2,
+        "time_minutes": 30,
+        "difficulty": meal.difficulty or "easy",
+        "cuisine": meal.cuisine or "",
+        "mealTime": meal.mealTime or "lunch",
+        "waste_items": [],
+        "source": "mealdb_fallback",
+    }
 
 def generate_recipes_with_cache(ingredients):
-    safe = [str(i).strip().lower() for i in (ingredients or []) if str(i).strip()]
+    safe = [str(i).strip().lower() for i in ingredients if str(i).strip()]
     key = "recipes:" + ",".join(sorted(safe))
 
     cached = cache.get(key)
-    if cached is not None:
+    if cached:
         return cached
 
-    recipes = generate_meals_openai(safe)
-    cache.set(key, recipes, timeout=86400)  # 24 hours
-    return recipes
+    ai_recipes = generate_meals_openai(safe)
+
+    if ai_recipes:
+        cache.set(key, ai_recipes, 86400)
+        return ai_recipes
+
+    meals = fallback_meals_from_mealdb(safe)
+
+    serialized = [
+        {
+            "recipe": m.recipe,
+            "ingredients": m.ingredients,
+            "steps": m.instructions.split("\n"),
+            "mealTime": "lunch",
+            "difficulty": "easy",
+            "waste_items": []
+        }
+        for m in meals
+    ]
+
+    cache.set(key, serialized, 86400)
+    return serialized
+
 
 
 #returns a dict of meal, waste_items, general_tips

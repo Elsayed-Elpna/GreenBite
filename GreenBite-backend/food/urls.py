@@ -18,7 +18,7 @@ urlpatterns = [
     path("meals/generate/", mealsGenViews.GenerateMealsAPIView.as_view()),
     path("meals/save-ai/", mealsGenViews.SaveAIMealAPIView.as_view()),
     path("meals/waste/", mealsGenViews.ai_meal_waste_profile),
-    # path("foodcomrecipes/", views.foodcom_recipe_list),
+    # path("foodcomrecipes/", views.foodcom_recipe_list, name='foodcom-recipe-list'),
     # path("foodcomrecipes/<int:pk>/", views.foodcom_recipe_detail),
     # path("mealdb/random/", views.mealdb_random),
     # path("mealdb/<str:mealdb_id>/", views.mealdb_detail)

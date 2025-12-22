@@ -4,48 +4,58 @@ def recipe_prompt(ingredients):
     You are a professional chef.
 
     Generate EXACTLY 5 recipes using ONLY these ingredients:
-    {ingredients}
+    <<INGREDIENTS>>
 
-    RULES:
-    - Return JSON only (no text)
-    - Max 5 recipes
-    - No extra ingredients unless basic (salt, oil, water)
-    - Title ≤ 8 words
-    - Description ≤ 25 words
-    - Steps: short, numbered
-    - Simple home recipes only
+    LANGUAGE RULE:
+    - Use ONLY ONE language per response.
+    - The language must be either ENGLISH or ARABIC.
+    - Do NOT mix languages.
+
+    STRICT RULES:
+    - Output MUST be valid JSON only. No markdown. No explanations.
+    - Do NOT add extra ingredients except: spices, salt, pepper, oil, water.
+    - Title must be ≤ 8 words.
+    - Description must be ≤ 25 words.
+    - Steps must be a list of short clear strings.
+    - DO NOT include calories or nutrition fields at all.
     - You MUST analyze each ingredient.
-    - If an ingredient naturally produces an inedible part(peel, shell, bone, seed, stem, tea bag),you MUST include it in waste_items.
+    - If an ingredient naturally produces an inedible part
+    (peel, shell, bone, seed, stem, tea bag),
+    you MUST include it in waste_items.
     - Do NOT skip waste if it exists.
     - ONLY include waste that comes directly from the listed ingredients.
     - If and ONLY IF no ingredient has inedible parts, return [].
+    - Each waste item MUST have:
+    - name: name of the waste item (e.g., "banana peel")
+    - reason: why it's waste (e.g., "inedible part only")
+    - disposal: one of [compost, trash, recycle]
 
-    JSON format:
-    [
-    {{
-        "recipe": "string",
-    "ingredients": ["string", "..."],
-    "serving": integer,
-    "calories": integer,
-    "cuisine": "string",
-    "mealTime": "breakfast|lunch|dinner|snack|brunch",
-    "title": "",
-    "description": "",
-    "ingredients": [],
-    "steps": [],
-    "estimated_time": "",
-    "difficulty": "easy|medium|hard"
-    "waste": [
+    RESPONSE FORMAT (exactly this shape):
+
+    {
+    "meals": [
         {
-        "name": "string",
-        "reason": "inedible part (peel/shell/bone/tea bag/etc.)",
-        "disposal": "compost|trash|recycle",
-        "estimated_amount": number,
-        "unit": "g|piece|tbsp"
+        "title": "string",
+        "description": "string",
+        "ingredients": ["string"],
+        "steps": ["string"],
+        "servings": 2,
+        "time_minutes": 20,
+        "difficulty": "easy|medium|hard",
+        "cuisine": "string",
+        "mealTime": "breakfast|lunch|dinner|snack|brunch",
+        "waste_items": [
+            {
+            "name": "string",
+            "reason": "inedible part only",
+            "disposal": "compost|trash|recycle"
+            }
+        ]
         }
-    ],
-    }}
-    ]"""
+    ]
+    }
+    """
+
 
 def waste_prompt(meal, context):
     return """You are a sustainability & kitchen-waste expert.
