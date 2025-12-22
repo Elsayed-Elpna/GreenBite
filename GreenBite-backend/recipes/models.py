@@ -63,6 +63,7 @@ class MealDBRecipe(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    embedding = models.JSONField(null=True, blank=True)
 
     class Meta:
         ordering = ["title"]
