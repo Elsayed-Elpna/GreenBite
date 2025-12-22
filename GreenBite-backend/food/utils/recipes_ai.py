@@ -12,48 +12,56 @@ except ImportError:
     OPENAI_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
-
 PROMPT_TEMPLATE = """
 You are a professional chef.
 
-Create EXACTLY 5 meal ideas using ONLY these ingredients:
+Generate EXACTLY 5 recipes using ONLY these ingredients:
 <<INGREDIENTS>>
 
-STRICT RULES:
-- Output MUST be valid JSON only (no markdown, no extra text).
-- Do NOT add extra ingredients except: salt, pepper, oil, water.
-- Name ≤ 8 words.
-- Description ≤ 25 words.
-- Steps must be a list of short strings (no numbering text).
-- waste_items MUST contain ONLY inedible parts (peel/shell/bone/tea bag/etc.). Never include edible food.
-- If no waste is expected, waste_items must be an empty list [] (not null).
+LANGUAGE RULE:
+- Use ONLY ONE language per response.
+- The language must be either ENGLISH or ARABIC.
+- Do NOT mix languages.
 
-RESPONSE SHAPE (return exactly this JSON object shape):
+STRICT RULES:
+- Output MUST be valid JSON only. No markdown. No explanations.
+- Do NOT add extra ingredients except: salt, pepper, oil, water.
+- Title must be ≤ 8 words.
+- Description must be ≤ 25 words.
+- Steps must be a list of short clear strings.
+- DO NOT include calories or nutrition fields at all.
+- You MUST analyze each ingredient.
+- If an ingredient naturally produces an inedible part(peel, shell, bone, seed, stem, tea bag),you MUST include it in waste_items.
+- Do NOT skip waste if it exists.
+- ONLY include waste that comes directly from the listed ingredients.
+- If and ONLY IF no ingredient has inedible parts, return [].
+
+RESPONSE FORMAT (exactly this shape):
+
 {
   "meals": [
     {
-      "name": "string",
+      "title": "string",
       "description": "string",
       "ingredients": ["string"],
       "steps": ["string"],
       "servings": 2,
       "time_minutes": 20,
-      "difficulty": "easy",
+      "difficulty": "easy|medium|hard",
       "cuisine": "string",
       "meal_time": "breakfast|lunch|dinner|snack|brunch",
       "waste_items": [
         {
           "name": "string",
-          "reason": "inedible part",
-          "disposal": "compost|trash|recycle",
-          "estimated_amount": 0,
-          "unit": "g|piece|tbsp"
+          "reason": "inedible part only",
+          "disposal": "compost|trash|recycle"
         }
       ]
     }
   ]
 }
 """
+
 
 def get_openai_client():
     if not OPENAI_AVAILABLE:
@@ -69,6 +77,8 @@ def get_openai_client():
 def fallback_meals(ingredients):
     ing = [str(i).strip() for i in (ingredients or []) if str(i).strip()]
     ing = ing[:10]
+    base = ", ".join(ing) if ing else "available ingredients"
+    
     base = ", ".join(ing) if ing else "available ingredients"
     return [
         {
@@ -165,33 +175,60 @@ def generate_meals_openai(ingredients):
     prompt = PROMPT_TEMPLATE.replace("<<INGREDIENTS>>", ", ".join(ing) if ing else "")
 
     try:
-        # Prefer structured JSON responses where supported.
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Return JSON only. Do not include markdown."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.6,
-                max_tokens=900,
-                response_format={"type": "json_object"},
-            )
-        except TypeError:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Return JSON only. Do not include markdown."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.6,
-                max_tokens=900,
-            )
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are a JSON API. Return ONLY valid JSON. No explanations. No markdown. No code blocks. Start with { and end with }."
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.6,
+            max_tokens=1500,  
+            response_format={"type": "json_object"},
+        )
 
         content = (response.choices[0].message.content or "").strip()
-        data = json.loads(content)
+        
+        # Clean up potential markdown code blocks
+        if content.startswith("```"):
+            lines = content.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            content = "\n".join(lines).strip()
+        
+        content = content.strip()
+        
+        logger.debug(f"Raw OpenAI response (first 500 chars): {content[:500]}")
+        
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {e}")
+            logger.error(f"Problematic content: {content}")
+            # Try to fix incomplete JSON by checking if it's just missing closing braces
+            if not content.endswith("}"):
+                logger.warning("Attempting to fix truncated JSON...")
+                # Count opening vs closing braces
+                open_braces = content.count("{")
+                close_braces = content.count("}")
+                missing = open_braces - close_braces
+                if missing > 0:
+                    content += "}" * missing
+                    try:
+                        data = json.loads(content)
+                        logger.info("Successfully fixed truncated JSON")
+                    except:
+                        return fallback_meals(ing)
+                else:
+                    return fallback_meals(ing)
+            else:
+                return fallback_meals(ing)
 
-        # Accept either {"meals": [...]} or a raw list (backward compatibility)
+        # Accept either {"meals": [...]} or a raw list
         meals = None
         if isinstance(data, dict):
             meals = data.get("meals")
@@ -199,6 +236,7 @@ def generate_meals_openai(ingredients):
             meals = data
 
         if not isinstance(meals, list):
+            logger.warning("No valid meals list found in response")
             return fallback_meals(ing)
 
         normalized = []

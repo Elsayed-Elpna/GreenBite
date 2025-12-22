@@ -14,8 +14,11 @@ def recipe_prompt(ingredients):
     - Description ≤ 25 words
     - Steps: short, numbered
     - Simple home recipes only
-    - waste_items MUST contain ONLY inedible items. Never put edible food in waste_items.
-    - If no waste is expected, waste_items must be [].
+    - You MUST analyze each ingredient.
+    - If an ingredient naturally produces an inedible part(peel, shell, bone, seed, stem, tea bag),you MUST include it in waste_items.
+    - Do NOT skip waste if it exists.
+    - ONLY include waste that comes directly from the listed ingredients.
+    - If and ONLY IF no ingredient has inedible parts, return [].
 
     JSON format:
     [
