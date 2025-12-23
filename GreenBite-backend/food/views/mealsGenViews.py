@@ -8,7 +8,7 @@ from ..serializers import MealSerializer, FoodComRecipeSerializer
 
 from rest_framework.views import APIView
 from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
-from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
+from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache, generate_meals_openai, mealdb_recipe_to_ai_shape
 
 import random
 
@@ -22,7 +22,7 @@ class GenerateMealsAPIView(APIView):
 
         ingredients = serializer.validated_data["ingredients"]
 
-        ai_recipes = generate_recipes_with_cache(ingredients)
+        ai_recipes = generate_meals_openai(ingredients)
 
         if not ai_recipes:
             return Response(
