@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FoodLogSys, Meal, FoodComRecipe, WasteLog
+from .models import FoodLogSys, Meal, WasteLog #FoodComRecipe
 
 class FoodLogSysSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,21 +37,21 @@ class SaveAIMealSerializer(serializers.Serializer):
     cuisine = serializers.CharField(max_length=100, required=False, allow_blank=True)
     mealTime = serializers.ChoiceField(choices=Meal._meta.get_field("mealTime").choices)
 
-class FoodComRecipeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FoodComRecipe
-        fields = ["id", "title",
-            "description",
-            "tags",
-            "ingredients",
-            "steps",
-            "n_ingredients",
-            "n_steps",
-            "source",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+# class FoodComRecipeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = FoodComRecipe
+#         fields = ["id", "title",
+#             "description",
+#             "tags",
+#             "ingredients",
+#             "steps",
+#             "n_ingredients",
+#             "n_steps",
+#             "source",
+#             "created_at",
+#             "updated_at",
+#         ]
+#         read_only_fields = ["id", "created_at", "updated_at"]
 
 class WasteLogSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default = serializers.CurrentUserDefault())

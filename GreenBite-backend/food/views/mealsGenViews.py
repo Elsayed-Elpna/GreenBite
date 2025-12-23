@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from ..models import Meal, FoodComRecipe
-from ..serializers import MealSerializer, FoodComRecipeSerializer
+from ..models import Meal #, FoodComRecipe
+from ..serializers import MealSerializer #, FoodComRecipeSerializer
 
 from rest_framework.views import APIView
 from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
@@ -75,30 +75,30 @@ def ai_meal_waste_profile(request):
 
     return Response(result, status.HTTP_200_OK)
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def foodcom_recipe_list(request):
-    qs = FoodComRecipe.objects.all().order_by("-id")
-    q = request.query_params.get("q") 
-    if q:
-        qs = qs.filter(title__icontains=q)
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def foodcom_recipe_list(request):
+#     qs = FoodComRecipe.objects.all().order_by("-id")
+#     q = request.query_params.get("q") 
+#     if q:
+#         qs = qs.filter(title__icontains=q)
     
-    ingredient = request.query_params.get("ingredient")
-    if ingredient:
-        qs.filter(ingredients__contains=[ingredient])
+#     ingredient = request.query_params.get("ingredient")
+#     if ingredient:
+#         qs.filter(ingredients__contains=[ingredient])
 
-    tag = request.query_params.get("tag")
-    if tag:
-        qs = qs.filter(tags__contains=[tag])  
+#     tag = request.query_params.get("tag")
+#     if tag:
+#         qs = qs.filter(tags__contains=[tag])  
 
-    serializer = FoodComRecipeSerializer(qs, many = True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+#     serializer = FoodComRecipeSerializer(qs, many = True)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def foodcom_recipe_detail(request, pk):
-    recipe = get_object_or_404(FoodComRecipe, pk = pk)
-    serializer = FoodComRecipeSerializer(recipe)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def foodcom_recipe_detail(request, pk):
+#     recipe = get_object_or_404(FoodComRecipe, pk = pk)
+#     serializer = FoodComRecipeSerializer(recipe)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
