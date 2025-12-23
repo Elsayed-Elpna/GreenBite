@@ -9,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 import Testoo from "./pages/HomePages/testoo";
 import Testooo from "./pages/HomePages/testooo";
+import RecipeGen from "./pages/RecipeGen";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route index element={<DashBoardPage />} />
             <Route path="testoo" element={<Testoo />} />
             <Route path="testooo" element={<Testooo />} />
+            <Route path="ai-recipes" element={<RecipeGen />} />
           </Route>
         </Routes>
       </BrowserRouter>
