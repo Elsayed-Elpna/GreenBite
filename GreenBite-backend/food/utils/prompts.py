@@ -1,60 +1,57 @@
-
 def recipe_prompt(ingredients):
-    return """
-    You are a professional chef.
+    return f"""
+Return VALID JSON only.
 
-    Generate EXACTLY 5 recipes using ONLY these ingredients:
-    <<INGREDIENTS>>
+Create EXACTLY 3 meals using ONLY these ingredients:
+{ingredients}
+LANGUAGE RULE:
+- Use ONLY ONE language per response.
+- The language must be either ENGLISH or ARABIC.
+- Do NOT mix languages.
+Rules:
+- Do not add extra ingredients except salt, oil, water, spices, pepper.
+- Keep steps short
+- Do not include calories
+- Do not include waste
+- No explanations
+- Do NOT skip waste if it exists.
+- ONLY include waste that comes directly from the listed ingredients.
+- If and ONLY IF no ingredient has inedible parts, return [].
+- Each waste item MUST have:
+- name: name of the waste item (e.g., "banana peel")
+- reason: why it's waste (e.g., "inedible part only")
+- disposal: one of [compost, trash, recycle]
 
-    LANGUAGE RULE:
-    - Use ONLY ONE language per response.
-    - The language must be either ENGLISH or ARABIC.
-    - Do NOT mix languages.
+JSON format:
 
-    STRICT RULES:
-    - Output MUST be valid JSON only. No markdown. No explanations.
-    - Do NOT add extra ingredients except: spices, salt, pepper, oil, water.
-    - Title must be ≤ 8 words.
-    - Description must be ≤ 25 words.
-    - Steps must be a list of short clear strings.
-    - DO NOT include calories or nutrition fields at all.
-    - You MUST analyze each ingredient.
-    - If an ingredient naturally produces an inedible part
-    (peel, shell, bone, seed, stem, tea bag),
-    you MUST include it in waste_items.
-    - Do NOT skip waste if it exists.
-    - ONLY include waste that comes directly from the listed ingredients.
-    - If and ONLY IF no ingredient has inedible parts, return [].
-    - Each waste item MUST have:
-    - name: name of the waste item (e.g., "banana peel")
-    - reason: why it's waste (e.g., "inedible part only")
-    - disposal: one of [compost, trash, recycle]
-
-    RESPONSE FORMAT (exactly this shape):
-
-    {
-    "meals": [
-        {
-        "title": "string",
-        "description": "string",
-        "ingredients": ["string"],
-        "steps": ["string"],
-        "servings": 2,
-        "time_minutes": 20,
-        "difficulty": "easy|medium|hard",
-        "cuisine": "string",
-        "mealTime": "breakfast|lunch|dinner|snack|brunch",
-        "waste_items": [
-            {
-            "name": "string",
-            "reason": "inedible part only",
-            "disposal": "compost|trash|recycle"
-            }
-        ]
-        }
+{{
+  "meals": [
+    {{
+      "title": "string",
+      "ingredients": ["string"],
+      "steps": ["string"],
+      "title": "string",
+    "description": "string",
+    "ingredients": ["string"],
+    "steps": ["string"],
+    "servings": 2,
+    "time_minutes": 20,
+    "difficulty": "easy|medium|hard",
+    "cuisine": "string",
+    "mealTime": "breakfast|lunch|dinner|snack|brunch",
+    "waste_items": [
+      {{
+        "name": "string",
+        "reason": "inedible part only",
+        "disposal": "compost|trash|recycle"
+      }}
     ]
-    }
-    """
+    }}
+  ]
+}}
+"""
+
+
 
 
 def waste_prompt(meal, context):

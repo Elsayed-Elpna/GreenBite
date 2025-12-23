@@ -1,4 +1,3 @@
-
 from django.db.models import Q
 from recipes.models import MealDBRecipe
 from food.utils.meal_fallback import fallback_meals_from_mealdb
@@ -11,6 +10,12 @@ from .prompts import waste_prompt, recipe_prompt
 
 try:
     from openai import OpenAI
+    # NEW: import OpenAI exception types (best-effort; names differ by SDK versions)
+    try:
+        from openai import APIError, APIConnectionError, RateLimitError, AuthenticationError, PermissionDeniedError, BadRequestError, NotFoundError
+    except Exception:  # pragma: no cover
+        APIError = APIConnectionError = RateLimitError = AuthenticationError = PermissionDeniedError = BadRequestError = NotFoundError = Exception
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -20,23 +25,43 @@ logger = logging.getLogger(__name__)
 
 def get_openai_client():
     if not OPENAI_AVAILABLE:
+        logger.warning("OpenAI SDK not installed (OPENAI_AVAILABLE=False).")
         return None
 
+    # Note: inside Docker you must have OPENAI_API_KEY set in the container env
     api_key = getattr(settings, "OPENAI_API_KEY", None)
     if not api_key:
+        logger.warning("OPENAI_API_KEY is missing in Django settings.")
         return None
 
+    logger.info("OpenAI client initialized (key present: %s).", "yes")
     return OpenAI(api_key=api_key)
+
+
+def _norm(s: str) -> str:
+    return " ".join((s or "").lower().strip().split())
+
+def _meal_mentions_any_ingredient(meal: dict, ing_norm: list[str]) -> bool:
+    recipe = _norm(meal.get("recipe") or meal.get("title") or meal.get("name"))
+    desc = _norm(meal.get("description"))
+    ingredients_list = meal.get("ingredients") or []
+    ingredients_text = " ".join(_norm(str(x)) for x in ingredients_list)
+
+    blob = f"{recipe} {desc} {ingredients_text}"
+    return any(i and i in blob for i in ing_norm)
+
+
 def generate_meals_openai(ingredients):
     client = get_openai_client()
     if not client:
-        logger.warning("OpenAI client unavailable; using fallback meals")
-        scored = fallback_meals_from_mealdb(ingredients)
+        logger.warning("OpenAI client unavailable; using fallback meals.")
+        scored = fallback_meals_from_mealdb(ingredients or [])
         return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
-    ing = [str(i).strip() for i in (ingredients or []) if str(i).strip()]
-    ing = ing[:10]  # HARD LIMIT
+    ing = [str(i).strip() for i in (ingredients or []) if str(i).strip()][:10]
+    ing_norm = [_norm(i) for i in ing]
 
+    # IMPORTANT: Make your prompt strict (edit recipe_prompt too if needed)
     prompt = recipe_prompt(", ".join(ing) if ing else "")
 
     try:
@@ -44,65 +69,49 @@ def generate_meals_openai(ingredients):
             model="gpt-4o-mini",
             messages=[
                 {
-                    "role": "system", 
-                    "content": "You are a JSON API. Return ONLY valid JSON. No explanations. No markdown. No code blocks. Start with { and end with }."
+                    "role": "system",
+                    "content": (
+                        "You are a JSON API. Return ONLY valid JSON. "
+                        "No explanations. No markdown. No code blocks."
+                    ),
                 },
                 {"role": "user", "content": prompt},
             ],
             temperature=0.6,
-            max_tokens=1500,  
+            max_tokens=3500,
             response_format={"type": "json_object"},
+           
         )
 
         content = (response.choices[0].message.content or "").strip()
-        
-        # Clean up potential markdown code blocks
+
+        # If the model ever wraps in fences despite response_format, strip them.
         if content.startswith("```"):
-            lines = content.split("\n")
-            if lines[0].startswith("```"):
+            lines = content.splitlines()
+            if lines and lines[0].startswith("```"):
                 lines = lines[1:]
             if lines and lines[-1].strip() == "```":
                 lines = lines[:-1]
             content = "\n".join(lines).strip()
-        
-        content = content.strip()
-        
-        logger.debug(f"Raw OpenAI response (first 500 chars): {content[:500]}")
-        
+
+        logger.debug("OpenAI raw content (first 500): %r", content[:500])
+
         try:
             data = json.loads(content)
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error: {e}")
-            logger.error(f"Problematic content: {content}")
-            # Try to fix incomplete JSON by checking if it's just missing closing braces
-            if not content.endswith("}"):
-                logger.warning("Attempting to fix truncated JSON...")
-                # Count opening vs closing braces
-                open_braces = content.count("{")
-                close_braces = content.count("}")
-                missing = open_braces - close_braces
-                if missing > 0:
-                    content += "}" * missing
-                    try:
-                        data = json.loads(content)
-                        logger.info("Successfully fixed truncated JSON")
-                    except:
-                        scored = fallback_meals_from_mealdb(ingredients)
-                        return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
-            else:
-                # scored = fallback_meals_from_mealdb(ingredients)
-                return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
+        except json.JSONDecodeError:
+            logger.exception("OpenAI returned invalid JSON. Falling back.")
+            scored = fallback_meals_from_mealdb(ing)
+            return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
-        # Accept either {"meals": [...]} or a raw list
-        meals = None
-        if isinstance(data, dict):
-            meals = data.get("meals")
-        elif isinstance(data, list):
-            meals = data
-
+        meals = data.get("meals") if isinstance(data, dict) else (data if isinstance(data, list) else None)
         if not isinstance(meals, list):
-            logger.warning("No valid meals list found in response")
-            return [mealdb_recipe_to_ai_shape(m) for _, m in fallback_meals_from_mealdb(ing)]
+            logger.warning(
+                "OpenAI JSON didn't contain a valid 'meals' list. Falling back. data_type=%s data_keys=%s",
+                type(data),
+                list(data.keys()) if isinstance(data, dict) else None,
+            )
+            scored = fallback_meals_from_mealdb(ing)
+            return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
         normalized = []
         for m in meals[:5]:
@@ -134,14 +143,20 @@ def generate_meals_openai(ingredients):
                     "cuisine": (m.get("cuisine") or ""),
                     "mealTime": (m.get("meal_time") or m.get("mealTime") or "lunch"),
                     "waste_items": waste_items,
+                    "source": "openai",
                 }
             )
 
-        scored = fallback_meals_from_mealdb(ingredients)
-        return normalized if normalized else [mealdb_recipe_to_ai_shape(m) for _, m in scored]
+        # ✅ Validate relevance: at least 1 meal must mention at least 1 input ingredient
+        if not normalized or not any(_meal_mentions_any_ingredient(x, ing_norm) for x in normalized):
+            logger.warning("AI meals not relevant to ingredients=%s. Falling back.", ing)
+            scored = fallback_meals_from_mealdb(ing)
+            return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
-    except Exception as e:
-        logger.exception("Meal generation failed; using fallback meals. Error: %s", e)
+        return normalized
+
+    except Exception:
+        logger.exception("OpenAI failed; using fallback meals.")
         scored = fallback_meals_from_mealdb(ing)
         return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
@@ -159,7 +174,7 @@ def mealdb_recipe_to_ai_shape(meal: MealDBRecipe):
     ]
 
     return {
-        "recipe": meal.recipe,
+        "recipe": meal.title,
         "description": meal.category or "",
         "ingredients": ingredient_names,
         "steps": steps[:12],
@@ -167,7 +182,7 @@ def mealdb_recipe_to_ai_shape(meal: MealDBRecipe):
         "time_minutes": 30,
         "difficulty": meal.difficulty or "easy",
         "cuisine": meal.cuisine or "",
-        "mealTime": meal.mealTime or "lunch",
+        "mealTime": (meal.meal_time or "lunch"),
         "waste_items": [],
         "source": "mealdb_fallback",
     }
