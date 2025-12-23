@@ -38,7 +38,7 @@ const SideMenu = () => {
           </NavLink>
 
           <NavLink
-            to="/home/testoo"
+            to="/home/foodlog"
             className={({ isActive }) =>
               `flex items-center justify-center px-4 py-2 rounded ${
                 isActive
@@ -49,7 +49,7 @@ const SideMenu = () => {
           >
             <GiHotMeal />
             <span className="text-[14px] ml-2.5 hidden lg:inline">
-              Reicpe center
+              Food Log
             </span>
           </NavLink>
         </nav>
