@@ -33,9 +33,8 @@ def fallback_meals_from_mealdb(
 
     # If nothing matched, broaden search
     if not candidates:
-        candidates = list(
-            MealDBRecipe.objects.exclude(embedding__isnull=True)[:800]
-        )
+        # Try any embedded meals
+        candidates = list(MealDBRecipe.objects.exclude(embedding__isnull=True)[:800])
 
     # Stage 2 — semantic ranking
     query_text = "Ingredients: " + ", ".join(norms or ingredients)
@@ -48,5 +47,10 @@ def fallback_meals_from_mealdb(
             scored.append((score, meal))
 
     scored.sort(key=lambda x: x[0], reverse=True)
+
+    # FINAL SAFETY NET: if still nothing, return any meals (even without embeddings)
+    if not scored:
+        qs_any = MealDBRecipe.objects.all().order_by("-id")[:top_k]
+        return [(0.0, m) for m in qs_any]
 
     return scored[:top_k]   # [(score, MealDBRecipe), ...]
