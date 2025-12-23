@@ -49,40 +49,6 @@ def _meal_mentions_any_ingredient(meal: dict, ing_norm: list[str]) -> bool:
 
     blob = f"{recipe} {desc} {ingredients_text}"
     return any(i and i in blob for i in ing_norm)
-# def generate_meals_openai(ingredients):
-#     client = get_openai_client()
-#     if not client:
-#         raise RuntimeError("OpenAI client not available")
-
-#     prompt = recipe_prompt(", ".join(ingredients))
-
-#     response = client.chat.completions.create(
-#         model="gpt-4o-mini",
-#         messages=[
-#             {"role": "system", "content": "Return valid JSON only."},
-#             {"role": "user", "content": prompt},
-#         ],
-#         temperature=0.4,
-#         max_tokens=800,
-#         response_format={"type": "json_object"},
-#     )
-
-#     content = response.choices[0].message.content.strip()
-#     data = json.loads(content)
-
-#     meals = data.get("meals", [])
-#     normalized = []
-
-#     for m in meals:
-#         normalized.append({
-#             "recipe": m.get("title", ""),
-#             "ingredients": m.get("ingredients", []),
-#             "steps": m.get("steps", []),
-#             "source": "openai",
-#         })
-
-#     return normalized
-
 
 
 def generate_meals_openai(ingredients):
@@ -114,6 +80,7 @@ def generate_meals_openai(ingredients):
             temperature=0.6,
             max_tokens=3500,
             response_format={"type": "json_object"},
+           
         )
 
         content = (response.choices[0].message.content or "").strip()
@@ -215,7 +182,7 @@ def mealdb_recipe_to_ai_shape(meal: MealDBRecipe):
         "time_minutes": 30,
         "difficulty": meal.difficulty or "easy",
         "cuisine": meal.cuisine or "",
-        "meal_time": (meal.meal_time or "lunch"),
+        "mealTime": (meal.meal_time or "lunch"),
         "waste_items": [],
         "source": "mealdb_fallback",
     }

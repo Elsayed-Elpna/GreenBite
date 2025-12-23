@@ -22,7 +22,7 @@ class GenerateMealsAPIView(APIView):
 
         ingredients = serializer.validated_data["ingredients"]
 
-        ai_recipes = generate_meals_openai(ingredients)
+        ai_recipes = generate_recipes_with_cache(ingredients)
 
         if not ai_recipes:
             return Response(
