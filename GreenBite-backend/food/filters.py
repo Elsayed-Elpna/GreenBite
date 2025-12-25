@@ -4,6 +4,7 @@ from .models import FoodLogSys
 from datetime import  date
 
 class FoodLogFilter(django_filters.FilterSet):
+  name = django_filters.CharFilter(field_name='name' , lookup_expr='icontains')
   category = django_filters.CharFilter(field_name='category')
   storage_type= django_filters.CharFilter(field_name='storage_type')
 
@@ -21,4 +22,4 @@ class FoodLogFilter(django_filters.FilterSet):
 
   class Meta:
     model = FoodLogSys
-    fields = ['category', 'storage_type', 'expiry_before', 'expiry_after', 'is_expired']
+    fields = ['name','category', 'storage_type', 'expiry_before', 'expiry_after', 'is_expired']
