@@ -15,25 +15,35 @@ import PublicRoute from "./routes/PublicRoute";
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} exact />
-          <Route path="*" element={<NotFound />} />
-          {/* public routes user cant access after login */}
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Route>
-          {/* ProtectedRoute use can access after login  */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/home" element={<HomeLayout />}>
-              <Route index element={<DashBoardPage />} />
-              <Route path="testoo" element={<Testoo />} />
-              <Route path="testooo" element={<Testooo />} />
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} exact />
+            <Route path="/verify" element={<EmailVerification />} />
+            <Route path="/activate/:uid/:token" element={<Activate />} />
+            {/* public routes user cant access after login */}
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
             </Route>
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            {/* ProtectedRoute user can access after login  */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/home" element={<HomeLayout />}>
+                {/* /home */}
+                <Route index element={<DashBoardPage />} />
+
+                {/* /home/foodlog */}
+                <Route path="foodlog">
+                  <Route index element={<FoodLog />} />
+                  <Route path="edit" element={<FoodLogEdit />} />
+                </Route>
+              </Route>
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
     </div>
   );
 }
