@@ -1,5 +1,5 @@
 from django.urls import path
-from food.views import foodlogsysviews, mealsGenViews, wasteLogviews
+from food.views import foodlogsysviews, mealsGenViews, wasteLogviews, imageProcessing
 
 
 app_name = 'food'
@@ -21,7 +21,8 @@ urlpatterns = [
     # path("foodcomrecipes/", views.foodcom_recipe_list, name='foodcom-recipe-list'),
     # path("foodcomrecipes/<int:pk>/", views.foodcom_recipe_detail),
     path("waste-log/", wasteLogviews.waste_log_list_create, name="waste-log-list-create"),
-    path("waste-log/<int:pk>/", wasteLogviews.waste_log_detail, name="waste-log-detail")
+    path("waste-log/<int:pk>/", wasteLogviews.waste_log_detail, name="waste-log-detail"),
     # path("mealdb/random/", views.mealdb_random),
-    # path("mealdb/<str:mealdb_id>/", views.mealdb_detail)
+    # path("mealdb/<str:mealdb_id>/", views.mealdb_detail),
+    path("food-safety/scan/", imageProcessing.food_safety_scan, name = "food-safety-scan")
 ]
