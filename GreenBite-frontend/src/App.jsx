@@ -11,6 +11,7 @@ import RegisterPage from "./pages/RegisterPage";
 import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword/RequestResetEmail";
 import ResetPassword from "./pages/ForgotPassword/ResetPassword";
+import ResetSuccess from "./pages/ForgotPassword/ResetSuccess";
 // import PrivateRoute from "./utils/PrivateRoute";
 import NotFound from "./pages/NotFound";
 import FoodLog from "./pages/HomePages/FoodLog/FoodLog";

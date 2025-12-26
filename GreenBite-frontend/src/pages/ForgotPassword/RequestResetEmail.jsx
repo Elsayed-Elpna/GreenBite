@@ -31,21 +31,18 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* MAIN CONTENT */}
       <div className="flex flex-1 w-full">
-        {/* LEFT SIDE — FORM */}
         <div className="w-full lg:w-[55%] xl:w-[60%] flex flex-col px-6 sm:px-10 lg:px-10">
-          {/* Logo at the top */}
-          <div className="pt-5">
+          {/* Logo */}
+          <div className="pt-6">
             <Link to="/">
               <img src={logo} alt="GreenBite Logo" className="h-14 object-contain cursor-pointer" />
             </Link>
           </div>
 
-          {/* Form container centered vertically */}
+          {/* Form */}
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
-              {/* Back link */}
               <Link
                 to="/login"
                 className="text-sm text-gray-500 hover:text-green-600 inline-flex items-center mb-6"

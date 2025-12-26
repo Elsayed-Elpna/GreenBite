@@ -31,7 +31,7 @@ export default function RegisterPage() {
       <div className="bg-white px-5">
 
         {/* Logo */}
-        <div className="flex justify-center lg:justify-end px-6 lg:px-12 pt-6">
+        <div className="flex justify-center lg:justify-end pt-6 px-0 lg:px-5">
           <img
             src={logo}
             alt="GreenBite Logo"

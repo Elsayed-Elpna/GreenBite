@@ -7,9 +7,9 @@ import Footer from "../components/LandingPage/Footer";
 export default function EmailVerification() {
     return (
         <div className="flex flex-col h-screen bg-white overflow-hidden">
-            {/* Logo - Fixed height */}
+            {/* Logo */}
             <div className="flex-shrink-0">
-                <div className="flex justify-center lg:justify-end pt-6 px-5">
+                <div className="flex justify-center lg:justify-end pt-6 px-6 lg:px-10">
                     <div className="h-14 flex items-center">
                         <Link to="/">
                             <img

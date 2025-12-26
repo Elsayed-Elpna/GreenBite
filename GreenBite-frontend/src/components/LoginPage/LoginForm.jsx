@@ -1,8 +1,10 @@
 import { useState, useContext } from "react";
-import { Label, TextInput, Button } from "flowbite-react";
+import { Button } from "flowbite-react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
+import FloatingInput from "@/components/ui/FloatingInput";
+
 
 const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
@@ -72,75 +74,53 @@ export default function LoginForm() {
       <form className="space-y-4" onSubmit={handleSubmit}>
         {/* Email */}
         <div>
-          <Label
-            htmlFor="email"
-            color="black"
-            className="text-sm lg:text-base mb-2 block"
-          >
-            Email
-          </Label>
-          <TextInput
+          <FloatingInput
             id="email"
+            label="Email"
             type="email"
-            placeholder="john.doe@gmail.com"
-            required
-            sizing="md"
-            color="white"
-            className="w-full text-sm lg:text-base lg:h-12"
+            value={formData.email}
+            error={fieldErros.email}
             onChange={(e) => {
-              const value = e.target.value.replace(/[\\<>|{}[\]]/g, "").trim();
+              const value = e.target.value
+                .replace(/[\\<>|{}[\]]/g, "")
+                .trim();
               setFromData({ ...formData, email: value });
               setFieldErrors({ ...fieldErros, email: "" });
             }}
           />
-          {fieldErros.email && (
-            <p className="text-red-500 text-sm mt-1">{fieldErros.email}</p>
-          )}
+
         </div>
 
         {/* Password */}
-        <div>
-          <Label
-            htmlFor="password"
-            color="black"
-            className="text-sm lg:text-base mb-2 block"
-          >
-            Password
-          </Label>
-          <div className="relative">
-            <TextInput
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••••••••••••••"
-              required
-              sizing="md"
-              color="white"
-              className="w-full text-sm lg:text-base lg:h-12"
-              onChange={(e) => {
-                const value = e.target.value
-                  .replace(/[\\<>|{}[\]]/g, "")
-                  .trim();
-                setFromData({ ...formData, password: value });
-                setFieldErrors({ ...fieldErros, password: "" });
-              }}
-            />
+        <div className="relative">
+          <FloatingInput
+            id="password"
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            value={formData.password}
+            error={fieldErros.password}
+            onChange={(e) => {
+              const value = e.target.value
+                .replace(/[\\<>|{}[\]]/g, "")
+                .trim();
+              setFromData({ ...formData, password: value });
+              setFieldErrors({ ...fieldErros, password: "" });
+            }}
+          />
 
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 focus:outline-none"
-            >
-              {showPassword ? (
-                <FaEyeSlash className="w-5 h-5 lg:w-6 lg:h-6" />
-              ) : (
-                <FaEye className="w-5 h-5 lg:w-6 lg:h-6" />
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700"
+          >
+            {showPassword ? (
+              <FaEyeSlash className="w-5 h-5" />
+            ) : (
+              <FaEye className="w-5 h-5" />
+            )}
+          </button>
         </div>
-        {fieldErros.password && (
-          <p className="text-red-500 text-sm mt-1">{fieldErros.password}</p>
-        )}
+        
         {/* Forgot Password */}
         <div className="pt-1 lg:pt-2">
           <p className="text-red-500">{formError}</p>
