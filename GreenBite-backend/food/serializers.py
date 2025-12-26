@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FoodLogSys, Meal, FoodComRecipe
+from .models import FoodLogSys, Meal, WasteLog #FoodComRecipe
 
 class FoodLogSysSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,18 +37,54 @@ class SaveAIMealSerializer(serializers.Serializer):
     cuisine = serializers.CharField(max_length=100, required=False, allow_blank=True)
     mealTime = serializers.ChoiceField(choices=Meal._meta.get_field("mealTime").choices)
 
-class FoodComRecipeSerializer(serializers.ModelSerializer):
+# class FoodComRecipeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = FoodComRecipe
+#         fields = ["id", "title",
+#             "description",
+#             "tags",
+#             "ingredients",
+#             "steps",
+#             "n_ingredients",
+#             "n_steps",
+#             "source",
+#             "created_at",
+#             "updated_at",
+#         ]
+#         read_only_fields = ["id", "created_at", "updated_at"]
+
+class WasteLogSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default = serializers.CurrentUserDefault())
     class Meta:
-        model = FoodComRecipe
-        fields = ["id", "title",
-            "description",
-            "tags",
-            "ingredients",
-            "steps",
-            "n_ingredients",
-            "n_steps",
-            "source",
+        model = WasteLog
+        fields = [
+            "id",
+            "user",
+            "meal",
+            "name",
+            "why",
+            "estimated_amount",
+            "unit",
+            "disposal",
+            "reuse_ideas",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_items(self, value):
+        if value in (None, ""):
+            return []
+        
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Items must be a list")
+        
+        for i, item in enumerate(value):
+            if not isinstance(item, dict):
+                raise serializers.ValidationError(f"items[{i}] must be an object")
+            
+            name = (item.get("name") or "").strip()
+            if not name:
+                raise serializers.ValidationError(f"items[{i}].name is required")
+            
+        return value

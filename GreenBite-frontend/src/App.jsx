@@ -16,6 +16,7 @@ import FoodLogEdit from "./pages/HomePages/FoodLog/FoodLogEdit";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Activate from "./pages/Activate";
+import WasteLog from "./pages/HomePages/WasteLog/WasteLog";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,10 @@ function App() {
                 <Route path="foodlog">
                   <Route index element={<FoodLog />} />
                   <Route path="edit" element={<FoodLogEdit />} />
+                </Route>
+                {/* /home/wastelog */}
+                <Route path="wastelog">
+                  <Route index element={<WasteLog />} />
                 </Route>
               </Route>
             </Route>

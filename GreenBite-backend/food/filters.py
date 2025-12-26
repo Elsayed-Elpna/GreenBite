@@ -1,6 +1,6 @@
 import django_filters
 from django.utils import timezone
-from .models import FoodLogSys
+from .models import FoodLogSys , WasteLog
 from datetime import  date
 
 class FoodLogFilter(django_filters.FilterSet):
@@ -23,3 +23,20 @@ class FoodLogFilter(django_filters.FilterSet):
   class Meta:
     model = FoodLogSys
     fields = ['name','category', 'storage_type', 'expiry_before', 'expiry_after', 'is_expired']
+
+
+
+class WasteLogFilter(django_filters.FilterSet):
+  name = django_filters.CharFilter(field_name='name' , lookup_expr='icontains')
+  
+  ordering = django_filters.OrderingFilter(
+        fields=(
+            ("estimated_amount", "estimated_amount"),
+            ("created_at", "created_at"),
+            ("name", "name"),
+        )
+    )
+
+  class Meta:
+    model = WasteLog
+    fields = ['name']

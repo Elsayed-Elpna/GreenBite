@@ -1,5 +1,4 @@
 version: "3.9"
-
 services:
   backend:
     build: ./GreenBite-backend
@@ -7,14 +6,20 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./GreenBite-backend:/app
+    env_file:
+      - ./GreenBite-backend/.env
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - ./GreenBite-backend/.env
-
+    environment:
+      - DB_NAME=greenbite
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   db:
     image: postgres:15
