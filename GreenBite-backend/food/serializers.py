@@ -22,6 +22,15 @@ class LeftoverSerializer(serializers.Serializer):
     storage_type = serializers.CharField(max_length=20, default='fridge')
     expiry_days = serializers.IntegerField(default=3)
     expiry_date = serializers.DateField(required=False)
+    def validate(self, attrs):
+        name = (attrs.get("name") or "").strip()
+        if not name:
+            attrs["name"] = "Leftover Item"
+        return attrs
+class LeftoversSerializer(serializers.Serializer):
+    leftovers = LeftoverSerializer(many=True, allow_empty=False)
+
+
 class MealGenerationSerializer(serializers.Serializer):
     #this is th input user will write 
     ingredients = serializers.ListField(

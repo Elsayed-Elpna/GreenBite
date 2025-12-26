@@ -12,6 +12,12 @@ from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profi
 
 import random, logging, base64
 
+class MealDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        meal = get_object_or_404(Meal, pk=pk, user=request.user)
+        return Response(MealSerializer(meal).data, status=200)
 
 class GenerateMealsAPIView(APIView):
     permission_classes = [IsAuthenticated]
