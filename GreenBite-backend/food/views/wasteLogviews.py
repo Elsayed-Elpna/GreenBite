@@ -9,7 +9,8 @@ from ..serializers import FoodLogSysSerializer, MealSerializer #, FoodComRecipeS
 from rest_framework.views import APIView
 from ..serializers import MealGenerationSerializer, SaveAIMealSerializer, WasteLogSerializer
 from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
-from ..filters import FoodLogFilter
+from ..filters import WasteLogFilter
+from ..pagination import WasteLogPagination
 
 import random
 
@@ -17,13 +18,24 @@ import random
 @permission_classes([IsAuthenticated])
 def waste_log_list_create(request):
     if request.method == "GET":
-        qs = WasteLog.objects.filter(user=request.user).select_related("meal").order_by("-created_at")
+        qs = (WasteLog.objects.filter(user=request.user).select_related("meal"))
         meal_id = request.query_params.get("meal")
         if meal_id:
             qs = qs.filter(meal_id = meal_id)
-
-        serializer = WasteLogSerializer(qs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # filters
+        waste_filter = WasteLogFilter(request.GET,queryset=qs)
+        if not waste_filter.is_valid():
+            return Response(waste_filter.errors, status=status.HTTP_400_BAD_REQUEST)
+        filtered_qs = waste_filter.qs
+        # pagination
+        paginator = WasteLogPagination()
+        page = paginator.paginate_queryset(filtered_qs, request)
+        if page is None:
+            serializer = WasteLogSerializer(filtered_qs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        # serializer
+        serializer = WasteLogSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
     #post
     serializer = WasteLogSerializer(data = request.data, context ={"request": request})
     if serializer.is_valid():
@@ -44,7 +56,7 @@ def waste_log_detail(request, pk):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     if request.method in ["PUT", "PATCH"]:
-        partial = request.method == "GET"
+        partial = request.method == "PATCH"
         serializer = WasteLogSerializer(
             waste_log,
             data=request.data,
