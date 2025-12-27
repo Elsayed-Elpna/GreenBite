@@ -89,6 +89,7 @@ export default function RegisterForm() {
     return error;
   };
 
+
   /* ---------------- HANDLERS ---------------- */
 
   const handleChange = (e) => {
@@ -267,7 +268,7 @@ export default function RegisterForm() {
           type="submit"
           color="green"
           outline
-          className="w-full h-12 font-semibold"
+          className="w-full h-12 font-semibold pointer-cursor"
         >
           Create account
         </Button>
