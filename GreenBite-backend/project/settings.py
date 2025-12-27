@@ -114,8 +114,11 @@ DJOSER = {
     "TOKEN_MODEL": None, 
     "PASSWORD_RESET_CONFIRM_URL":"password/reset/confirm/{uid}/{token}/", 
     "ACTIVATION_URL": "activate/{uid}/{token}/", 
-    
 
+    "PERMISSIONS": {
+        "resend_activation": ["rest_framework.permissions.AllowAny"],
+    },
+    
     "SERIALIZERS": {
         "user_create": "accounts.serializers.UserCreateSerializer",
         "user_create_password_retype": "accounts.serializers.UserCreateSerializer",
