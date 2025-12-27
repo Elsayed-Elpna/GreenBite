@@ -98,6 +98,7 @@ class Meal(models.Model):
     )
     
     consumed_at = models.DateTimeField(default=timezone.now)
+    # in helper function inherit from it the new 2 fields
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

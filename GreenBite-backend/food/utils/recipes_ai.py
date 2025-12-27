@@ -22,7 +22,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-
+#  reform the logic to be a oop  contains 
 def get_openai_client():
     if not OPENAI_AVAILABLE:
         logger.warning("OpenAI SDK not installed (OPENAI_AVAILABLE=False).")
