@@ -5,6 +5,7 @@ import slide2 from '@/assets/images/Loginregister/slide2.png';
 import slide3 from '@/assets/images/Loginregister/slide3.png';
 import logo from '@/assets/images/logos/Verticallogo.png'
 import Footer from "../components/LandingPage/Footer";
+import { Link } from "react-router-dom";
 
 
 export default function RegisterPage() {
@@ -29,14 +30,15 @@ export default function RegisterPage() {
   return (
     <div>
       <div className="bg-white px-5">
-
         {/* Logo */}
-        <div className="flex justify-center lg:justify-end pt-6 px-0 lg:px-5">
-          <img
-            src={logo}
-            alt="GreenBite Logo"
-            className="h-14 object-contain"
-          />
+        <div className="flex justify-center lg:justify-end pt-6 lg:px-5">
+          <Link to="/">
+            <img
+              src={logo}
+              alt="GreenBite Logo"
+              className="h-14 object-contain cursor-pointer"
+            />
+          </Link>
         </div>
 
         {/* Main content */}
