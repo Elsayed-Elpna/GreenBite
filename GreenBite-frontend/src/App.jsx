@@ -19,7 +19,6 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Activate from "./pages/Activate";
 import WasteLog from "./pages/HomePages/WasteLog/WasteLog";
-import ResetSuccess from "./pages/ForgotPassword/ResetSuccess";
 
 
 const queryClient = new QueryClient({
