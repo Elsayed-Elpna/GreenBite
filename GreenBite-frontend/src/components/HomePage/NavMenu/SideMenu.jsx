@@ -10,6 +10,7 @@ import logo2 from "@/assets/images/Logos/pac man (1).png";
 // icons
 import { FaHome } from "react-icons/fa";
 import { GiHotMeal } from "react-icons/gi";
+import { MdOutlineFoodBank } from "react-icons/md";
 
 const SideMenu = () => {
   return (
@@ -38,7 +39,7 @@ const SideMenu = () => {
           </NavLink>
 
           <NavLink
-            to="/home/testoo"
+            to="/home/foodlog"
             className={({ isActive }) =>
               `flex items-center justify-center px-4 py-2 rounded ${
                 isActive
@@ -49,7 +50,22 @@ const SideMenu = () => {
           >
             <GiHotMeal />
             <span className="text-[14px] ml-2.5 hidden lg:inline">
-              Reicpe center
+              Food Log
+            </span>
+          </NavLink>
+          <NavLink
+            to="/home/wastelog"
+            className={({ isActive }) =>
+              `flex items-center justify-center px-4 py-2 rounded ${
+                isActive
+                  ? "bg-[#7eb685] rounded-l-full ml-1 text-white"
+                  : "text-gray-700 rounded-l-full ml-1 hover:bg-gray-100"
+              }`
+            }
+          >
+            <MdOutlineFoodBank />
+            <span className="text-[14px] ml-2.5 hidden lg:inline">
+              Waste Log
             </span>
           </NavLink>
           <NavLink
@@ -67,7 +83,6 @@ const SideMenu = () => {
               Ai Recipes
             </span>
           </NavLink>
-          
         </nav>
       </aside>
       <div>

@@ -140,7 +140,24 @@ class Meal(models.Model):
 class WasteLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waste_logs")
     meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL, related_name="waste_logs")
-    items = models.JSONField(default=list, blank = True)   
+
+    name = models.CharField(max_length=100)
+    why = models.TextField( )
+
+    estimated_amount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2
+    )
+    unit = models.CharField(max_length=20)
+
+    disposal = models.CharField(
+        max_length=50
+    )
+
+    reuse_ideas = models.JSONField(
+        default=list,
+        blank=True
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

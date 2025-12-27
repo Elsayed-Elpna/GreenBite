@@ -70,7 +70,12 @@ class WasteLogSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "meal",
-            "items",
+            "name",
+            "why",
+            "estimated_amount",
+            "unit",
+            "disposal",
+            "reuse_ideas",
             "created_at",
             "updated_at",
         ]

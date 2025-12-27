@@ -38,7 +38,7 @@ export default function LoginForm() {
     return !errors.email && !errors.password;
   };
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError("");
     const isValid = validateForm();
