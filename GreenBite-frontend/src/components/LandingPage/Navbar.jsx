@@ -37,20 +37,20 @@ export default function AppNavbar() {
       <NavbarCollapse>
         <div className="hidden md:flex items-center">
           <div className="flex items-center gap-8 !bg-[#7eb685] px-8 py-4 rounded-[15px]">
-            <NavbarLink href="/home" active className={navLinkClass}>
+            <NavbarLink as={Link} to="/home" active className={navLinkClass}>
               Home
             </NavbarLink>
 
             <span className="text-white">|</span>
 
             {!isAuthenticated && (
-              <NavbarLink href="/login" className={navLinkClass}>
+              <NavbarLink as={Link} to="/login" className={navLinkClass}>
                 Login
               </NavbarLink>
             )}
             {!isAuthenticated && <span className="text-white">|</span>}
 
-            <NavbarLink href="#vision" className={navLinkClass}>
+            <NavbarLink href="/#vision" className={navLinkClass}>
               Our Vision
             </NavbarLink>
           </div>

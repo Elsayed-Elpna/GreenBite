@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FoodLogSys, Meal, FoodComRecipe, WasteLog
+from .models import FoodLogSys, Meal, WasteLog #FoodComRecipe
 
 class FoodLogSysSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +22,15 @@ class LeftoverSerializer(serializers.Serializer):
     storage_type = serializers.CharField(max_length=20, default='fridge')
     expiry_days = serializers.IntegerField(default=3)
     expiry_date = serializers.DateField(required=False)
+    def validate(self, attrs):
+        name = (attrs.get("name") or "").strip()
+        if not name:
+            attrs["name"] = "Leftover Item"
+        return attrs
+class LeftoversSerializer(serializers.Serializer):
+    leftovers = LeftoverSerializer(many=True, allow_empty=False)
+
+
 class MealGenerationSerializer(serializers.Serializer):
     #this is th input user will write 
     ingredients = serializers.ListField(
@@ -37,21 +46,21 @@ class SaveAIMealSerializer(serializers.Serializer):
     cuisine = serializers.CharField(max_length=100, required=False, allow_blank=True)
     mealTime = serializers.ChoiceField(choices=Meal._meta.get_field("mealTime").choices)
 
-class FoodComRecipeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FoodComRecipe
-        fields = ["id", "title",
-            "description",
-            "tags",
-            "ingredients",
-            "steps",
-            "n_ingredients",
-            "n_steps",
-            "source",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+# class FoodComRecipeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = FoodComRecipe
+#         fields = ["id", "title",
+#             "description",
+#             "tags",
+#             "ingredients",
+#             "steps",
+#             "n_ingredients",
+#             "n_steps",
+#             "source",
+#             "created_at",
+#             "updated_at",
+#         ]
+#         read_only_fields = ["id", "created_at", "updated_at"]
 
 class WasteLogSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default = serializers.CurrentUserDefault())
@@ -61,7 +70,12 @@ class WasteLogSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "meal",
-            "items",
+            "name",
+            "why",
+            "estimated_amount",
+            "unit",
+            "disposal",
+            "reuse_ideas",
             "created_at",
             "updated_at",
         ]

@@ -12,7 +12,7 @@ const HomeLayout = () => {
       </div>
 
       {/* Main Content */}
-      <div className="center-content">
+      <div className="center-content bg-[#F9F4F2]">
         <Outlet />
       </div>
 
