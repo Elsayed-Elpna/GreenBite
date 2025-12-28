@@ -7,27 +7,24 @@ export default function Features() {
     {
       image: f1,
       title: "Log and organize food before it goes to waste.",
-      link: "Track Your Leftovers"
-
+      link: "Track Your Leftovers",
     },
     {
       image: f2,
       title: "Get smart reuse tips and leftover-based recipes.",
-      link: "Reuse & Recipe Ideas"
+      link: "Reuse & Recipe Ideas",
     },
     {
       image: f3,
       title: "AI suggests the best way to use each item.",
-      link: "AI Reuse Recommendations"
-    }
+      link: "AI Reuse Recommendations",
+    },
   ];
 
   return (
-    <section className="py-8 text-center max-w-[95vw] mx-auto">
+    <section id="offers" className="py-8 text-center max-w-[95vw] mx-auto">
       <p className="text-green-600 font-semibold">OUR FEATURES</p>
-      <h2 className="text-3xl font-bold mb-10">
-        What we offer to our users.
-      </h2>
+      <h2 className="text-3xl font-bold mb-10">What we offer to our users.</h2>
       <div className="grid md:grid-cols-3 gap-12 px-6">
         {features.map((feature, i) => (
           <div key={i} className="relative rounded-xl overflow-hidden">
@@ -35,7 +32,6 @@ export default function Features() {
               src={feature.image}
               alt={feature.title}
               className="w-full h-94 object-cover"
-
             />
 
             <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-6">
