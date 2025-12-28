@@ -8,7 +8,8 @@ import {
 } from "flowbite-react";
 import logo from "@/assets/images/logos/Verticallogo.png";
 import { AuthContext } from "@/context/AuthContext";
-import { Link } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
+
 import { useContext } from "react";
 
 export default function AppNavbar() {
@@ -58,12 +59,15 @@ export default function AppNavbar() {
 
         {/* Mobile */}
         <div className="flex flex-col gap-2 md:hidden mt-2 bg-[#7eb685] rounded-[15px] p-4">
-          <NavbarLink href="#" className={navLinkClass}>
+          <NavbarLink as={Link} to="/home" className={navLinkClass}>
             Home
           </NavbarLink>
-          <NavbarLink href="/login" className={navLinkClass}>
-            Login
-          </NavbarLink>
+
+          {!isAuthenticated && (
+            <NavbarLink as={Link} to="/login" className={navLinkClass}>
+              Login
+            </NavbarLink>
+          )}
           <NavbarLink href="#vision" className={navLinkClass}>
             Our Vision
           </NavbarLink>
