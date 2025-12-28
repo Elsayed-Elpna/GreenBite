@@ -20,7 +20,6 @@ services:
       - DB_PASSWORD=postgres
       - DB_HOST=db
       - DB_PORT=5432
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   db:
     image: postgres:15

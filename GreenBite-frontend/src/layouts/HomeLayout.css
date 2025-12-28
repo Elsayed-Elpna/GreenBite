@@ -1,11 +1,7 @@
-/* =========================
-   Desktop (Default)
-   ========================= */
-.layout {
+/* .layout {
   display: grid;
   min-height: 100vh;
 
-  /* Left | Center | Right */
   grid-template-columns:
     clamp(200px, 15vw, 240px)
     1fr
@@ -13,7 +9,6 @@
   grid-template-areas: "left center right";
 }
 
-/* Areas */
 .left-sidebar {
   grid-area: left;
   position: sticky;
@@ -30,7 +25,6 @@
   grid-area: right;
 }
 
-/* Transitions */
 .left-sidebar,
 .right-sidebar,
 .center-content {
@@ -40,10 +34,6 @@
   height: 100%;
 }
 
-/* =========================
-   Tablet (≤ 1024px)
-   Left small | Center
-   ========================= */
 @media (max-width: 1024px) {
   .layout {
     grid-template-columns: 76px 1fr;
@@ -54,10 +44,6 @@
   }
 }
 
-/* =========================
-   Mobile (≤ 767px)
-   Center only
-   ========================= */
 @media (max-width: 767px) {
   .layout {
     grid-template-columns: 1fr;
@@ -70,4 +56,4 @@
   .left-sidebar {
     display: none;
   }
-}
+} */
