@@ -4,8 +4,8 @@ export default function RecipeHeroSection({ onGenerate }) {
   const [ingredients, setIngredients] = useState("");
 
   return (
-    <section className="max-w-3xl mx-auto px-4 text-center">
-      <h1 className="text-[#7eb685] text-2xl lg:text-4xl font-bold mb-4">
+    <section className="max-w-3xl mx-auto px-4 mt-18 text-center">
+      <h1 className="text-[#7eb685] text-2xl lg:text-4xl font-bold mb-6">
         Let’s Make Something Delicious!
       </h1>
 
