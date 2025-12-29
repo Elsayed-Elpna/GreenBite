@@ -114,7 +114,7 @@ def generate_meals_openai(ingredients):
             return [mealdb_recipe_to_ai_shape(m) for _, m in scored]
 
         normalized = []
-        for m in meals[:5]:
+        for m in meals[:6]:
             if not isinstance(m, dict):
                 continue
 

@@ -2,14 +2,16 @@ def recipe_prompt(ingredients):
     return f"""
 Return VALID JSON only.
 
-Create EXACTLY 3 meals using ONLY these ingredients:
+Create EXACTLY 6 meals using ONLY these ingredients:
 {ingredients}
 LANGUAGE RULE:
 - Use ONLY ONE language per response.
 - The language must be either ENGLISH or ARABIC.
 - Do NOT mix languages.
 Rules:
-- Do not add extra ingredients except salt, oil, water, spices, pepper.
+- Do not add extra ingredients except salt, oil, water, spices, pepper if needed.
+- Be more specifice about cuisine country especially middle eastern dishes.
+- Ingredients must have realistic quantities.
 - Keep steps short
 - Do not include calories
 - No explanations
