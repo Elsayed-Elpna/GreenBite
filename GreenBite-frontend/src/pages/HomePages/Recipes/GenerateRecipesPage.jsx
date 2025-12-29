@@ -3,6 +3,8 @@ import RecipesGrid from "@/components/HomePage/Recipes/RecipesGrid";
 import RecipeDetailsDialog from "@/components/HomePage/Dialogs/RecipeDetailsDialog";
 import useGenerateRecipes from "@/components/HomePage/Recipes/RecipeUtils/useGenerateRecipes";
 import useDialog from "@/hooks/useDialog";
+import { PacmanLoader } from "react-spinners";
+
 
 export default function GenerateRecipesPage() {
   const { recipes, loading, error, generate } = useGenerateRecipes();
@@ -16,7 +18,8 @@ export default function GenerateRecipesPage() {
     <div className="flex flex-col items-center justify-center w-full px-5 py-8 bg-white h-full">
       <RecipeHeroSection onGenerate={generate} />
 
-      {loading && <p className="text-center mt-8">Generating recipes...</p>}
+      {loading && <PacmanLoader color="#7EB685" size={40} speedMultiplier={1} className="mt-8" />}
+
       {error && <p className="text-center text-red-500 mt-8">{error}</p>}
 
       <RecipesGrid recipes={recipes} onView={handleView} />
