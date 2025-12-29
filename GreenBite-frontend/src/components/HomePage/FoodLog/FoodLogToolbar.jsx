@@ -11,7 +11,7 @@ const FoodLogToolbar = ({ setFilters, onAddClick }) => {
   };
 
   return (
-    <div className="flex items-center justify-between bg-[#ffffff] gap-3 p-4 border-b border-[#E1E1E1] ">
+    <div className="flex items-center justify-between bg-[#ffffff] gap-3 p-4 border-b border-[#E1E1E1]  overflow-x-auto">
       <div className="flex gap-2 ">
         <div>
           <input
@@ -30,7 +30,6 @@ const FoodLogToolbar = ({ setFilters, onAddClick }) => {
         <ExpirySelect onChange={(value) => update("is_expired", value)} />
       </div>
       <div>
-        
         <button
           onClick={onAddClick}
           className="px-4 py-2 text-sm font-semibold text-white
@@ -38,7 +37,7 @@ const FoodLogToolbar = ({ setFilters, onAddClick }) => {
             hover:bg-green-600
             focus:outline-none focus:ring-2 focus:ring-green-400
             transition flex items-center"
-        > 
+        >
           <GoPlus className="mr-1" />
           <span>Add</span>
         </button>
