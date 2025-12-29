@@ -15,14 +15,12 @@ export default function GenerateRecipesPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full px-5 py-8 bg-white h-full">
+    <div className="flex flex-col items-center justify-center w-full px-5 py-8 bg-white min-h-[90vh]">
       <RecipeHeroSection onGenerate={generate} />
-
-      {loading && <PacmanLoader color="#7EB685" size={40} speedMultiplier={1} className="mt-8" />}
 
       {error && <p className="text-center text-red-500 mt-8">{error}</p>}
 
-      <RecipesGrid recipes={recipes} onView={handleView} />
+      <RecipesGrid recipes={recipes} onView={handleView} loading={loading} />
 
       <RecipeDetailsDialog dialog={dialog} />
     </div>
