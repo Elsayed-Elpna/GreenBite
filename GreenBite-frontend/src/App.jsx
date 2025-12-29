@@ -19,6 +19,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Activate from "./pages/Activate";
 import WasteLog from "./pages/HomePages/WasteLog/WasteLog";
+import GenerateRecipesPage from "./pages/HomePages/Recipes/GenerateRecipesPage";
 
 
 const queryClient = new QueryClient({
@@ -61,6 +62,10 @@ function App() {
                 {/* /home/wastelog */}
                 <Route path="wastelog">
                   <Route index element={<WasteLog />} />
+                </Route>
+
+                <Route path="recipes">
+                  <Route index element={<GenerateRecipesPage />} />
                 </Route>
               </Route>
             </Route>
