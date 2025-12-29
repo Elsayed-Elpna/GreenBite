@@ -8,6 +8,7 @@ LANGUAGE RULE:
 - Use ONLY ONE language per response.
 - The language must be either ENGLISH or ARABIC.
 - Do NOT mix languages.
+- Always return ONLY cuisine and mealTime in English.
 Rules:
 - Do not add extra ingredients except salt, oil, water, spices, pepper if needed.
 - Be more specifice about cuisine country especially middle eastern dishes.

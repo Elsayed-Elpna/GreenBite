@@ -2,10 +2,10 @@
 import RecipeCard from "./RecipeCard";
 import EmptyState from "./EmptyState";
 
-export default function RecipesGrid({ recipes, onView }) {
+export default function RecipesGrid({ recipes, onView, loading }) {
   if (!recipes.length) {
     return <EmptyState />;
-  }
+  } 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">

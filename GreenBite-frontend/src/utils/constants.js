@@ -52,6 +52,17 @@ export const CUISINE_COUNTRY_MAP = {
   turkish: "TR",
   moroccan: "MA",
   egyptian: "EG",
+  syrian: "SY",
+  iraqi: "IQ",
+  jordanian: "JO",
+  palestinian: "PS",
+  saudi: "SA",
+  qatari: "QA",
+  emirati: "AE",
+  kuwaiti: "KW",
+  bahraini: "BH",
+  oman: "OM",
+  yemen: "YE",
   middle_eastern: "LB",
   "middle eastern": "LB",
 
@@ -66,6 +77,7 @@ export const CUISINE_COUNTRY_MAP = {
   /* ===== African ===== */
   ethiopian: "ET",
 };
+
 
 
 /* =========================
