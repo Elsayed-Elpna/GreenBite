@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
+from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -20,8 +21,15 @@ class MealDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
+        cache_key = f"meal:detail:{request.user.id}:{pk}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=200)
+        
         meal = get_object_or_404(Meal, pk=pk, user=request.user)
-        return Response(MealSerializer(meal).data, status=200)
+        data = MealSerializer(meal).data
+        cache.set(cache_key, data, timeout = 60*60*24)
+        return Response(data, status = 200)
 
 class GenerateMealsAPIView(APIView):
     permission_classes = [IsAuthenticated]
