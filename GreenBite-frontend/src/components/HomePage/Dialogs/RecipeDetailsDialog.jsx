@@ -3,10 +3,13 @@ import { MEAL_TIME_COLORS, DIFFICULTY_COLORS, getCuisineVisuals } from "@/utils/
 import { Clock, Utensils } from "lucide-react";
 import { saveMeal } from "@/api/recipes.api";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function RecipeDetailsDialog({ dialog }) {
   const { isOpen, close, data: recipes, activeIndex, prev, next } = dialog;
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  
 
   if (!isOpen || !recipes?.length) return null;
 
@@ -17,11 +20,11 @@ export default function RecipeDetailsDialog({ dialog }) {
   const handleSaveMeal = async () => {
     try {
       setSaving(true);
-      await saveMeal(recipe);
-      alert("Meal saved successfully!");
+      const { meal, autoWasteLogs } = await saveMeal(recipe);
+      navigate("/home");
+
     } catch (error) {
-      console.error("Failed to save meal:", error);
-      alert("Failed to save meal.");
+      alert("Failed to save meal or waste.");
     } finally {
       setSaving(false);
     }
@@ -98,6 +101,14 @@ export default function RecipeDetailsDialog({ dialog }) {
             <div className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
               <Utensils size={16} />
               <span>{recipe.servings} servings</span>
+            </div>
+          )}
+
+          {/* Calories */}
+          {recipe.calories && (
+            <div className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+              <span>🔥</span>
+              <span>{recipe.calories} Kcal</span>
             </div>
           )}
         </div>

@@ -12,5 +12,6 @@ export const mapRecipeToCard = (recipe, index) => ({
   steps: recipe.steps,
   servings: recipe.servings,
   source: recipe.source,
+  calories: recipe.calories,
   cuisineVisuals: getCuisineVisuals(recipe.cuisine),
 });

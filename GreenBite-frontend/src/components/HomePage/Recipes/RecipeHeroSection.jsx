@@ -2,6 +2,17 @@ import { useState } from "react";
 
 export default function RecipeHeroSection({ onGenerate }) {
   const [ingredients, setIngredients] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!ingredients.trim()) return;
+    setLoading(true);
+    try {
+      await onGenerate?.(ingredients);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="max-w-3xl mx-auto px-4 mt-18 text-center">
@@ -23,15 +34,13 @@ export default function RecipeHeroSection({ onGenerate }) {
       />
 
       <button
-        onClick={() => onGenerate?.(ingredients)}
-        disabled={!ingredients.trim()}
+        onClick={handleGenerate}
+        disabled={!ingredients.trim() || loading}
         className="w-full bg-[#7eb685] text-white px-8 py-3 rounded-lg text-lg font-medium
                    hover:bg-[#7ec690] transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Generate Recipes
+        {loading ? "Generating Recipes..." : "Generate Recipes"}
       </button>
     </section>
   );
 }
-
-

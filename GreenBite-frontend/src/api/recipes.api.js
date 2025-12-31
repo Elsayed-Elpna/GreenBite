@@ -13,20 +13,53 @@ export const generateRecipes = async (ingredients) => {
 
 // -------------------- Save Meal --------------------
 export const saveMeal = async (recipe) => {
-  // Construct payload depending on your backend
+  // 1 Generate predicted waste first
+  const wastePayload = {
+    meal: recipe.title,
+    ingredients: recipe.ingredients.map(i => i.name || i)
+  };
+
+  const wasteResponse = await api.post("/api/meals/waste/", wastePayload);
+  const predictedWaste = wasteResponse.data.waste_items || [];
+
+  // 2 Save the meal including waste
   const payload = {
     recipe: recipe.title,
     description: recipe.description,
     ingredients: recipe.ingredients,
     steps: recipe.steps,
     cuisine: recipe.cuisine,
-    mealTime: recipe.mealTime.toLowerCase(), // lowercase for backend choices
+    mealTime: recipe.mealTime.toLowerCase(),
     difficulty: recipe.difficulty,
     time: recipe.time,
     serving: recipe.servings,
+    calories: recipe.calories,
+    waste: predictedWaste
   };
 
+  const mealResponse = await api.post("/api/meals/save-ai/", payload);
+  const savedMeal = mealResponse.data;
 
-  const response = await api.post("/api/meals/save-ai/", payload);
-  return response.data; // return saved meal info if needed
+  // 3 Create WasteLog entries for each predicted waste item
+  const createdWasteLogs = await Promise.all(
+    predictedWaste.map(item =>
+      api.post("/api/waste-log/", {
+        meal: savedMeal.id,
+        name: item.name,
+        why: item.why || "",
+        estimated_amount: item.estimated_amount || 0,
+        unit: item.unit || "portion",
+        disposal: item.disposal || "unknown",
+        reuse_ideas: item.reuse_ideas || []
+      })
+    )
+  );
+
+  // 4 Return meal + created WasteLogs
+  return {
+    meal: savedMeal,
+    autoWasteLogs: createdWasteLogs
+  };
 };
+
+

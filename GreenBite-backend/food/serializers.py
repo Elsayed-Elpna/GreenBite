@@ -41,10 +41,12 @@ class MealGenerationSerializer(serializers.Serializer):
 class SaveAIMealSerializer(serializers.Serializer):
     recipe = serializers.CharField(max_length=2000)
     ingredients = serializers.JSONField()
+    steps = serializers.JSONField()
     serving = serializers.IntegerField(required=False, min_value=1, max_value=20)
     calories = serializers.IntegerField(required=False, min_value=0)
     cuisine = serializers.CharField(max_length=100, required=False, allow_blank=True)
     mealTime = serializers.ChoiceField(choices=Meal._meta.get_field("mealTime").choices)
+    waste = serializers.JSONField(required=False)
 
 # class FoodComRecipeSerializer(serializers.ModelSerializer):
 #     class Meta:

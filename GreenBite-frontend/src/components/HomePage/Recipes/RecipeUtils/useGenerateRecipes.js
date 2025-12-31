@@ -1,4 +1,3 @@
-// src/components/recipes/RecipeUtils/useGenerateRecipes.js
 import { useState } from "react";
 import { generateRecipes } from "@/api/recipes.api";
 import { mapRecipeToCard } from "./recipes.mapper";

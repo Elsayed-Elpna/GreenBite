@@ -77,12 +77,15 @@ class MealTime(models.TextChoices):
     DINNER = 'dinner', 'Dinner'
     SNACK = 'snack', 'Snack'
     BRUNCH = 'brunch', 'Brunch'
+    DESSERT = 'dessert', 'Dessert'
+    APPETIZER = 'appetizer', 'Appetizer'
 
 
 class Meal(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.TextField()
     ingredients = models.JSONField()
+    steps = models.JSONField(default=list, blank=True)
     serving = models.IntegerField(null=True, blank=True)
     waste = models.JSONField(default=list, blank=True) 
     calories = models.IntegerField(null=True, blank=True)
