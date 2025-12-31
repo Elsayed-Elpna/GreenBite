@@ -11,7 +11,6 @@ from ..serializers import MealSerializer
 from rest_framework.views import APIView
 from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
 from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache, generate_meals_openai, mealdb_recipe_to_ai_shape
-from ..utils.hashing import hash_key
 
 import random, logging, base64
 

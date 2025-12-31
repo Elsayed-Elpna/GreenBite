@@ -1,23 +1,30 @@
-from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
-from ..models import FoodLogSys, Meal, WasteLog
-from ..serializers import FoodLogSysSerializer, MealSerializer #, FoodComRecipeSerializer
-
-from rest_framework.views import APIView
-from ..serializers import MealGenerationSerializer, SaveAIMealSerializer, WasteLogSerializer
-from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
+from rest_framework import status
+from ..models import WasteLog
+from ..serializers import WasteLogSerializer
 from ..filters import WasteLogFilter
 from ..pagination import WasteLogPagination
 
-import random
+from django.core.cache import cache
+from ..utils.caching import detail_key, list_key, invalidate_cache
+
+CACHE_TTL_SECONDS = 60 * 60 * 24
+NAMESPACE = "wastelog"
 
 @api_view(["GET","POST"])
 @permission_classes([IsAuthenticated])
 def waste_log_list_create(request):
     if request.method == "GET":
+        user_id = request.user.id
+        full_path = request.get_full_path()
+        key = list_key(NAMESPACE, user_id, full_path)
+
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached, status= status.HTTP_200_OK)
+        
         qs = (WasteLog.objects.filter(user=request.user).select_related("meal"))
         meal_id = request.query_params.get("meal")
         if meal_id:
@@ -32,15 +39,21 @@ def waste_log_list_create(request):
         page = paginator.paginate_queryset(filtered_qs, request)
         if page is None:
             serializer = WasteLogSerializer(filtered_qs, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            data = serializer.data
+            cache.set(key, data, timeout = CACHE_TTL_SECONDS)
+            return Response(data, status=status.HTTP_200_OK)
         # serializer
         serializer = WasteLogSerializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        response = paginator.get_paginated_response(serializer.data)
+        cache.set(key, response.data, timeout=CACHE_TTL_SECONDS)
+        return response
     #post
     serializer = WasteLogSerializer(data = request.data, context ={"request": request})
     if serializer.is_valid():
-        serializer.save(user = request.user)
+        waste_log = serializer.save(user = request.user)
+        invalidate_cache(NAMESPACE, request.user.id, detail_id=waste_log.id)
         return Response(serializer.data, status = status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
@@ -51,9 +64,18 @@ def waste_log_detail(request, pk):
     except WasteLog.DoesNotExist:
         return Response({"detail" : "Not found"}, status =status.HTTP_404_NOT_FOUND)
     
+    user_id = request.user.id
+    detail_cache_key = detail_key(NAMESPACE, user_id, pk)
+
     if request.method == "GET":
+        cached = cache.get(detail_cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+        
         serializer = WasteLogSerializer(waste_log)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = serializer.data
+        cache.set(detail_cache_key, data, timeout = CACHE_TTL_SECONDS)
+        return Response(data, status=status.HTTP_200_OK)
     
     if request.method in ["PUT", "PATCH"]:
         partial = request.method == "PATCH"
@@ -64,9 +86,12 @@ def waste_log_detail(request, pk):
             context = {"request": request},
         )
         if serializer.is_valid():
-            serializer.save(user = request.user)
+            updated = serializer.save(user = request.user)
+            invalidate_cache(NAMESPACE, request.user.id, detail_id = updated.id)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     waste_log.delete()
+    invalidate_cache(NAMESPACE, request.user.id, detail_id = waste_log.id)
     return Response(status=status.HTTP_204_NO_CONTENT)

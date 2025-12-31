@@ -1,17 +1,13 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
+from rest_framework import status
 from ..models import FoodLogSys
 from ..serializers import FoodLogSysSerializer
 from ..filters import FoodLogFilter 
-from rest_framework.views import APIView
-from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
-from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
 from ..utils.caching import bump_list_version, detail_key, list_key
-from ..filters import FoodLogFilter
 from ..pagination import FoodLogPagination
 
 NAMESPACE = "foodlog"
@@ -122,43 +118,43 @@ def food_log_detail(request, pk):
         )
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def food_log_create(request):
-    """
-    Create a new food log entry.
-    """
-    serializer = FoodLogSysSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def food_log_create(request):
+#     """
+#     Create a new food log entry.
+#     """
+#     serializer = FoodLogSysSerializer(data=request.data)
+#     if serializer.is_valid():
+#         serializer.save(user=request.user)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def food_log_update(request, pk):
-    """
-    Update an existing food log entry.
-    """
-    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-    partial = request.method == 'PATCH'
-    serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['PUT', 'PATCH'])
+# @permission_classes([IsAuthenticated])
+# def food_log_update(request, pk):
+#     """
+#     Update an existing food log entry.
+#     """
+#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+#     partial = request.method == 'PATCH'
+#     serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def food_log_delete(request, pk):
-    """
-    Delete a food log entry.
-    """
-    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-    food_log.delete()
-    return Response(
-        {'message': f'Food log "{food_log.name}" deleted successfully'}, 
-        status=status.HTTP_204_NO_CONTENT
-    )
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def food_log_delete(request, pk):
+#     """
+#     Delete a food log entry.
+#     """
+#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+#     food_log.delete()
+#     return Response(
+#         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
+#         status=status.HTTP_204_NO_CONTENT
+#     )

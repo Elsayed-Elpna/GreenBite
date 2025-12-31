@@ -31,7 +31,7 @@ def list_key(namespace:str, user_id:int, full_path: str) -> str:
     return f"{namespace}:list:{user_id}:v{version}:{digest}"
 
 #only related to meals_operations
-def invalidate_meals(namespace, user_id: int, meal_id:int | None=None) -> None:
+def invalidate_cache(namespace, user_id: int, detail_id:int | None=None) -> None:
     bump_list_version(namespace, user_id)
-    if meal_id is not None:
-        cache.delete(detail_key(namespace, user_id, meal_id))
+    if detail_id is not None:
+        cache.delete(detail_key(namespace, user_id, detail_id))

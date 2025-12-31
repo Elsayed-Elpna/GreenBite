@@ -1,13 +1,12 @@
 from django.shortcuts import render, get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics
 from ..models import Meal
 from ..serializers import MealSerializer, LeftoversSerializer
 from rest_framework.views import APIView
 
-from ..utils.caching import detail_key,list_key, bump_list_version, invalidate_meals
+from ..utils.caching import detail_key,list_key, invalidate_cache
 from django.core.cache import cache
 
 CACHE_TTL_SECONDS = 60 * 60 * 24
@@ -23,7 +22,7 @@ class MealDetailAPIView(APIView):
             return Response(cached, status=status.HTTP_200_OK)
         
         meal = get_object_or_404(Meal, pk=pk, user=request.user)
-        data = MealSerializer(meal.data)
+        data = MealSerializer(meal).data
         cache.set(key, data, timeout = CACHE_TTL_SECONDS)
         return Response(data, status=200)
     
@@ -46,7 +45,7 @@ class SaveMealLeftoversAPIView(APIView):
         meal.save(update_fields=["leftovers", "has_leftovers", "updated_at"])
         meal.save_leftovers_to_food_log()
         #invalidating cache
-        invalidate_meals(NAMESPACE,request.user.id, meal_id=meal.id)
+        invalidate_cache(NAMESPACE,request.user.id, detail_id=meal.id)
 
         return Response(
             {"detail": "Leftovers added successfully"},
@@ -81,8 +80,9 @@ class DeleteMealAPIView(APIView):
 
     def delete(self, request, pk):
         meal = get_object_or_404(Meal, pk=pk, user=request.user)
+        meal_id = meal.id
         meal.delete()
-        invalidate_meals(NAMESPACE, request.user.id, meal_id=meal.id)
+        invalidate_cache(NAMESPACE, request.user.id, detail_id=meal_id)
         return Response(
             {"detail": "Meal deleted successfully"},
             status=204
