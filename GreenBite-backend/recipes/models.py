@@ -30,29 +30,30 @@ class MealDBRecipe(models.Model):
     TheMealDB-backed recipe model (your single source of truth).
     `ingredients` is a JSON list of objects, e.g.
       [{"name": "chicken", "measure": "500g"}, ...]
-    `ingredients_norm` is a JSON list of normalized strings for matching with FoodLogSys.name_normalized.
+    `ingredient_tokens` is an ArrayField of normalized strings for matching with FoodLogSys.
     """
 
     mealdb_id = models.CharField(max_length=20, unique=True, db_index=True)
 
     title = models.CharField(max_length=255, db_index=True)
     category = models.CharField(max_length=100, blank=True, default="")
-    cuisine = models.CharField(max_length=100, blank=True, default="")  # MealDB strArea
+    cuisine = models.CharField(max_length=100, blank=True, default="")
     instructions = models.TextField(blank=True, default="")
     thumbnail = models.URLField(blank=True, default="")
-    tags = models.JSONField(default=list, blank=True)  # ["Pasta", "Curry", ...]
+    tags = models.JSONField(default=list, blank=True)
     youtube = models.URLField(blank=True, default="")
     source = models.URLField(blank=True, default="")
 
     # Ingredients
-    ingredients = models.JSONField(default=list, blank=True)       # list[{"name","measure"}]
-    ingredients_norm = ArrayField(
-        base_field=models.CharField(max_length=80),
+    ingredients = models.JSONField(default=list, blank=True)
+    
+    # ✅ RENAMED: ingredients_norm → ingredient_tokens (to match DB)
+    ingredient_tokens = models.JSONField(
         default=list,
         blank=True,
+        null=True
     )
 
-    #(if you want to let user tag recipe)
     meal_time = models.CharField(
         max_length=20, choices=MealTimeChoices.choices, null=True, blank=True, db_index=True
     )
@@ -67,7 +68,7 @@ class MealDBRecipe(models.Model):
     class Meta:
         ordering = ["title"]
         indexes = [
-            GinIndex(fields=["ingredients_norm"], name="mealdb_ing_norm_gin"),
+            GinIndex(fields=["ingredient_tokens"], name="mealdb_ing_tokens_gin"),  # ✅ Updated index name
             GinIndex(fields=["tags"], name="mealdb_tags_gin"),
             models.Index(fields=["cuisine"]),
             models.Index(fields=["category"]),
@@ -77,6 +78,7 @@ class MealDBRecipe(models.Model):
         return f"{self.title} (mealdb:{self.mealdb_id})"
 
     def rebuild_ingredients_norm(self) -> None:
+        """Rebuild normalized ingredient tokens from raw ingredients."""
         norms = []
         for it in (self.ingredients or []):
             raw = (it.get("name") or it.get("ingredient") or "").strip()
@@ -86,7 +88,7 @@ class MealDBRecipe(models.Model):
             if n:
                 norms.append(n)
 
-        self.ingredients_norm = sorted(set(norms))
+        self.ingredient_tokens = sorted(set(norms))  # ✅ Updated field name
 
     def save(self, *args, **kwargs):
         self.rebuild_ingredients_norm()

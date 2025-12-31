@@ -7,13 +7,22 @@ from rest_framework.response import Response
 from meal_plans.services.meal_plan_generator import generate_meal_plan
 from meal_plans.services.confirmeal import confirm_meal_plan_day
 from .models import  MealPlanMeal, MealPlanDay
+from .services.meal_planning_service import MealPlanningService
+from .services.inventory import InventoryService
+from .services.recipeProvider import MealDBRecipeProvider, AIRecipeProvider
+from .tasks import async_generate_meal_plan
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MealPlanGeneratorView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def post(self, request):
         days = int(request.data.get("days", 3))
         meals_per_day = int(request.data.get("meals_per_day", 3))
+        use_ai = request.data.get("use_ai_fallback", True)
+        async_mode = request.data.get("async", False)  # Optional async generation
 
         start_date_raw = request.data.get("start_date")
         if start_date_raw:
@@ -24,45 +33,53 @@ class MealPlanGeneratorView(APIView):
             start_date = timezone.now().date()
 
         try:
-            meal_plan = generate_meal_plan(request.user, start_date, days, meals_per_day)
-
-            if not meal_plan:
-                return Response({"error": "Failed to generate meal plan."}, status=500)
-
-            days_qs = getattr(meal_plan, "days_plan", None)
-            if days_qs is None:
-                return Response(
-                    {"error": "MealPlan model has no related 'days_plan'. Check MealPlanDay.related_name."},
-                    status=500,
+            if async_mode:
+                # Queue task for background processing
+                task = async_generate_meal_plan.delay(
+                    request.user.id,
+                    start_date.strftime("%Y-%m-%d"),
+                    days,
+                    meals_per_day,
+                    use_ai
                 )
+                return Response({
+                    "status": "queued",
+                    "task_id": task.id,
+                    "message": "Meal plan generation started in background"
+                }, status=202)
+            
+            # Synchronous generation
+            inventory = InventoryService(request.user)
+            providers = [MealDBRecipeProvider(inventory)]
 
-            meals_payload = []
-            for day in days_qs.all():
-                for plan_meal in day.meals.all():  # Assumes related_name="meals"
-                    meals_payload.append(
-                        {
-                            "date": day.date,
-                            "meal_time": plan_meal.meal_time,
-                            "photo": (plan_meal.meal.photo if plan_meal.meal else None),
-                            "recipe": (plan_meal.meal.recipe if plan_meal.meal else None),
-                            "meal_id": (plan_meal.meal_id if plan_meal.meal else None),
-                            "is_skipped": plan_meal.is_skipped,
-                        }
-                    )
-
-            return Response(
-                {
-                    "meal_plan_id": meal_plan.id,
-                    "start_date": meal_plan.start_date,
-                    "days": meal_plan.days,  # int
-                    "is_confirmed": meal_plan.is_confirmed,
-                    "meals": meals_payload,
-                },
-                status=201,
+            if use_ai:
+                providers.append(AIRecipeProvider(inventory))
+            
+            service = MealPlanningService(
+                user=request.user,
+                start_date=start_date,
+                days=days,
+                meals_per_day=meals_per_day,
+                providers=providers
             )
-
+            
+            meal_plan = service.generate()
+            
+            # Serialize response (use your existing serializers)
+            # ... return meal plan data ...
+            
+            return Response({
+                "meal_plan_id": meal_plan.id,
+                "days": days,
+                "start_date": start_date,
+                "message": "Meal plan generated successfully"
+            }, status=201)
+            
         except ValueError as e:
             return Response({"error": str(e)}, status=400)
+        except Exception as e:
+            logger.exception(f"Meal plan generation failed: {e}")
+            return Response({"error": "Internal server error"}, status=500)
 from meal_plans.models import MealPlan
 from .serializers import MealPlanDetailSerializer
 

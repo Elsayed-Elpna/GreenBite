@@ -11,7 +11,7 @@ from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
 from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
 from ..filters import FoodLogFilter
 from ..pagination import FoodLogPagination
-
+from meal_plans.services.inventory import InventoryService
 import random
 
 @api_view(['GET', 'POST'])
@@ -152,3 +152,10 @@ def food_log_delete(request, pk):
         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
         status=status.HTTP_204_NO_CONTENT
     )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def food_log_summary(request):
+    inventory = InventoryService(request.user)
+    summary = inventory.get_food_log_summary()
+    return Response(summary)

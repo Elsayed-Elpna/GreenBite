@@ -17,7 +17,7 @@ class MealPlan(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
+    def __repr__(self):
         return f"MealPlan({self.user.username}) {self.start_date} ({self.days} days)"
 
     class Meta:
@@ -38,8 +38,14 @@ class MealPlanDay(models.Model):
 
     @property
     def planned_food_usages(self):
-        # aggregate all usages across meals in that day
-        return MealPlanFoodUsage.objects.filter(meal_plan_meal__meal_plan_day=self)
+        """All food usages planned for meals in this day."""
+        if not hasattr(self, "_cached_usages"):
+            self._cached_usages = list(
+                MealPlanFoodUsage.objects
+                .select_related("food_log", "meal_plan_meal__meal")
+                .filter(meal_plan_meal__meal_plan_day=self)
+            )
+        return self._cached_usages
 
     def __str__(self):
         return f"{self.meal_plan.user.username} - {self.date}"
@@ -47,6 +53,9 @@ class MealPlanDay(models.Model):
     class Meta:
         unique_together = ("meal_plan", "date")
         ordering = ["date"]
+        indexes = [
+            models.Index(fields=["date", "is_confirmed"]),
+        ]
         
 class MealPlanMeal(models.Model):
     meal_plan_day = models.ForeignKey(
@@ -75,6 +84,7 @@ class MealPlanMeal(models.Model):
 
     class Meta:
         unique_together = ("meal_plan_day", "meal_time")
+        ordering = ["meal_plan_day__date", "meal_time"]
         verbose_name = "Meal Plan Meal"
         verbose_name_plural = "Meal Plan Meals"
 class MealPlanFoodUsage(models.Model):
