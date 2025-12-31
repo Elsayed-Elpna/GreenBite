@@ -44,13 +44,20 @@ export default function RecipeCard({ recipe, onView }) {
         </span>
 
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            MEAL_TIME_COLORS[recipe.mealTime] ||
+          className={`px-3 py-1 rounded-full text-xs font-medium ${MEAL_TIME_COLORS[recipe.mealTime] ||
             "bg-gray-100 text-gray-700"
-          }`}
+            }`}
         >
           {recipe.mealTime}
         </span>
+
+        <div
+          className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize bg-gray-100 text-gray-700"
+        >
+          <span>🔥</span>
+          <span>{recipe.calories}</span>
+        </div>
+
       </div>
 
       {/* Meta */}
@@ -68,9 +75,8 @@ export default function RecipeCard({ recipe, onView }) {
 
       {/* Difficulty */}
       <p
-        className={`text-sm font-medium mb-4 ${
-          DIFFICULTY_COLORS[recipe.difficulty]
-        }`}
+        className={`text-sm font-medium mb-4 ${DIFFICULTY_COLORS[recipe.difficulty]
+          }`}
       >
         Difficulty: {recipe.difficulty}
       </p>

@@ -10,11 +10,11 @@ LANGUAGE RULE:
 - Do NOT mix languages.
 - Always return ONLY cuisine and mealTime in English.
 Rules:
-- Do not add extra ingredients except salt, oil, water, spices, pepper if needed.
-- Be more specifice about cuisine country especially middle eastern dishes.
+- You can add 2-3 extra ingredients and salt, oil, water, spices, pepper if needed.
+- Be more specific about cuisine countries especially middle eastern return country cuisines.
 - Ingredients must have realistic quantities.
 - Keep steps short
-- Do not include calories
+- calculate calories
 - No explanations
 
 JSON format:
@@ -34,6 +34,7 @@ JSON format:
     "difficulty": "easy|medium|hard",
     "cuisine": "string",
     "mealTime": "breakfast|lunch|dinner|snack|brunch",
+    "calories": 0,
     }}
   ]
 }}

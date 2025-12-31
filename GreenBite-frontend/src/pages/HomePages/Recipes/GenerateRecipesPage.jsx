@@ -3,7 +3,6 @@ import RecipesGrid from "@/components/HomePage/Recipes/RecipesGrid";
 import RecipeDetailsDialog from "@/components/HomePage/Dialogs/RecipeDetailsDialog";
 import useGenerateRecipes from "@/components/HomePage/Recipes/RecipeUtils/useGenerateRecipes";
 import useDialog from "@/hooks/useDialog";
-import { PacmanLoader } from "react-spinners";
 
 
 export default function GenerateRecipesPage() {
