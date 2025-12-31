@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q, Func, Value
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.core.cache import cache
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -16,6 +17,7 @@ from rest_framework.views import APIView
 
 
 from food.models import FoodLogSys, FoodLogUsage
+from food.utils.caching import list_key, detail_key, get_list_version
 from recipes.models import MealDBRecipe
 from recipes.serializers import ConsumePreviewSerializer, ConsumeConfirmSerializer
 
@@ -29,7 +31,32 @@ client = None
 if OpenAI and getattr(settings, "OPENAI_API_KEY", None):
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+#Cache 
+CACHE_TTL_SECONDS = 60 * 60
+REC_NAMESPACE = "recipes:recommend"
+MEALDB_DETAIL_NAMESPACE = "mealdb:detail"
+INVENTORY_NAMESPACE = "foodlog"
 
+def _recommend_cache_key(request) -> str:
+    user_id = request.user.id
+    inv_v = get_list_version(INVENTORY_NAMESPACE, user_id)
+    # include inventory version in the hashed input
+    full_path = f"{request.get_full_path()}|inv_v={inv_v}"
+    return list_key(REC_NAMESPACE, user_id, full_path)
+
+
+def _mealdb_detail_cache_key(mealdb_id: str) -> str:
+    # Use user_id=0 for a global-ish key (still namespaced)
+    return detail_key(MEALDB_DETAIL_NAMESPACE, 0, int(_safe_int_hash(mealdb_id)))
+
+
+def _safe_int_hash(s: str) -> int:
+    # stable int derived from a string for detail_key(pk:int)
+    # (pk only needs to be consistent, not meaningful)
+    acc = 0
+    for ch in (s or "")[:120]:
+        acc = (acc * 131 + ord(ch)) % 2_000_000_000
+    return acc or 1
 class RecommendRecipesAPIView(APIView):
     """
     GET /recipes/recommend?limit=5
@@ -39,7 +66,17 @@ class RecommendRecipesAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        limit = int(request.query_params.get("limit", 5))
+        # ---- cache check (per-user + tied to inventory version) ----
+        ck = _recommend_cache_key(request)
+        cached = cache.get(ck)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+
+        # ---- input parsing ----
+        try:
+            limit = int(request.query_params.get("limit", 5))
+        except (TypeError, ValueError):
+            limit = 5
         limit = max(1, min(limit, 10))
 
         today = timezone.now().date()
@@ -51,12 +88,18 @@ class RecommendRecipesAPIView(APIView):
             expiry_date__gte=today,
         ).order_by("expiry_date")
 
-        inv_rows = list(inventory_qs.values("name_normalized", "expiry_date", "quantity", "unit"))
+        inv_rows = list(
+            inventory_qs.values("name_normalized", "expiry_date", "quantity", "unit")
+        )
         inv_norms = sorted({x["name_normalized"] for x in inv_rows if x["name_normalized"]})
 
         if not inv_norms:
-            return Response([], status=status.HTTP_200_OK)
+            out = []
+            cache.set(ck, out, timeout=CACHE_TTL_SECONDS)
+            return Response(out, status=status.HTTP_200_OK)
+
         inv_set = set(inv_norms)
+
         # map ingredient -> min days left
         inv_days = {}
         for x in inv_rows:
@@ -65,20 +108,29 @@ class RecommendRecipesAPIView(APIView):
                 continue
             days = (x["expiry_date"] - today).days
             inv_days[norm] = min(inv_days.get(norm, 10**9), days)
+
         candidates_qs = MealDBRecipe.objects.all().only(
-            "id", "mealdb_id", "title", "thumbnail", "category", "cuisine", "ingredients_norm",
-            "meal_time", "difficulty"
+            "id",
+            "mealdb_id",
+            "title",
+            "thumbnail",
+            "category",
+            "cuisine",
+            "ingredients_norm",
+            "meal_time",
+            "difficulty",
+            "instructions",
+            "tags",
+            "ingredients",
         )
 
+        # Prefer DB overlap filter if supported; else fallback
         try:
-            # Cast both sides to the same array type to avoid type mismatch
-            # Use varchar[] for compatibility since the column is character varying[]
             candidates_qs = candidates_qs.extra(
                 where=["ingredients_norm::varchar[] && %s::varchar[]"],
-                params=[inv_norms]
+                params=[inv_norms],
             )[:400]
         except Exception:
-            # Fallback: just take first N and rank in python (OK if dataset isn't huge)
             candidates_qs = candidates_qs[:1200]
 
         candidates_scored = []
@@ -93,24 +145,28 @@ class RecommendRecipesAPIView(APIView):
 
             min_days = min([inv_days[m] for m in matched], default=999999)
 
-            candidates_scored.append({
-                "recipe_id": r.id,
-                "mealdb_id": r.mealdb_id,
-                "title": r.title,
-                "thumbnail": r.thumbnail,
-                "category": r.category,
-                "cuisine": r.cuisine,
-                "meal_time": r.meal_time,
-                "difficulty": r.difficulty,
-                "ingredients_norm": list(ing_set)[:30],
-                "match_count": match_count,
-                "min_days_left": min_days,
-            })
+            candidates_scored.append(
+                {
+                    "recipe_id": r.id,
+                    "mealdb_id": r.mealdb_id,
+                    "title": r.title,
+                    "thumbnail": r.thumbnail,
+                    "category": r.category,
+                    "cuisine": r.cuisine,
+                    "meal_time": r.meal_time,
+                    "difficulty": r.difficulty,
+                    "ingredients_norm": list(ing_set)[:30],
+                    "match_count": match_count,
+                    "min_days_left": min_days,
+                }
+            )
 
         if not candidates_scored:
-            return Response([], status=status.HTTP_200_OK)
+            out = []
+            cache.set(ck, out, timeout=CACHE_TTL_SECONDS)
+            return Response(out, status=status.HTTP_200_OK)
 
-        # deterministic ranking as base:
+        # deterministic ranking as base
         candidates_scored.sort(key=lambda x: (-x["match_count"], x["min_days_left"]))
         top_for_llm = candidates_scored[:150]
 
@@ -123,8 +179,12 @@ class RecommendRecipesAPIView(APIView):
                 payload = {
                     "limit": limit,
                     "inventory": [
-                        {"name_norm": x["name_normalized"], "days_left": (x["expiry_date"] - today).days}
-                        for x in inv_rows if x["name_normalized"]
+                        {
+                            "name_norm": x["name_normalized"],
+                            "days_left": (x["expiry_date"] - today).days,
+                        }
+                        for x in inv_rows
+                        if x["name_normalized"]
                     ],
                     "candidates": [
                         {
@@ -194,29 +254,33 @@ class RecommendRecipesAPIView(APIView):
 
             expiring_soon = sorted(
                 [{"name_norm": n, "days_left": inv_days[n]} for n in matched],
-                key=lambda d: d["days_left"]
+                key=lambda d: d["days_left"],
             )[:5]
 
-            out.append({
-                "recipe_id": r.id,
-                "mealdb_id": r.mealdb_id,
-                "title": r.title,
-                "thumbnail": r.thumbnail,
-                "category": r.category,
-                "cuisine": r.cuisine,
-                "instructions": r.instructions,
-                "tags": r.tags,
-                "ingredients": r.ingredients,  # list of {"name","measure"}
-                "mealTime": r.meal_time,
-                "difficulty": r.difficulty,
-                "why": why_map.get(r.id, ""),
-                "match": {
-                    "matched_ingredients_norm": matched,
-                    "expiring_soon": expiring_soon,
+            out.append(
+                {
+                    "recipe_id": r.id,
+                    "mealdb_id": r.mealdb_id,
+                    "title": r.title,
+                    "thumbnail": r.thumbnail,
+                    "category": r.category,
+                    "cuisine": r.cuisine,
+                    "instructions": r.instructions,
+                    "tags": r.tags,
+                    "ingredients": r.ingredients,  # list of {"name","measure"}
+                    "mealTime": r.meal_time,
+                    "difficulty": r.difficulty,
+                    "why": why_map.get(r.id, ""),
+                    "match": {
+                        "matched_ingredients_norm": matched,
+                        "expiring_soon": expiring_soon,
+                    },
                 }
-            })
+            )
 
+        cache.set(ck, out, timeout=CACHE_TTL_SECONDS)
         return Response(out, status=status.HTTP_200_OK)
+
 
 
 class ConsumePreviewAPIView(APIView):
@@ -236,29 +300,38 @@ class ConsumePreviewAPIView(APIView):
         today = timezone.now().date()
         recipe_norms = sorted(set([x for x in (recipe.ingredients_norm or []) if x]))
 
-        logs = (
-            FoodLogSys.objects.filter(user=request.user,is_consumed=False,expiry_date__gte=today,name_normalized__in=recipe_norms,).order_by("expiry_date")
-        )
+        logs = FoodLogSys.objects.filter(
+            user=request.user,
+            is_consumed=False,
+            expiry_date__gte=today,
+            name_normalized__in=recipe_norms,
+        ).order_by("expiry_date")
 
         grouped = {}
         for fl in logs:
-            grouped.setdefault(fl.name_normalized, []).append({
-                "foodlog_id": fl.id,
-                "name": fl.name,
-                "name_normalized": fl.name_normalized,
-                "quantity_available": str(fl.quantity),
-                "unit": fl.unit,
-                "expiry_date": str(fl.expiry_date),
-                "days_left": (fl.expiry_date - today).days,
-            })
+            grouped.setdefault(fl.name_normalized, []).append(
+                {
+                    "foodlog_id": fl.id,
+                    "name": fl.name,
+                    "name_normalized": fl.name_normalized,
+                    "quantity_available": str(fl.quantity),
+                    "unit": fl.unit,
+                    "expiry_date": str(fl.expiry_date),
+                    "days_left": (fl.expiry_date - today).days,
+                }
+            )
 
-        return Response({
-            "recipe_id": recipe.id,
-            "mealdb_id": recipe.mealdb_id,
-            "title": recipe.title,
-            "recipe_ingredients_norm": recipe_norms,
-            "matches": grouped,
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "recipe_id": recipe.id,
+                "mealdb_id": recipe.mealdb_id,
+                "title": recipe.title,
+                "recipe_ingredients_norm": recipe_norms,
+                "matches": grouped,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 
 class ConsumeConfirmAPIView(APIView):
@@ -301,19 +374,19 @@ class ConsumeConfirmAPIView(APIView):
                 if not fl:
                     return Response(
                         {"detail": f"Invalid foodlog_id: {it['foodlog_id']}"},
-                        status=status.HTTP_400_BAD_REQUEST
+                        status=status.HTTP_400_BAD_REQUEST,
                     )
                 if fl.name_normalized not in recipe_norms:
                     return Response(
                         {"detail": f"FoodLog {fl.id} not part of this recipe ingredients"},
-                        status=status.HTTP_400_BAD_REQUEST
+                        status=status.HTTP_400_BAD_REQUEST,
                     )
 
-            # consumption we usage logging
+            # consumption + usage logging
             for it in items:
                 fl = log_map[it["foodlog_id"]]
                 used_qty = Decimal(str(it["used_quantity"]))
-                fl.consume(used_qty) 
+                fl.consume(used_qty)
                 FoodLogUsage.objects.create(
                     user=request.user,
                     recipe=recipe,
@@ -321,7 +394,13 @@ class ConsumeConfirmAPIView(APIView):
                     used_quantity=used_qty,
                 )
 
-        return Response({"detail": "Consumption recorded successfully"}, status=status.HTTP_200_OK)
+        # NOTE: make sure your FoodLog endpoints bump_list_version("foodlog", user_id)
+        # so recommendation cache is invalidated automatically.
+
+        return Response(
+            {"detail": "Consumption recorded successfully"},
+            status=status.HTTP_200_OK,
+        )
 
 
 @api_view(["GET"])
@@ -348,8 +427,9 @@ def mealdb_random(request):
     picked_ids = random.sample(ids, n)
 
     meals = list(
-        MealDBRecipe.objects.filter(id__in=picked_ids)
-        .values("mealdb_id", "title", "thumbnail", "category", "cuisine")
+        MealDBRecipe.objects.filter(id__in=picked_ids).values(
+            "mealdb_id", "title", "thumbnail", "category", "cuisine"
+        )
     )
 
     if n == 1:
@@ -364,6 +444,12 @@ def mealdb_detail(request, mealdb_id: str):
     GET /recipes/mealdb/<mealdb_id>/
     Returns full details.
     """
+    # Optional: cache this because it’s pure DB read (safe)
+    ck = detail_key(MEALDB_DETAIL_NAMESPACE, 0, int(_safe_int_hash(mealdb_id)))
+    cached = cache.get(ck)
+    if cached is not None:
+        return Response(cached, status=status.HTTP_200_OK)
+
     meal = get_object_or_404(MealDBRecipe, mealdb_id=mealdb_id)
 
     data = {
@@ -381,4 +467,6 @@ def mealdb_detail(request, mealdb_id: str):
         "created_at": meal.created_at,
         "updated_at": meal.updated_at,
     }
+
+    cache.set(ck, data, timeout=60 * 10)  # 10 minutes
     return Response(data, status=status.HTTP_200_OK)
