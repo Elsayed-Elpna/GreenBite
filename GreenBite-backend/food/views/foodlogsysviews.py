@@ -118,43 +118,43 @@ def food_log_detail(request, pk):
         )
 
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def food_log_create(request):
-#     """
-#     Create a new food log entry.
-#     """
-#     serializer = FoodLogSysSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save(user=request.user)
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def food_log_create(request):
+    """
+    Create a new food log entry.
+    """
+    serializer = FoodLogSysSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['PUT', 'PATCH'])
-# @permission_classes([IsAuthenticated])
-# def food_log_update(request, pk):
-#     """
-#     Update an existing food log entry.
-#     """
-#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-#     partial = request.method == 'PATCH'
-#     serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
-#     if serializer.is_valid():
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def food_log_update(request, pk):
+    """
+    Update an existing food log entry.
+    """
+    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+    partial = request.method == 'PATCH'
+    serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def food_log_delete(request, pk):
-#     """
-#     Delete a food log entry.
-#     """
-#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-#     food_log.delete()
-#     return Response(
-#         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
-#         status=status.HTTP_204_NO_CONTENT
-#     )
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def food_log_delete(request, pk):
+    """
+    Delete a food log entry.
+    """
+    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+    food_log.delete()
+    return Response(
+        {'message': f'Food log "{food_log.name}" deleted successfully'}, 
+        status=status.HTTP_204_NO_CONTENT
+    )
