@@ -69,18 +69,18 @@ const SideMenu = () => {
             </span>
           </NavLink>
           <NavLink
-            to="/home/ai-recipes"
+            to="/home/recipes"
             className={({ isActive }) =>
               `flex items-center justify-center px-4 py-2 rounded ${
                 isActive
-                  ? "bg-[#C2E66E] rounded-l-full ml-1 text-white"
+                  ? "bg-[#7eb685] rounded-l-full ml-1 text-white"
                   : "text-gray-700 rounded-l-full ml-1 hover:bg-gray-100"
               }`
             }
           >
             <GiHotMeal />
             <span className="text-[14px] ml-2.5 hidden lg:inline">
-              Ai Recipes
+              Recipe center
             </span>
           </NavLink>
         </nav>
