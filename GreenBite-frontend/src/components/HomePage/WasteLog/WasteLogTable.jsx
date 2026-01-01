@@ -25,9 +25,9 @@ const WasteLogTable = ({
   };
 
   return (
-    <div className="bg-white rounded-t-lg shadow ">
+    <div className="bg-white rounded-lg shadow">
       {/* ===== Toolbar ===== */}
-      <div className="flex flex-wrap gap-3 items-center justify-between p-4 bg-[#ffffff] rounded-2xl">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between p-4 bg-[#ffffff] rounded-t-2xl">
         <input
           type="text"
           placeholder="Search name..."
@@ -35,7 +35,7 @@ const WasteLogTable = ({
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, name: e.target.value }))
           }
-          className="input input-sm input-bordered rounded-full"
+          className="input input-sm input-bordered rounded-full w-full sm:w-64"
         />
 
         <button
@@ -43,36 +43,36 @@ const WasteLogTable = ({
                bg-green-500 rounded-lg
                hover:bg-green-600
                focus:outline-none focus:ring-2 focus:ring-green-400
-               transition flex items-center"
+               transition flex items-center justify-center"
           onClick={onAdd}
         >
           + Add
         </button>
       </div>
 
-      {/* ===== Table ===== */}
-      <div className="overflow-x-auto">
-        <table className="table w-full">
-          <thead className="bg-[#faf7f5] text-gray-500 text-sm">
+      {/* ===== Desktop Table View ===== */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-[#F9F4F1] text-[#898D90] text-xs border-b border-[#E1E1E1]">
             <tr>
               <th
-                className="cursor-pointer select-none"
+                className="px-5 py-3 text-left cursor-pointer select-none"
                 onClick={() => toggleOrdering("name")}
               >
                 Name {renderArrow("name")}
               </th>
 
               <th
-                className="cursor-pointer select-none"
+                className="px-5 py-3 text-left cursor-pointer select-none"
                 onClick={() => toggleOrdering("estimated_amount")}
               >
                 Amount {renderArrow("estimated_amount")}
               </th>
 
-              <th>Reason</th>
-              <th>Disposal</th>
-              <th>Reuse Ideas</th>
-              <th className="text-right">Actions</th>
+              <th className="px-5 py-3 text-left">Reason</th>
+              <th className="px-5 py-3 text-left">Disposal</th>
+              <th className="px-5 py-3 text-left">Reuse Ideas</th>
+              <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
 
@@ -85,43 +85,122 @@ const WasteLogTable = ({
               </tr>
             ) : (
               data.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="font-medium">{item.name}</td>
-                  <td>{`${item.estimated_amount} ${item.unit}`}</td>
-                  <td>{item.why}</td>
-                  <td>
+                <tr
+                  key={item.id}
+                  className="hidden sm:table-row hover:bg-gray-50 border-b border-[#00000010]"
+                >
+                  <td className="px-5 py-4 text-sm font-medium text-gray-800">
+                    {item.name}
+                  </td>
+                  <td className="px-5 py-4 text-sm text-gray-600">{`${item.estimated_amount} ${item.unit}`}</td>
+                  <td className="px-5 py-4 text-sm text-gray-600">
+                    {item.why}
+                  </td>
+                  <td className="px-5 py-4 text-sm">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      className={`px-3 py-1 rounded-full text-xs capitalize ${
                         item.disposal === "compost"
-                          ? "px-3 py-1 rounded-full text-xs capitalize bg-emerald-100 text-emerald-700"
+                          ? "bg-emerald-100 text-emerald-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
                       {item.disposal}
                     </span>
                   </td>
-                  <td className="text-sm text-gray-500 overflow-hidden">
+                  <td className="px-5 py-4 text-sm text-gray-600">
                     {item.reuse_ideas[0]}
                   </td>
-                  <td className="text-right space-x-2">
-                    <button
-                      className="text-blue-500 bg-[#0000ff27] rounded py-2 px-2 flex-1 hover:bg-[#3a3afd27]  "
-                      onClick={() => onEdit(item)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-500  bg-[#ff000027] rounded py-2 px-2 flex-1 hover:bg-[#f83a3a59]"
-                      onClick={() => onDelete(item.id)}
-                    >
-                      Delete
-                    </button>
+                  <td className="px-5 py-4 text-sm">
+                    <div className="flex gap-2 justify-end text-xs">
+                      <button
+                        className="text-blue-500 bg-[#0000ff27] rounded py-2 px-2 flex-1 hover:bg-[#3a3afd27]"
+                        onClick={() => onEdit(item)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-500 bg-[#ff000027] rounded py-2 px-2 flex-1 hover:bg-[#f83a3a59]"
+                        onClick={() => onDelete(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ===== Mobile Card View ===== */}
+      <div className="md:hidden p-4 space-y-4">
+        {data.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">No results found</div>
+        ) : (
+          data.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg">
+                    {item.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {`${item.estimated_amount} ${item.unit}`}
+                  </p>
+                </div>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                    item.disposal === "compost"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {item.disposal}
+                </span>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-2 mb-4">
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase">
+                    Reason
+                  </span>
+                  <p className="text-sm text-gray-700 mt-1">{item.why}</p>
+                </div>
+
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase">
+                    Reuse Ideas
+                  </span>
+                  <p className="text-sm text-gray-700 mt-1">
+                    {item.reuse_ideas[0]}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 text-blue-500 bg-[#0000ff27] rounded-lg py-2.5 px-4 hover:bg-[#3a3afd27] transition font-medium text-sm"
+                  onClick={() => onEdit(item)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="flex-1 text-red-500 bg-[#ff000027] rounded-lg py-2.5 px-4 hover:bg-[#f83a3a59] transition font-medium text-sm"
+                  onClick={() => onDelete(item.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
