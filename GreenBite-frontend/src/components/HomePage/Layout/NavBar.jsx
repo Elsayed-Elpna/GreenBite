@@ -117,19 +117,19 @@ const NavBar = () => {
 
             <li>
               <NavLink
-                to="/home/ai-recipes"
+                to="/home/recipes"
                 className={({ isActive }) =>
                   `relative flex items-center px-4 py-3 rounded-xl transition-all duration-300 ease-in-out overflow-hidden group ${
                     isActive
-                      ? "bg-gradient-to-r from-[#C2E66E] to-[#a8cc5e] text-white shadow-md transform translate-x-1"
+                      ? "bg-gradient-to-r from-[#7eb685] to-[#7eb685] text-white shadow-md transform translate-x-1"
                       : "text-gray-700 hover:bg-gray-50 hover:translate-x-1"
                   }`
                 }
               >
-                <span className="absolute left-0 w-1 h-full bg-[#C2E66E] transition-all duration-300 scale-y-0 group-hover:scale-y-100 origin-center rounded-r-full" />
+                <span className="absolute left-0 w-1 h-full bg-[#7eb685] transition-all duration-300 scale-y-0 group-hover:scale-y-100 origin-center rounded-r-full" />
                 <GiHotMeal className="relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
                 <span className="relative z-10 text-[15px] ml-3 font-medium">
-                  AI Recipes
+                  Recipe Center
                 </span>
                 <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   →
