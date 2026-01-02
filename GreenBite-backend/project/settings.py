@@ -127,6 +127,19 @@ DJOSER = {
     },
 }
 
+# ==============
+# Redis
+# ==============
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/1")
+CACHES = {
+    "default":{
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "TIMEOUT": 60*10,
+    }
+}
 
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587

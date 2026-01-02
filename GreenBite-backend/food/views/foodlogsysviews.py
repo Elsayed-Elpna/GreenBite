@@ -1,18 +1,18 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
+from rest_framework import status
 from ..models import FoodLogSys
 from ..serializers import FoodLogSysSerializer
 from ..filters import FoodLogFilter 
-from rest_framework.views import APIView
-from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
-from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache
-from ..filters import FoodLogFilter
+from ..utils.caching import bump_list_version, detail_key, list_key
 from ..pagination import FoodLogPagination
 
-import random
+NAMESPACE = "foodlog"
+SORTABLE_FIELDS = {"name", "category", "storage_type", "quantity", "expiry_date"}
+DUAL_SORT_FIELDS = {"quantity", "expiry_date"}
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -20,20 +20,12 @@ def food_log_list_create(request):
     """
     List all food logs for the authenticated user or create a new food log.
     """
-    SORTABLE_FIELDS = {
-    "name",
-    "category",
-    "storage_type",
-    "quantity",
-    "expiry_date",
-}
-
-    DUAL_SORT_FIELDS = {
-    "quantity",
-    "expiry_date",
-}
-
     if request.method == 'GET':
+        cache_key = list_key(NAMESPACE, request.user.id, request.get_full_path())
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+        
         queryset = FoodLogSys.objects.filter(user=request.user)
         #FoodLogFilter
         food_filter = FoodLogFilter(request.GET,queryset=queryset)
@@ -68,18 +60,20 @@ def food_log_list_create(request):
         serializer = FoodLogSysSerializer(
             paginated_queryset, many=True
         )
+        response = paginator.get_paginated_response(serializer.data)
+        cache.set(cache_key, response.data, timeout= 60*60*24)
+        return response
 
-        return paginator.get_paginated_response(serializer.data)
-
-        
-    
     elif request.method == 'POST':
         # Create a new food log
         serializer = FoodLogSysSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
+            bump_list_version(NAMESPACE, request.user.id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def food_log_detail(request, pk):
@@ -91,8 +85,14 @@ def food_log_detail(request, pk):
     
     if request.method == 'GET':
         # Retrieve a specific food log
-        serializer = FoodLogSysSerializer(food_log)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        ck = detail_key(NAMESPACE, request.user.id, pk)
+        cached = cache.get(ck)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+        
+        data = FoodLogSysSerializer(food_log).data
+        cache.set(ck, data, timeout= 60*60*24) 
+        return Response(data, status=status.HTTP_200_OK)
     
     elif request.method in ['PUT', 'PATCH']:
         # Update a food log (PUT for full update, PATCH for partial update)
@@ -100,12 +100,18 @@ def food_log_detail(request, pk):
         serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
         if serializer.is_valid():
             serializer.save()
+
+            cache.delete(detail_key(NAMESPACE, request.user.id, pk))
+            bump_list_version(NAMESPACE, request.user.id)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
         # Delete a food log
         food_log.delete()
+        
+        cache.delete(detail_key(NAMESPACE, request.user.id, pk))
+        bump_list_version(NAMESPACE, request.user.id)
         return Response(
             {'message': 'Food log deleted successfully'}, 
             status=status.HTTP_204_NO_CONTENT
