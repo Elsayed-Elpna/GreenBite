@@ -1,5 +1,9 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
+import { AuthContext } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
 
 // components
 import LogOutBtn from "@/components/HomePage/NavMenu/LogOutBtn";
@@ -12,8 +16,64 @@ import { GiHotMeal } from "react-icons/gi";
 import { MdOutlineFoodBank } from "react-icons/md";
 
 const NavBar = () => {
+  const { logout, user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  if (!user || !user.profile) {
+    return null;
+  }
+  const { profile } = user;
+
+  const handelLogout = () => {
+    logout();
+    navigate("/login");
+  };
   return (
-    <div className="navbar bg-base-100 flex flex-row-reverse justify-between">
+    <div className="navbar bg-base-100 flex flex-row-reverse justify-between items-center  ">
+      {/* profile */}
+      <div className="dropdown dropdown-end hidden lg:flex gap-2 justify-between items-center mr-5">
+        <div className="flex gap-1 items-center">
+          <span className="text-[16px] font-semibold text-[#374151] capitalize">
+            {user.first_name}{" "}
+          </span>
+          <span className="text-[16px] font-semibold text-[#374151] capitalize">
+            {user.last_name}
+          </span>
+        </div>
+        <div>
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-ghost btn-circle avatar"
+          >
+            <div className="w-10 rounded-full">
+              <img
+                alt="Tailwind CSS Navbar component"
+                src={
+                  profile.avatar ||
+                  "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                }
+              />
+            </div>
+          </div>
+          <ul
+            tabIndex="-1"
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+          >
+            <li>
+              <a className="justify-between">Profile</a>
+            </li>
+            <li>
+              <a>Settings</a>
+            </li>
+            <li>
+              <button type="button" onClick={handelLogout}>
+                Logout
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
       {/* mobile menu */}
       <div className="navbar-start flex justify-end">
         <div className="dropdown dropdown-end">
@@ -41,6 +101,96 @@ const NavBar = () => {
             tabIndex="-1"
             className="menu menu-sm dropdown-content bg-base-100 rounded-2xl z-50 mt-3 w-56 p-3 shadow-2xl border border-gray-100 space-y-1"
           >
+            <li>
+              <details className="group">
+                <summary
+                  className="
+        relative flex items-center px-4 py-3 rounded-xl
+        transition-all duration-300 ease-in-out
+        text-gray-700 hover:bg-gray-50 hover:translate-x-1
+        cursor-pointer
+      "
+                >
+                  <span
+                    className="absolute left-0 w-1 h-full bg-[#7eb685]
+        transition-all duration-300 scale-y-0
+        group-hover:scale-y-100 origin-center rounded-r-full"
+                  />
+
+                  <FaUser className="relative z-10 transition-all duration-300 group-hover:scale-110" />
+
+                  <div className="flex gap-1 items-center">
+                    <span className="text-[16px] font-semibold text-[#374151] capitalize">
+                      {user.first_name}{" "}
+                    </span>
+                    <span className="text-[16px] font-semibold text-[#374151] capitalize">
+                      {user.last_name}
+                    </span>
+                  </div>
+                </summary>
+
+                {/* dropdown items */}
+                <ul className="mt-2 space-y-1 pl-2">
+                  {/* Profile */}
+                  <li>
+                    <NavLink
+                      to="/profile"
+                      className="
+            relative flex items-center px-4 py-3 rounded-xl
+            transition-all duration-300 ease-in-out
+            text-gray-700 hover:bg-gray-50 hover:translate-x-1
+          "
+                    >
+                      <span
+                        className="absolute left-0 w-1 h-full bg-[#7eb685]
+            transition-all duration-300 scale-y-0
+            group-hover:scale-y-100 origin-center rounded-r-full"
+                      />
+
+                      <FaUser className="relative z-10" />
+                      <span className="relative z-10 ml-3 text-[15px] font-medium">
+                        Profile
+                      </span>
+                    </NavLink>
+                  </li>
+
+                  {/* Settings */}
+                  <li>
+                    <NavLink
+                      to="/settings"
+                      className="
+            relative flex items-center px-4 py-3 rounded-xl
+            transition-all duration-300 ease-in-out
+            text-gray-700 hover:bg-gray-50 hover:translate-x-1
+          "
+                    >
+                      <FaCog className="relative z-10" />
+                      <span className="relative z-10 ml-3 text-[15px] font-medium">
+                        Settings
+                      </span>
+                    </NavLink>
+                  </li>
+
+                  {/* Logout */}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={handelLogout}
+                      className="
+            relative w-full flex items-center px-4 py-3 rounded-xl
+            transition-all duration-300 ease-in-out
+            text-red-600 hover:bg-red-50 hover:translate-x-1
+          "
+                    >
+                      <FaSignOutAlt className="relative z-10" />
+                      <span className="relative z-10 ml-3 text-[15px] font-medium">
+                        Logout
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </details>
+            </li>
             <li>
               <NavLink
                 to="/home"
@@ -141,7 +291,7 @@ const NavBar = () => {
       </div>
 
       {/* links */}
-      <div className="navbar-center hidden lg:flex">
+      <div className="navbar-center ml-5 hidden lg:flex">
         <ul className="menu menu-horizontal px-1 gap-2">
           <li>
             <NavLink
