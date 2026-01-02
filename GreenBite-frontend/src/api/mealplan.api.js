@@ -21,7 +21,7 @@ export const confirmMealPlan = async (id) => {
     const response = await api.post(`/meal_plans/${id}/confirm/`);
     return response.data;
 };
-export const replaceMealInPlan = async (mealId, useAi=true) => {
+export const replaceMeal = async (mealId, useAi=true) => {
     const response = await api.post(`/meal_plans/meals/${mealId}/replace-meal/`, { use_ai_fallback: useAi });
     return response.data;
 };
