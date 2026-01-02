@@ -2,10 +2,10 @@ from datetime import timedelta, date
 from decimal import Decimal
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth import get_user_model
+
 from project.utils.normalize import normalize_ingredient_name
 from django.core.validators import MinValueValidator
-User = get_user_model()
+
 
 class CategoryChoices(models.TextChoices):
     FRUIT = 'fruit', 'Fruit' #left side is what is stored in DB, rs is django display
@@ -23,7 +23,7 @@ class StorageTypeChoices(models.TextChoices):
 
 
 class FoodLogSys(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     quantity = models.DecimalField(
         max_digits=10,
@@ -80,7 +80,7 @@ class MealTime(models.TextChoices):
 
 
 class Meal(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     recipe = models.TextField()
     ingredients = models.JSONField()
     serving = models.IntegerField(null=True, blank=True)
@@ -138,7 +138,7 @@ class Meal(models.Model):
 
 #input get it from ai and make crud operation 
 class WasteLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waste_logs")
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="waste_logs")
     meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL, related_name="waste_logs")
 
     name = models.CharField(max_length=100)
@@ -171,7 +171,7 @@ class WasteLog(models.Model):
         verbose_name = "Waste Log"
         verbose_name_plural = "Waste Logs"
 class FoodLogUsage(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     recipe = models.ForeignKey("recipes.MealDBRecipe", on_delete=models.CASCADE)
     foodlog = models.ForeignKey("food.FoodLogSys", on_delete=models.CASCADE)
     used_quantity = models.DecimalField(max_digits=10, decimal_places=2)

@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.fields import ArrayField
 
 from project.utils.normalize import normalize_ingredient_name
-
-User = get_user_model()
 
 
 class MealTimeChoices(models.TextChoices):
@@ -95,7 +92,7 @@ class MealDBRecipe(models.Model):
 
 
 class RecipeFavorite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipe_favorites")
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="recipe_favorites")
     recipe = models.ForeignKey(MealDBRecipe, on_delete=models.CASCADE, related_name="favorites")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -110,7 +107,7 @@ class RecipeFavorite(models.Model):
 
 
 class RecipeReview(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipe_reviews")
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="recipe_reviews")
     recipe = models.ForeignKey(MealDBRecipe, on_delete=models.CASCADE, related_name="reviews")
 
     rating = models.PositiveSmallIntegerField(
