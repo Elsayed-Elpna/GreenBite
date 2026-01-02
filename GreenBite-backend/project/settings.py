@@ -65,13 +65,14 @@ INSTALLED_APPS = [
 
 
     # apps
-    "project",  
     "accounts",
+    "project",  
     "food",
     "recipes",
     "meal_plans",
 ]
 SITE_ID = 1
+
 # -------------------------------------------------
 # REST Framework
 # -------------------------------------------------
@@ -100,7 +101,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "TOKEN_OBTAIN_SERIALIZER": "accounts.views.MyTokenObtainPairSerializer"
+    "TOKEN_OBTAIN_SERIALIZER": "accounts.views.auth.MyTokenObtainPairSerializer"
 }
 
 # -------------------------------------------------
@@ -108,26 +109,24 @@ SIMPLE_JWT = {
 # -------------------------------------------------
 
 DJOSER = {
-    "LOGIN_FIELD": "email", 
-    "SEND_ACTIVATION_EMAIL": True, 
-    "USER_CREATE_PASSWORD_RETYPE": True, 
-    "PASSWORD_RESET_CONFIRM_RETYPE": True, 
-    "USER_DELETE_PASSWORD_CONFIRM": True, 
-    "TOKEN_MODEL": None, 
-    "PASSWORD_RESET_CONFIRM_URL":"password/reset/confirm/{uid}/{token}/", 
-    "ACTIVATION_URL": "activate/{uid}/{token}/", 
+    "LOGIN_FIELD": "email",
+    "SEND_ACTIVATION_EMAIL": True,
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "USER_DELETE_PASSWORD_CONFIRM": True,
+    "TOKEN_MODEL": None,
+    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}/",
+    "ACTIVATION_URL": "activate/{uid}/{token}/",
 
     "PERMISSIONS": {
         "resend_activation": ["rest_framework.permissions.AllowAny"],
     },
-    
+
     "SERIALIZERS": {
-        "user_create": "accounts.serializers.UserCreateSerializer",
-        "user_create_password_retype": "accounts.serializers.UserCreateSerializer",
+        "user_create": "accounts.serializers.user.UserCreateSerializer",
+        "current_user": "accounts.serializers.user.UserMeSerializer",
+        "user_create_password_retype": "accounts.serializers.user.UserCreateSerializer",
     },
-    # "EMAIL": {
-    #     "activation": "accounts.email.CustomActivationEmail",
-    # },
 }
 
 # ==============
@@ -166,6 +165,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',   
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'project.middleware.block_get_body.BlockGetBodyMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -243,3 +243,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

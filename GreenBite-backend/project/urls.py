@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -43,6 +46,7 @@ urlpatterns = [
     # App endpoints
     path("api/", include("food.urls")),
     path('api/', include('recipes.urls')),
+    path("api/", include("accounts.urls")),
     path('api/meal_plans/', include('meal_plans.urls')),
 
     # Swagger
@@ -63,3 +67,8 @@ urlpatterns = [
     ),
 ]
 
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )
