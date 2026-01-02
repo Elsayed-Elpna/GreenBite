@@ -21,9 +21,94 @@ class StorageTypeChoices(models.TextChoices):
     FREEZER = 'freezer', 'Freezer'
     ROOM_TEMP = 'room_temp', 'Room Temperature'
 
+class MealTime(models.TextChoices):
+    BREAKFAST = 'breakfast', 'Breakfast'
+    LUNCH = 'lunch', 'Lunch'
+    DINNER = 'dinner', 'Dinner'
+    SNACK = 'snack', 'Snack'
+    BRUNCH = 'brunch', 'Brunch'
+    DESSERT = 'dessert', 'Dessert'
+    APPETIZER = 'appetizer', 'Appetizer'
+
+class Meal(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.TextField()
+    ingredients = models.JSONField()
+    steps = models.JSONField(default=list, blank=True)
+    serving = models.IntegerField(null=True, blank=True)
+    waste = models.JSONField(default=list, blank=True) 
+    calories = models.IntegerField(null=True, blank=True)
+    has_leftovers = models.BooleanField(default=False)
+     # Track if leftovers were already saved
+    leftovers_saved = models.BooleanField(default=False) 
+    leftovers = models.JSONField(null=True, blank=True)
+    cuisine = models.CharField(max_length=100, null=True, blank=True)
+    photo = models.TextField(null=True, blank=True)
+    mealTime = models.CharField(
+        max_length=20,
+        choices=MealTime.choices
+    )
+    
+    consumed_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username}'s {self.get_mealTime_display()} - {self.consumed_at.date()}"
+    
+    def save_leftovers_to_food_log(self):
+        """
+        Create FoodLog entries from meal leftovers.
+        Assumes leftovers are already validated & saved.
+        """
+        if not self.leftovers or self.leftovers_saved:
+            return 0
+
+        created_count = 0
+
+        for leftover in self.leftovers:
+            expiry_days = leftover.get("expiry_days", 3)
+            expiry_date = leftover.get("expiry_date")
+
+            if not expiry_date:
+                expiry_date = date.today() + timedelta(days=expiry_days)
+
+            food_log = FoodLogSys.objects.create(
+                user=self.user,
+                meal=self,
+                name=leftover.get(
+                    "name",
+                    f"Leftover from {self.get_mealTime_display()}"
+                ),
+                quantity=leftover.get("quantity", 1),
+                unit=leftover.get("unit", "portion"),
+                category=leftover.get("category", CategoryChoices.OTHER),
+                expiry_date=expiry_date,
+                storage_type=leftover.get(
+                    "storage_type",
+                    StorageTypeChoices.FRIDGE
+                ),
+            )
+
+            # Link leftover JSON to FoodLog
+            leftover["food_log_id"] = food_log.id
+            created_count += 1
+
+        # mark leftovers as saved & persist IDs
+        self.leftovers_saved = True
+        self.has_leftovers = True
+        self.save(update_fields=["leftovers", "leftovers_saved", "has_leftovers", "updated_at"])
+
+        return created_count
+    
+    class Meta:
+        ordering = ['-consumed_at']
+        verbose_name = "Meal"
+        verbose_name_plural = "Meals"
 
 class FoodLogSys(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.CASCADE, related_name="food_logs")
     name = models.CharField(max_length=100)
     quantity = models.DecimalField(
         max_digits=10,
@@ -71,78 +156,11 @@ class FoodLogSys(models.Model):
         ordering = ['expiry_date']
         verbose_name = "Food Log Entry"
         verbose_name_plural = "Food Log Entries"
-class MealTime(models.TextChoices):
-    BREAKFAST = 'breakfast', 'Breakfast'
-    LUNCH = 'lunch', 'Lunch'
-    DINNER = 'dinner', 'Dinner'
-    SNACK = 'snack', 'Snack'
-    BRUNCH = 'brunch', 'Brunch'
-    DESSERT = 'dessert', 'Dessert'
-    APPETIZER = 'appetizer', 'Appetizer'
-
-
-class Meal(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    recipe = models.TextField()
-    ingredients = models.JSONField()
-    steps = models.JSONField(default=list, blank=True)
-    serving = models.IntegerField(null=True, blank=True)
-    waste = models.JSONField(default=list, blank=True) 
-    calories = models.IntegerField(null=True, blank=True)
-    has_leftovers = models.BooleanField(default=False)
-     # Track if leftovers were already saved
-    leftovers_saved = models.BooleanField(default=False) 
-    leftovers = models.JSONField(null=True, blank=True)
-    cuisine = models.CharField(max_length=100, null=True, blank=True)
-    photo = models.TextField(null=True, blank=True)
-    mealTime = models.CharField(
-        max_length=20,
-        choices=MealTime.choices
-    )
-    
-    consumed_at = models.DateTimeField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        return f"{self.user.username}'s {self.get_mealTime_display()} - {self.consumed_at.date()}"
-    
-    def save_leftovers_to_food_log(self):
-        if not self.has_leftovers or self.leftovers_saved:
-            return 0        
-        if not self.leftovers:
-            return 0
-        created_count = 0
-        for leftover in self.leftovers:
-            expiry_days = leftover.get('expiry_days', 3)
-            expiry_date = leftover.get('expiry_date')
-            if not expiry_date:
-                expiry_date = date.today() + timedelta(days=expiry_days)
-            
-            FoodLogSys.objects.create(
-                user=self.user,
-                name=leftover.get('name', f'Leftover from {self.get_mealTime_display()}'),
-                quantity=leftover.get('quantity', 1),
-                unit=leftover.get('unit', 'portion'),
-                category=leftover.get('category', CategoryChoices.OTHER),
-                expiry_date=expiry_date,
-                storage_type=leftover.get('storage_type', StorageTypeChoices.FRIDGE)
-            )
-            created_count += 1
-        self.leftovers_saved = True
-        self.save()
-        
-        return created_count
-    
-    class Meta:
-        ordering = ['-consumed_at']
-        verbose_name = "Meal"
-        verbose_name_plural = "Meals"
 
 #input get it from ai and make crud operation 
 class WasteLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="waste_logs")
-    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.SET_NULL, related_name="waste_logs")
+    meal = models.ForeignKey(Meal, null=True, blank=True, on_delete=models.CASCADE, related_name="waste_logs")
 
     name = models.CharField(max_length=100)
     why = models.TextField( )
@@ -173,6 +191,7 @@ class WasteLog(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Waste Log"
         verbose_name_plural = "Waste Logs"
+
 class FoodLogUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey("recipes.MealDBRecipe", on_delete=models.CASCADE)

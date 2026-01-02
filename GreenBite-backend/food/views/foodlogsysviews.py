@@ -80,6 +80,7 @@ def food_log_list_create(request):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def food_log_detail(request, pk):
@@ -104,13 +105,38 @@ def food_log_detail(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
-        # Delete a food log
+        # Keep reference to the meal if this food log is a leftover
+        meal = food_log.meal
+        food_log_id = food_log.id
+
+        # Delete the food log first
         food_log.delete()
+
+        if meal and meal.leftovers:
+            # Remove this leftover
+            meal.leftovers = [
+                l for l in meal.leftovers
+                if str(l.get("food_log_id")) != str(food_log_id)
+            ]
+
+            # If no leftovers remain, reset JSON and flags
+            if not meal.leftovers:
+                meal.leftovers = None
+                meal.has_leftovers = False
+                meal.leftovers_saved = False
+
+            # Persist changes
+            meal.save(update_fields=[
+                "leftovers",
+                "has_leftovers",
+                "leftovers_saved",
+                "updated_at"
+            ])
+
         return Response(
-            {'message': 'Food log deleted successfully'}, 
+            {"message": "Food log deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -140,15 +166,15 @@ def food_log_update(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def food_log_delete(request, pk):
-    """
-    Delete a food log entry.
-    """
-    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-    food_log.delete()
-    return Response(
-        {'message': f'Food log "{food_log.name}" deleted successfully'}, 
-        status=status.HTTP_204_NO_CONTENT
-    )
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def food_log_delete(request, pk):
+#     """
+#     Delete a food log entry.
+#     """
+#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+#     food_log.delete()
+#     return Response(
+#         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
+#         status=status.HTTP_204_NO_CONTENT
+#     )

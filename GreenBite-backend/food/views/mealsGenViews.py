@@ -60,8 +60,11 @@ class SaveAIMealAPIView(APIView):
             mealTime=serializer.validated_data["mealTime"],
             steps=serializer.validated_data["steps"],
             has_leftovers=False,
+            leftovers=[],
+            leftovers_saved=False,
             waste=serializer.validated_data.get("waste", [])
         )
+
 
         return Response(
             MealSerializer(meal).data,
