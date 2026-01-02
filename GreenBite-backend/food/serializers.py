@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import FoodLogSys, Meal, WasteLog #FoodComRecipe
+from datetime import date, timedelta
 
 class FoodLogSysSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,28 +8,61 @@ class FoodLogSysSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user', 'created_at', 'updated_at', 'name_normalized']
 
-class MealSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Meal
-        fields = '__all__'
-        read_only_fields = ['user', 'created_at', 'updated_at', 'consumed_at', 'leftovers_saved']
+    def update(self, instance, validated_data):
+        updated_food_log = super().update(instance, validated_data)
+
+        meal = updated_food_log.meal
+        if meal and meal.leftovers:
+            for leftover in meal.leftovers:
+                if leftover.get("food_log_id") == updated_food_log.id:
+                    leftover.update({
+                        "name": updated_food_log.name,
+                        "quantity": float(updated_food_log.quantity),
+                        "unit": updated_food_log.unit,
+                        "category": updated_food_log.category,
+                        "storage_type": updated_food_log.storage_type,
+                        "expiry_date": updated_food_log.expiry_date.isoformat(),
+                    })
+                    meal.save(update_fields=["leftovers", "updated_at"])
+                    break
+
+        return updated_food_log
 
 class LeftoverSerializer(serializers.Serializer):
-    """Serializer for leftover data when saving to food log"""
     name = serializers.CharField(max_length=100, required=False)
     quantity = serializers.FloatField(default=1)
     unit = serializers.CharField(max_length=20, default='portion')
     category = serializers.CharField(max_length=20, default='other')
     storage_type = serializers.CharField(max_length=20, default='fridge')
-    expiry_days = serializers.IntegerField(default=3)
-    expiry_date = serializers.DateField(required=False)
+    expiry_days = serializers.IntegerField(required=False, default=3)
+    expiry_date = serializers.DateField(format="%Y-%m-%d", required=False)
+
     def validate(self, attrs):
-        name = (attrs.get("name") or "").strip()
-        if not name:
+        if not attrs.get("name"):
             attrs["name"] = "Leftover Item"
+
+        today = date.today()
+
+        # expiry_date → expiry_days
+        if attrs.get("expiry_date") and not attrs.get("expiry_days"):
+            attrs["expiry_days"] = (attrs["expiry_date"] - today).days
+
+        # expiry_days → expiry_date
+        if attrs.get("expiry_days") and not attrs.get("expiry_date"):
+            attrs["expiry_date"] = today + timedelta(days=attrs["expiry_days"])
+
         return attrs
+
+
 class LeftoversSerializer(serializers.Serializer):
     leftovers = LeftoverSerializer(many=True, allow_empty=False)
+
+class MealSerializer(serializers.ModelSerializer):
+    leftovers = LeftoverSerializer(many=True)
+    class Meta:
+        model = Meal
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at', 'updated_at', 'consumed_at', 'leftovers_saved']
 
 
 class MealGenerationSerializer(serializers.Serializer):
