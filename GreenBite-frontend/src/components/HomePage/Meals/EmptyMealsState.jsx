@@ -1,7 +1,7 @@
 import { PlusCircle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function EmptyMealsState() {
+export default function EmptyMealsState({ isFiltered }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-40 px-6 lg:py-60">
       
@@ -12,7 +12,7 @@ export default function EmptyMealsState() {
 
       {/* Title */}
       <h2 className="text-2xl font-semibold text-gray-800">
-        No meals saved yet
+        {isFiltered ? "No meals match your filters" : "No meals saved yet"}
       </h2>
 
       {/* Description */}

@@ -1,8 +1,8 @@
 import api from "@/api/axios";
 
-export const fetchMyMeals = async () => {
-  const res = await api.get("/api/meals/");
-  return res.data;
+export const fetchMyMeals = async (params) => {
+  const { data } = await api.get("/api/meals/", { params });
+  return data;
 };
 
 export const deleteMeal = async (mealId) => {
