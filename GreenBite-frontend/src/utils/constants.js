@@ -2,14 +2,17 @@
    Meal times
 ========================= */
 
-export const MEAL_TIMES = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"];
+import App from "@/App";
+
+export const MEAL_TIMES = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert", "Appetizer"];
 
 export const MEAL_TIME_COLORS = {
   Breakfast: "bg-yellow-100 text-yellow-700",
   Lunch: "bg-blue-100 text-blue-700",
   Dinner: "bg-purple-100 text-purple-700",
   Snack: "bg-pink-100 text-pink-700",
-  Dessert: "bg-orange-100 text-orange-700"
+  Dessert: "bg-orange-100 text-orange-700",
+  Appetizer: "bg-green-100 text-green-700",
 };
 
 /* =========================
@@ -135,6 +138,34 @@ export const getCuisineVisuals = (cuisine = "") => {
   };
 };
 
+/* =========================
+   Meal Default image
+========================= */
+
+export const MEAL_TIME_IMAGES = {
+  Breakfast: "/images/mymeals/breakfast.webp",
+  Brunch: "/images/mymeals/brunch.jpg",
+  Lunch: "/images/mymeals/lunch.jpg",
+  Dinner: "/images/mymeals/dinner-table.avif",
+  Snack: "/images/mymeals/snack.avif",
+  Dessert: "/images/mymeals/DESSERT.webp",
+  Appetizer: "/images/mymeals/appetizer.jpg",
+};
+
+export const DEFAULT_MEAL_IMAGE = "/images/mymeals/default.webp";
+
+/* =========================
+   Ingredient pill colors
+========================= */
+
+export const INGREDIENT_PILL_COLORS = [
+  "bg-red-50 text-red-700",
+  "bg-orange-50 text-orange-700",
+  "bg-green-50 text-green-700",
+  "bg-blue-50 text-blue-700",
+  "bg-purple-50 text-purple-700",
+  "bg-pink-50 text-pink-700",
+];
 
 /* =========================
    API endpoints

@@ -19,6 +19,7 @@ import PublicRoute from "./routes/PublicRoute";
 import Activate from "./pages/Activate";
 import WasteLog from "./pages/HomePages/WasteLog/WasteLog";
 import GenerateRecipesPage from "./pages/HomePages/Recipes/GenerateRecipesPage";
+import MyMealsPage from "./pages/HomePages/Meals/MyMealsPage";
 
 import UserLayout from "./layouts/UserLayout";
 import Settings from "./pages/user/Settings";
@@ -63,7 +64,8 @@ function App() {
               {/* --------------------------------------- */}
               <Route path="/home" element={<HomeLayout />}>
                 {/* /home */}
-                <Route index element={<DashBoardPage />} />
+                <Route index element={<MyMealsPage />} />
+
                 {/* /home/foodlog */}
                 <Route path="foodlog">
                   <Route index element={<FoodLog />} />
@@ -75,6 +77,9 @@ function App() {
 
                 <Route path="recipes">
                   <Route index element={<GenerateRecipesPage />} />
+                </Route>
+                <Route path="mymeals">
+                  <Route index element={<MyMealsPage />} />
                 </Route>
               </Route>
             </Route>

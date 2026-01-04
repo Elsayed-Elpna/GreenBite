@@ -24,7 +24,7 @@ const SideMenu = () => {
         </div>
         <nav className="">
           <NavLink
-            to="/home"
+            to="/home/mymeals"
             end
             className={({ isActive }) =>
               `flex items-center justify-center px-4 py-2 rounded ${

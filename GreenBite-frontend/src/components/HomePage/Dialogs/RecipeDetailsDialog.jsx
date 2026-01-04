@@ -1,30 +1,30 @@
 // src/components/dialogs/RecipeDetailsDialog.jsx
 import { MEAL_TIME_COLORS, DIFFICULTY_COLORS, getCuisineVisuals } from "@/utils/constants";
 import { Clock, Utensils } from "lucide-react";
-import { saveMeal } from "@/api/recipes.api";
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useSaveMeal from "@/hooks/useSaveMeals";
 
 export default function RecipeDetailsDialog({ dialog }) {
   const { isOpen, close, data: recipes, activeIndex, prev, next } = dialog;
-  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
+
+  const { mutate: saveMealMutate, isLoading } = useSaveMeal();
 
   if (!isOpen || !recipes?.length) return null;
 
   const recipe = recipes[activeIndex];
   const cuisineVisuals = getCuisineVisuals(recipe.cuisine);
 
-
-  const handleSaveMeal = async () => {
-    try {
-      setSaving(true);
-      await saveMeal(recipe);
-      alert("Meal saved successfully!");
-    } catch (error) {
-      console.error("Failed to save meal:", error);
-      alert("Failed to save meal.");
-    } finally {
-      setSaving(false);
-    }
+  const handleSaveMeal = () => {
+    saveMealMutate(recipe, {
+      onSuccess: () => {
+        navigate("/home");
+        close();
+      },
+      onError: () => {
+        alert("Failed to save meal or waste.");
+      },
+    });
   };
 
   return (
@@ -100,6 +100,14 @@ export default function RecipeDetailsDialog({ dialog }) {
               <span>{recipe.servings} servings</span>
             </div>
           )}
+
+          {/* Calories */}
+          {recipe.calories && (
+            <div className="flex items-center gap-1 px-3 py-2 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+              <span>🔥</span>
+              <span>{recipe.calories} Kcal</span>
+            </div>
+          )}
         </div>
 
         {/* Description */}
@@ -141,11 +149,11 @@ export default function RecipeDetailsDialog({ dialog }) {
         <div className="flex justify-end gap-4 mt-6">
           <button
             onClick={handleSaveMeal}
-            disabled={saving}
-            className={`px-4 py-2 rounded-md text-white transition ${saving ? "bg-green-300 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+            disabled={isLoading}
+            className={`px-4 py-2 rounded-md text-white transition ${isLoading ? "bg-green-300 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
               }`}
           >
-            {saving ? "Saving..." : "Save Meal"}
+            {isLoading ? "Saving..." : "Save Meal"}
           </button>
           <button
             onClick={close}

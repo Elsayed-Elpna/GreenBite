@@ -10,7 +10,7 @@ from ..pagination import WasteLogPagination
 from django.core.cache import cache
 from ..utils.caching import detail_key, list_key, invalidate_cache
 
-CACHE_TTL_SECONDS = 60 * 60 * 24
+CACHE_TTL_SECONDS = 60 * 5
 NAMESPACE = "wastelog"
 
 @api_view(["GET","POST"])
@@ -52,6 +52,8 @@ def waste_log_list_create(request):
     if serializer.is_valid():
         waste_log = serializer.save(user = request.user)
         invalidate_cache(NAMESPACE, request.user.id, detail_id=waste_log.id)
+        if waste_log.meal:
+            invalidate_cache("meals", request.user.id, detail_id=waste_log.meal.id)
         return Response(serializer.data, status = status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -88,10 +90,14 @@ def waste_log_detail(request, pk):
         if serializer.is_valid():
             updated = serializer.save(user = request.user)
             invalidate_cache(NAMESPACE, request.user.id, detail_id = updated.id)
+            if waste_log.meal:
+                invalidate_cache("meals", request.user.id, detail_id=waste_log.meal.id)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     waste_log.delete()
     invalidate_cache(NAMESPACE, request.user.id, detail_id = waste_log.id)
+    if waste_log.meal:
+        invalidate_cache("meals", request.user.id, detail_id=waste_log.meal.id)
     return Response(status=status.HTTP_204_NO_CONTENT)

@@ -7,7 +7,7 @@ from rest_framework import status
 from ..models import FoodLogSys
 from ..serializers import FoodLogSysSerializer
 from ..filters import FoodLogFilter 
-from ..utils.caching import bump_list_version, detail_key, list_key
+from ..utils.caching import bump_list_version, detail_key, list_key, invalidate_cache
 from ..pagination import FoodLogPagination
 
 NAMESPACE = "foodlog"
@@ -61,7 +61,7 @@ def food_log_list_create(request):
             paginated_queryset, many=True
         )
         response = paginator.get_paginated_response(serializer.data)
-        cache.set(cache_key, response.data, timeout= 60*60*24)
+        cache.set(cache_key, response.data, timeout= 60*5)
         return response
 
     elif request.method == 'POST':
@@ -72,7 +72,6 @@ def food_log_list_create(request):
             bump_list_version(NAMESPACE, request.user.id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
@@ -91,7 +90,7 @@ def food_log_detail(request, pk):
             return Response(cached, status=status.HTTP_200_OK)
         
         data = FoodLogSysSerializer(food_log).data
-        cache.set(ck, data, timeout= 60*60*24) 
+        cache.set(ck, data, timeout= 60*5) 
         return Response(data, status=status.HTTP_200_OK)
     
     elif request.method in ['PUT', 'PATCH']:
@@ -103,58 +102,89 @@ def food_log_detail(request, pk):
 
             cache.delete(detail_key(NAMESPACE, request.user.id, pk))
             bump_list_version(NAMESPACE, request.user.id)
+            if food_log.meal:
+                invalidate_cache("meals", request.user.id, detail_id=food_log.meal.id)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
-        # Delete a food log
+        # Keep reference to the meal if this food log is a leftover
+        meal = food_log.meal
+        food_log_id = food_log.id
+
+        # Delete the food log first
         food_log.delete()
-        
+
+        if meal and meal.leftovers:
+            # Remove this leftover
+            meal.leftovers = [
+                l for l in meal.leftovers
+                if str(l.get("food_log_id")) != str(food_log_id)
+            ]
+
+            # If no leftovers remain, reset JSON and flags
+            if not meal.leftovers:
+                meal.leftovers = None
+                meal.has_leftovers = False
+                meal.leftovers_saved = False
+
+            # Persist changes
+            meal.save(update_fields=[
+                "leftovers",
+                "has_leftovers",
+                "leftovers_saved",
+                "updated_at"
+            ])
+
+
+
         cache.delete(detail_key(NAMESPACE, request.user.id, pk))
         bump_list_version(NAMESPACE, request.user.id)
+        if meal:
+            invalidate_cache("meals", request.user.id, detail_id=meal.id)
+
         return Response(
-            {'message': 'Food log deleted successfully'}, 
+            {"message": "Food log deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def food_log_create(request):
-    """
-    Create a new food log entry.
-    """
-    serializer = FoodLogSysSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def food_log_update(request, pk):
-    """
-    Update an existing food log entry.
-    """
-    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-    partial = request.method == 'PATCH'
-    serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def food_log_create(request):
+#     """
+#     Create a new food log entry.
+#     """
+#     serializer = FoodLogSysSerializer(data=request.data)
+#     if serializer.is_valid():
+#         serializer.save(user=request.user)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def food_log_delete(request, pk):
-    """
-    Delete a food log entry.
-    """
-    food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-    food_log.delete()
-    return Response(
-        {'message': f'Food log "{food_log.name}" deleted successfully'}, 
-        status=status.HTTP_204_NO_CONTENT
-    )
+# @api_view(['PUT', 'PATCH'])
+# @permission_classes([IsAuthenticated])
+# def food_log_update(request, pk):
+#     """
+#     Update an existing food log entry.
+#     """
+#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+#     partial = request.method == 'PATCH'
+#     serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def food_log_delete(request, pk):
+#     """
+#     Delete a food log entry.
+#     """
+#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
+#     food_log.delete()
+#     return Response(
+#         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
+#         status=status.HTTP_204_NO_CONTENT
+#     )
