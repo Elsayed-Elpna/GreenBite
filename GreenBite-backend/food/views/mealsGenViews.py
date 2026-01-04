@@ -1,10 +1,12 @@
 from django.shortcuts import render, get_object_or_404
+from django.utils.decorators import method_decorator
+from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from ..models import Meal #, FoodComRecipe
-from ..serializers import MealSerializer #, FoodComRecipeSerializer
+from ..models import Meal 
+from ..serializers import MealSerializer 
 
 from rest_framework.views import APIView
 from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
@@ -12,12 +14,21 @@ from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profi
 
 import random, logging, base64
 
+logger = logging.getLogger(__name__)
+
 class MealDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
+        cache_key = f"meal:detail:{request.user.id}:{pk}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached, status=200)
+        
         meal = get_object_or_404(Meal, pk=pk, user=request.user)
-        return Response(MealSerializer(meal).data, status=200)
+        data = MealSerializer(meal).data
+        cache.set(cache_key, data, timeout = 60*60*24)
+        return Response(data, status = 200)
 
 class GenerateMealsAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -27,7 +38,7 @@ class GenerateMealsAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         ingredients = serializer.validated_data["ingredients"]
-
+        
         ai_recipes = generate_recipes_with_cache(ingredients)
 
         if not ai_recipes:
@@ -113,30 +124,5 @@ def ai_meal_waste_profile(request):
 
     return Response(result, status.HTTP_200_OK)
 
-# @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
-# def foodcom_recipe_list(request):
-#     qs = FoodComRecipe.objects.all().order_by("-id")
-#     q = request.query_params.get("q") 
-#     if q:
-#         qs = qs.filter(title__icontains=q)
-    
-#     ingredient = request.query_params.get("ingredient")
-#     if ingredient:
-#         qs.filter(ingredients__contains=[ingredient])
-
-#     tag = request.query_params.get("tag")
-#     if tag:
-#         qs = qs.filter(tags__contains=[tag])  
-
-#     serializer = FoodComRecipeSerializer(qs, many = True)
-#     return Response(serializer.data, status=status.HTTP_200_OK)
-
-# @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
-# def foodcom_recipe_detail(request, pk):
-#     recipe = get_object_or_404(FoodComRecipe, pk = pk)
-#     serializer = FoodComRecipeSerializer(recipe)
-#     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
