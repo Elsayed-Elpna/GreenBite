@@ -12,7 +12,6 @@ import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword/RequestResetEmail";
 import ResetPassword from "./pages/ForgotPassword/ResetPassword";
 import ResetSuccess from "./pages/ForgotPassword/ResetSuccess";
-// import PrivateRoute from "./utils/PrivateRoute";
 import NotFound from "./pages/NotFound";
 import FoodLog from "./pages/HomePages/FoodLog/FoodLog";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -21,11 +20,15 @@ import Activate from "./pages/Activate";
 import WasteLog from "./pages/HomePages/WasteLog/WasteLog";
 import GenerateRecipesPage from "./pages/HomePages/Recipes/GenerateRecipesPage";
 
+import UserLayout from "./layouts/UserLayout";
+import Settings from "./pages/user/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      retry: 1,
       staleTime: 1000 * 5,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -46,15 +49,21 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-success" element={<ResetSuccess />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/password/reset/confirm/:uid/:token" element={<ResetPassword />} />
+              <Route
+                path="/password/reset/confirm/:uid/:token"
+                element={<ResetPassword />}
+              />
             </Route>
             {/* ProtectedRoute user can access after login  */}
             <Route element={<ProtectedRoute />}>
-              
+              {/* /User */}
+              <Route path="/user" element={<UserLayout />}>
+                <Route path="settings" element={<Settings />} />
+              </Route>
+              {/* --------------------------------------- */}
               <Route path="/home" element={<HomeLayout />}>
                 {/* /home */}
                 <Route index element={<DashBoardPage />} />
-
                 {/* /home/foodlog */}
                 <Route path="foodlog">
                   <Route index element={<FoodLog />} />

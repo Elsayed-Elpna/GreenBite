@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
 
+import { useQuery } from "@tanstack/react-query";
+import { getProfile } from "@/hooks/settings/useProfile";
+
 // components
 import LogOutBtn from "@/components/HomePage/NavMenu/LogOutBtn";
 // imgs
@@ -16,13 +19,18 @@ import { GiHotMeal } from "react-icons/gi";
 import { MdOutlineFoodBank } from "react-icons/md";
 
 const NavBar = () => {
-  const { logout, user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+  const { data, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+    enabled: !!user,
+    staleTime: Infinity,
+  });
   const navigate = useNavigate();
 
-  if (!user || !user.profile) {
-    return null;
-  }
-  const { profile } = user;
+  if (!user || isLoading || !data) return null;
+
+  const { first_name, last_name, profile: { avatar } = {} } = data;
 
   const handelLogout = () => {
     logout();
@@ -34,10 +42,10 @@ const NavBar = () => {
       <div className="dropdown dropdown-end hidden lg:flex gap-2 justify-between items-center mr-5">
         <div className="flex gap-1 items-center">
           <span className="text-[16px] font-semibold text-[#374151] capitalize">
-            {user.first_name}{" "}
+            {first_name}{" "}
           </span>
           <span className="text-[16px] font-semibold text-[#374151] capitalize">
-            {user.last_name}
+            {last_name}
           </span>
         </div>
         <div>
@@ -50,7 +58,7 @@ const NavBar = () => {
               <img
                 alt="Tailwind CSS Navbar component"
                 src={
-                  profile.avatar ||
+                  avatar ||
                   "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
                 }
               />
@@ -60,15 +68,61 @@ const NavBar = () => {
             tabIndex="-1"
             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
           >
+            {/* Profile */}
             <li>
-              <a className="justify-between">Profile</a>
+              <NavLink
+                to="/profile"
+                className="
+            relative flex items-center px-4 py-3 rounded-xl
+            transition-all duration-300 ease-in-out
+            text-gray-700 hover:bg-gray-50 hover:translate-x-1
+          "
+              >
+                <span
+                  className="absolute left-0 w-1 h-full bg-[#7eb685]
+            transition-all duration-300 scale-y-0
+            group-hover:scale-y-100 origin-center rounded-r-full"
+                />
+
+                <FaUser className="relative z-10" />
+                <span className="relative z-10 ml-3 text-[15px] font-medium">
+                  Profile
+                </span>
+              </NavLink>
             </li>
+
+            {/* Settings */}
             <li>
-              <a>Settings</a>
+              <NavLink
+                to="/user/settings"
+                className="
+            relative flex items-center px-4 py-3 rounded-xl
+            transition-all duration-300 ease-in-out
+            text-gray-700 hover:bg-gray-50 hover:translate-x-1
+          "
+              >
+                <FaCog className="relative z-10" />
+                <span className="relative z-10 ml-3 text-[15px] font-medium">
+                  Settings
+                </span>
+              </NavLink>
             </li>
+
+            {/* Logout */}
             <li>
-              <button type="button" onClick={handelLogout}>
-                Logout
+              <button
+                type="button"
+                onClick={handelLogout}
+                className="
+            relative w-full flex items-center px-4 py-3 rounded-xl
+            transition-all duration-300 ease-in-out
+            text-red-600 hover:bg-red-50 hover:translate-x-1
+          "
+              >
+                <FaSignOutAlt className="relative z-10" />
+                <span className="relative z-10 ml-3 text-[15px] font-medium">
+                  Logout
+                </span>
               </button>
             </li>
           </ul>
@@ -121,10 +175,10 @@ const NavBar = () => {
 
                   <div className="flex gap-1 items-center">
                     <span className="text-[16px] font-semibold text-[#374151] capitalize">
-                      {user.first_name}{" "}
+                      {first_name}{" "}
                     </span>
                     <span className="text-[16px] font-semibold text-[#374151] capitalize">
-                      {user.last_name}
+                      {last_name}
                     </span>
                   </div>
                 </summary>
@@ -157,7 +211,7 @@ const NavBar = () => {
                   {/* Settings */}
                   <li>
                     <NavLink
-                      to="/settings"
+                      to="/user/settings"
                       className="
             relative flex items-center px-4 py-3 rounded-xl
             transition-all duration-300 ease-in-out
