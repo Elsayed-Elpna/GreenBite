@@ -2,6 +2,16 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGenerateMealPlan } from "@/hooks/useMealPlans";
 
+function Field({ label, children, hint }) {
+  return (
+    <label className="block">
+      <span className="text-sm font-semibold text-gray-900">{label}</span>
+      <div className="mt-2">{children}</div>
+      {hint ? <p className="mt-2 text-xs text-gray-500">{hint}</p> : null}
+    </label>
+  );
+}
+
 export default function GenerateMealPlanPage() {
   const [days, setDays] = useState(3);
   const [mealsPerDay, setMealsPerDay] = useState(3);
@@ -20,75 +30,91 @@ export default function GenerateMealPlanPage() {
       };
       if (startDate) payload.start_date = startDate;
       const res = await generateMutation.mutateAsync(payload);
-      if (res.meal_plan_id) {
-        navigate(`/home/mealplans/${res.meal_plan_id}`);
-      }
+      if (res.meal_plan_id) navigate(`/home/mealplans/${res.meal_plan_id}`);
     } catch {
-      // error is already reflected by mutation state or toast
+      // handled by mutation state/toast
     }
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Generate Meal Plan</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
-          <span>Start Date (optional)</span>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 w-full border rounded px-3 py-2"
-          />
-        </label>
-
-        <label className="block">
-          <span>Days</span>
-          <input
-            type="number"
-            min={1}
-            max={30}
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="mt-1 w-full border rounded px-3 py-2"
-          />
-        </label>
-
-        <label className="block">
-          <span>Meals per day</span>
-          <input
-            type="number"
-            min={1}
-            max={4}
-            value={mealsPerDay}
-            onChange={(e) => setMealsPerDay(Number(e.target.value))}
-            className="mt-1 w-full border rounded px-3 py-2"
-          />
-        </label>
-
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={useAi}
-            onChange={(e) => setUseAi(e.target.checked)}
-          />
-          <span>Use AI fallback when recipes are missing</span>
-        </label>
-
-        <button
-          type="submit"
-          disabled={generateMutation.isLoading}
-          className="bg-[#7eb685] text-white px-4 py-2 rounded-lg disabled:opacity-60"
-        >
-          {generateMutation.isLoading ? "Generating..." : "Generate"}
-        </button>
-
-        {generateMutation.isError && (
-          <p className="text-red-500 text-sm mt-2">
-            Failed to generate meal plan. Please try again.
+    <div className="p-6">
+      <div className="max-w-xl mx-auto">
+        <div className="rounded-3xl border border-gray-200 bg-gradient-to-br from-green-50 via-white to-orange-50 p-6 sm:p-8 shadow-sm">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Generate Meal Plan
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Build a plan based on available inventory. Enable AI fallback if you
+            want suggestions when recipes are missing.
           </p>
-        )}
-      </form>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <Field label="Start Date (optional)" hint="Leave empty to start today.">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#7eb685]/40"
+              />
+            </Field>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Days" hint="1 to 30">
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={days}
+                  onChange={(e) => setDays(Number(e.target.value))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#7eb685]/40"
+                />
+              </Field>
+
+              <Field label="Meals per day" hint="1 to 4">
+                <input
+                  type="number"
+                  min={1}
+                  max={4}
+                  value={mealsPerDay}
+                  onChange={(e) => setMealsPerDay(Number(e.target.value))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#7eb685]/40"
+                />
+              </Field>
+            </div>
+
+            <label className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+              <input
+                type="checkbox"
+                checked={useAi}
+                onChange={(e) => setUseAi(e.target.checked)}
+                className="mt-1"
+              />
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  Use AI fallback
+                </p>
+                <p className="text-xs text-gray-600">
+                  If you run out of matching recipes, we’ll suggest AI recipes.
+                </p>
+              </div>
+            </label>
+
+            <button
+              type="submit"
+              disabled={generateMutation.isLoading}
+              className="w-full bg-[#7eb685] text-white px-4 py-3 rounded-2xl font-semibold shadow-sm hover:opacity-95 disabled:opacity-60 transition"
+            >
+              {generateMutation.isLoading ? "Generating..." : "Generate"}
+            </button>
+
+            {generateMutation.isError && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 text-red-700 p-4 text-sm">
+                Failed to generate meal plan. Please try again.
+              </div>
+            )}
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -44,9 +44,9 @@ class MealPlanningService:
         if not self.inventory.get_available_logs().exists():
             raise ValueError("No available food inventory to base meal plan on")
         
-        # ✅ Call methods properly
+
         inventory_tokens = self.inventory.get_inventory_tokens(use_synonyms=True)
-        inventory_map = self.inventory.map_food_logs()  # ✅ Call the method
+        inventory_map = self.inventory.map_food_logs()  
         
         logger.info(
             f"Starting meal plan generation for {self.user.username}: "
