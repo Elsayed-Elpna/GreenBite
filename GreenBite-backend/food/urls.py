@@ -12,8 +12,8 @@ urlpatterns = [
     path('food-logs/<int:pk>/', foodlogsysviews.food_log_detail, name='food-log-detail'),
 
     # Separate endpoints (alternative approach)
-    path('food-logs/create/', foodlogsysviews.food_log_create, name='food-log-create'),
-    path('food-logs/<int:pk>/update/', foodlogsysviews.food_log_update, name='food-log-update'),
+    # path('food-logs/create/', foodlogsysviews.food_log_create, name='food-log-create'),
+    # path('food-logs/<int:pk>/update/', foodlogsysviews.food_log_update, name='food-log-update'),
     # path('food-logs/<int:pk>/delete/', foodlogsysviews.food_log_delete, name='food-log-delete'),
     path("meals/generate/", mealsGenViews.GenerateMealsAPIView.as_view()),
     path("meals/save-ai/", mealsGenViews.SaveAIMealAPIView.as_view()),

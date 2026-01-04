@@ -4,7 +4,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  QueryClient,
 } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -28,7 +27,7 @@ const FoodLog = () => {
     sort_order: "",
   });
   const [deleteItem, setDeleteItem] = useState(null);
-  const queryClient = useQueryClient();
+  
   const [page, setPage] = useState(1);
 
   const buildQueryParams = () => {
@@ -58,9 +57,12 @@ const FoodLog = () => {
   });
 
   // delete mutation
+  const queryClient = useQueryClient();
   const deleteMutation = useMutation({
+    
     mutationFn: (id) => api.delete(`/api/food-logs/${id}/`),
     onSuccess: () => {
+      
       queryClient.invalidateQueries({
         queryKey: ["foodLog"],
       });

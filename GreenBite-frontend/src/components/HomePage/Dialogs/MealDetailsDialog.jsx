@@ -1,30 +1,60 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MEAL_TIME_COLORS, getCuisineVisuals } from "@/utils/constants";
 import { Utensils, X } from "lucide-react";
 import AddLeftoversDialog from "./AddLeftoversDialog";
+import { fetchMealDetails } from "@/api/meals.api";
+import { mapMealFromApi } from "@/utils/meal.mapper";
+import useSaveMeal from "@/hooks/useSaveMeals";
 
 export default function MealDetailsDialog({ dialog }) {
-  const { isOpen, close, data, loading, activeIndex } = dialog;
+  const { isOpen, close, data: dialogData, activeIndex } = dialog;
   const navigate = useNavigate();
-
-  // ================== Hooks always at top ==================
+  const queryClient = useQueryClient();
   const [leftoversOpen, setLeftoversOpen] = useState(false);
 
+  // Get the meal ID
+  const mealId = dialogData?.[activeIndex];
+
+  // Save meal hook
+  const saveMealHook = useSaveMeal(mealId);
+
+  // Fetch meal details
+  const { data: meal, isLoading, isError } = useQuery({
+    queryKey: ["meal", mealId],
+    queryFn: async () => {
+      const response = await fetchMealDetails(mealId);
+      return mapMealFromApi(response);
+    },
+    enabled: isOpen && !!mealId,
+    staleTime: 2 * 60 * 1000,
+  });
+
   if (!isOpen) return null;
-  if (loading)
+
+  // Loading / error states
+  if (isLoading)
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl">Loading meal...</div>
+        <div className="bg-white p-6 rounded-xl">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p>Loading meal details...</p>
+        </div>
       </div>
     );
 
-  const meal = data[activeIndex];
-  if (!meal)
+  if (isError)
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-xl text-red-500">
-          No meal data found
+          <p className="mb-4">Failed to load meal details</p>
+          <button
+            onClick={close}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+          >
+            Close
+          </button>
         </div>
       </div>
     );
@@ -34,29 +64,23 @@ export default function MealDetailsDialog({ dialog }) {
     meal.mealTime?.charAt(0).toUpperCase() +
     meal.mealTime?.slice(1).toLowerCase();
 
-  const handleSaveLeftovers = () => {
-    if (meal.leftovers_saved) return;
-    setLeftoversOpen(true);
-  };
+  const handleSaveLeftovers = () => { if (meal.leftovers_saved) return; setLeftoversOpen(true); };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 rounded-xl max-w-4xl w-full p-6 overflow-y-auto max-h-[90vh]">
-
-        {/* ================= Header ================= */}
+        {/* ===== Header ===== */}
         <div className="relative mb-4 px-8">
           <h2 className="text-xl lg:text-2xl font-bold text-center">
             {meal.title || meal.recipe}
           </h2>
           <button
             onClick={close}
-            className="cursor-pointer absolute top-0 right-0 mt-2 mr-2 text-gray-500 hover:text-red-500 transition"
+            className="absolute top-0 right-0 mt-2 mr-2 text-gray-500 hover:text-red-500"
           >
             <X size={24} />
           </button>
         </div>
-
-        <div className="h-px bg-gray-200 mb-4" />
 
         {/* ================= Pills ================= */}
         <div className="flex flex-wrap gap-2 mb-6 justify-center">
@@ -69,8 +93,7 @@ export default function MealDetailsDialog({ dialog }) {
           )}
           {meal.mealTime && (
             <span
-              className={`px-3 py-2 rounded-full text-xs font-medium ${MEAL_TIME_COLORS[mealTimeKey] || "bg-gray-100 text-gray-700"
-                }`}
+              className={`px-3 py-2 rounded-full text-xs font-medium ${MEAL_TIME_COLORS[mealTimeKey] || "bg-gray-100 text-gray-700"}`}
             >
               {meal.mealTime}
             </span>
@@ -214,14 +237,20 @@ export default function MealDetailsDialog({ dialog }) {
         )}
 
         {/* ================= Leftovers Dialog ================= */}
-        <AddLeftoversDialog
-          open={leftoversOpen}
-          onClose={() => setLeftoversOpen(false)}
-          meal={{
-            ...meal,
-            leftovers: meal.leftovers || [], // ensure leftovers is always array
-          }}
-        />
+        {leftoversOpen && (
+          <AddLeftoversDialog
+            open={leftoversOpen}
+            onClose={() => setLeftoversOpen(false)}
+            meal={meal}
+            onSaved={(newLeftovers) => {
+              queryClient.setQueryData(["meal", mealId], (old) => ({
+                ...old,
+                leftovers: newLeftovers,
+                leftovers_saved: true,
+              }));
+            }}
+          />
+        )}
       </div>
     </div>
   );

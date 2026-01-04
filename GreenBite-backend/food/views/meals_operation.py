@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions, filters as drf_filters
-from ..models import Meal, FoodLogSys #, FoodComRecipe
+from ..models import Meal, FoodLogSys, WasteLog #, FoodComRecipe
 from ..serializers import MealSerializer, LeftoversSerializer #, FoodComRecipeSerializer
 from datetime import date, timedelta
 from rest_framework.views import APIView
@@ -10,10 +10,10 @@ from ..pagination import MealPagination
 from ..filters import MealFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-from ..utils.caching import detail_key,list_key, invalidate_cache
+from ..utils.caching import detail_key,list_key, invalidate_cache, bump_list_version
 from django.core.cache import cache
 
-CACHE_TTL_SECONDS = 60 * 60 * 24
+CACHE_TTL_SECONDS = 60 * 5
 NAMESPACE = "meals"
 class MealDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -96,10 +96,23 @@ class DeleteMealAPIView(APIView):
 
     def delete(self, request, pk):
         meal = get_object_or_404(Meal, pk=pk, user=request.user)
+
+        # Delete related data
         FoodLogSys.objects.filter(meal=meal).delete()
+        WasteLog.objects.filter(meal=meal).delete()
+
+        meal_id = meal.id
         meal.delete()
-        invalidate_cache(NAMESPACE, request.user.id, detail_id=meal_id)
+
+
+        invalidate_cache("meals", request.user.id, detail_id=meal_id)
+
+        bump_list_version("foodlog", request.user.id)
+
+        bump_list_version("wastelog", request.user.id)
+
         return Response(
             {"detail": "Meal deleted successfully"},
             status=204
         )
+

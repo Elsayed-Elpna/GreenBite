@@ -1,7 +1,7 @@
 import MealCard from "./MealCard";
 import useDialog from "@/hooks/useDialog";
+import useSaveMeal from "@/hooks/useSaveMeals";
 import MealDetailsDialog from "@/components/HomePage/Dialogs/MealDetailsDialog";
-import { fetchMealDetails } from "@/api/meals.api";
 
 export default function MealsGrid({ meals, onDelete }) {
   const mealDialog = useDialog();
@@ -14,7 +14,7 @@ export default function MealsGrid({ meals, onDelete }) {
             key={meal.id}
             meal={meal}
             onDelete={() => onDelete(meal.id)}
-            onView={() => mealDialog.open(() => fetchMealDetails(meal.id))}
+            onView={() => mealDialog.open(meal.id)}
           />
         ))}
       </div>

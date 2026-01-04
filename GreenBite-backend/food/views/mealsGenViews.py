@@ -11,24 +11,24 @@ from ..serializers import MealSerializer
 from rest_framework.views import APIView
 from ..serializers import MealGenerationSerializer, SaveAIMealSerializer
 from ..utils.recipes_ai import generate_recipes_with_cache, generate_waste_profile_with_cache, generate_meals_openai, mealdb_recipe_to_ai_shape
-
+from ..utils.caching import bump_list_version
 import random, logging, base64
 
 logger = logging.getLogger(__name__)
 
-class MealDetailAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+# class MealDetailAPIView(APIView):
+#     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk):
-        cache_key = f"meal:detail:{request.user.id}:{pk}"
-        cached = cache.get(cache_key)
-        if cached is not None:
-            return Response(cached, status=200)
+#     def get(self, request, pk):
+#         cache_key = f"meal:detail:{request.user.id}:{pk}"
+#         cached = cache.get(cache_key)
+#         if cached is not None:
+#             return Response(cached, status=200)
         
-        meal = get_object_or_404(Meal, pk=pk, user=request.user)
-        data = MealSerializer(meal).data
-        cache.set(cache_key, data, timeout = 60*60*24)
-        return Response(data, status = 200)
+#         meal = get_object_or_404(Meal, pk=pk, user=request.user)
+#         data = MealSerializer(meal).data
+#         cache.set(cache_key, data, timeout = 60*60*24)
+#         return Response(data, status = 200)
 
 class GenerateMealsAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -75,6 +75,7 @@ class SaveAIMealAPIView(APIView):
             leftovers_saved=False,
             waste=serializer.validated_data.get("waste", [])
         )
+        bump_list_version("meals", request.user.id)
 
 
         return Response(
