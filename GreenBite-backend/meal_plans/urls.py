@@ -7,7 +7,8 @@ from .views import (
     MealPlanDayConfirmAPIView, 
     MealPlanMealReplaceAPIView,  
     MealPlanMealSkipAPIView,
-    MealPlanListAPIView
+    MealPlanListAPIView, 
+    MealPlanTaskStatusAPIView,
 )
 
 app_name = 'meal_plans'
@@ -26,5 +27,7 @@ urlpatterns = [
     
     path('meals/<int:pk>/skip/', MealPlanMealSkipAPIView.as_view(), name='skip_meal'),
     
-    path('<int:pk>/delete/', MealPlanDeleteAPIView.as_view(), name='delete_meal_plan'),
+    path('<int:pk>/delete/', MealPlanDeleteAPIView.as_view(), name='delete_meal_plan'), 
+    path("tasks/<str:task_id>/", MealPlanTaskStatusAPIView.as_view(), name="mealplan-task-status"),
+
 ]

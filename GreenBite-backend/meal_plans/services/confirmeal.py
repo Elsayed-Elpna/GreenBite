@@ -2,13 +2,34 @@
 Service for confirming meal plan days and logging food consumption.
 """
 import logging
+import re
 from django.db import transaction
 from django.utils import timezone
 from meal_plans.models import MealPlanDay, MealPlanMeal, MealPlanFoodUsage
-from food.models import FoodLogSys
+from food.models import FoodLogSys,Meal
 from decimal import Decimal
+from food.utils.caching import bump_list_version, invalidate_cache
+
 
 logger = logging.getLogger(__name__)
+
+_UNIT_WORDS = {
+    "g", "kg", "mg", "lb", "lbs", "oz", "ml", "l",
+    "tsp", "tbsp", "cup", "cups", "teaspoon", "tablespoon",
+    "pinch", "clove", "cloves", "slice", "slices"
+}
+
+
+def _core_ingredient_name(text: str) -> str:
+    """
+    Best-effort normalization for matching inventory items.
+    Example: "2 tbsp Olive Oil" -> "olive oil"
+    """
+    s = (text or "").strip().lower()
+    s = re.sub(r"[\d/]+", " ", s)          # remove qty like 2, 1/2
+    s = re.sub(r"[^a-z\s-]", " ", s)       # remove punctuation
+    tokens = [t for t in s.split() if t and t not in _UNIT_WORDS]
+    return " ".join(tokens).strip()
 
 
 @transaction.atomic
@@ -41,6 +62,10 @@ def confirm_meal_plan_day(meal_plan_day, user):
     if meal_plan_day.is_confirmed:
         logger.warning(f"Day {meal_plan_day.id} already confirmed at {meal_plan_day.confirmed_at}")
         raise ValueError("This day is already confirmed")
+    bump_list_version("meals", user.id)
+
+    # Optional: if you create/update FoodLogSys during confirmation
+    bump_list_version("foodlog", user.id)
 
     # Get all meals for this day (QuerySet, not list)
     meals = MealPlanMeal.objects.filter(
@@ -58,73 +83,88 @@ def confirm_meal_plan_day(meal_plan_day, user):
     for meal in meals:
         # Skip skipped meals
         if meal.is_skipped:
-            logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - marked as skipped")
+            logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - skipped")
+            continue
+        if meal.meal_id:
+            logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - already confirmed")
             continue
 
-        if not meal.meal:
-            logger.warning(f"Meal {meal.id} has no associated meal object")
-            continue
+        # ✅ Create Meal only on confirmation
+        if meal.meal is None:
+            meal.meal = Meal.objects.create(
+                user=user,
+                recipe=meal.draft_title or "",
+                ingredients=meal.draft_ingredients or [],
+                steps=meal.draft_steps or [],
+                cuisine=meal.draft_cuisine or None,
+                calories=meal.draft_calories,
+                serving=meal.draft_serving,
+                photo=meal.draft_photo or "",
+                mealTime=meal.meal_time,
+                source_mealdb_id=(meal.draft_source_mealdb_id or None),
+            )
+            meal.save(update_fields=["meal"])
 
-        # Get planned usages for this meal
-        planned_usages = meal.planned_usages.all()
 
-        if planned_usages:
-            # Use planned usages if they exist
-            for usage in planned_usages:
+        planned_usages_qs = meal.planned_usages.select_related("food_log")
+
+        if planned_usages_qs.exists():  # ✅ FIX: correct check
+            for usage in planned_usages_qs:
                 food_log = usage.food_log
                 quantity = usage.planned_quantity
 
                 if food_log.id not in consumption_tracker:
-                    consumption_tracker[food_log.id] = {
-                        'food_log': food_log,
-                        'total_quantity': Decimal('0')
-                    }
+                    consumption_tracker[food_log.id] = {"food_log": food_log, "total_quantity": Decimal("0")}
 
-                consumption_tracker[food_log.id]['total_quantity'] += quantity
+                consumption_tracker[food_log.id]["total_quantity"] += quantity
 
                 logger.debug(
-                    f"Meal {meal.meal_time}: {food_log.name} - {quantity}g "
-                    f"(from planned usage)"
+                    f"Meal {meal.meal_time}: {food_log.name} - {quantity}g (from planned usage)"
                 )
         else:
-            # Fallback: estimate consumption from ingredients
             logger.debug(f"No planned usages for meal {meal.id}, using ingredient estimation")
 
-            ingredients = meal.meal.ingredients if hasattr(meal.meal, 'ingredients') else []
+            ingredients = getattr(meal.meal, "ingredients", []) or []
+            if not ingredients:
+                logger.warning(f"Meal {meal.meal.id} has no ingredients; cannot estimate consumption")
+                continue
 
-            # Match ingredients to food logs
             for ingredient in ingredients:
-                if not isinstance(ingredient, str):
+                if isinstance(ingredient, dict):
+                    ingredient_text = ingredient.get("name") or ingredient.get("ingredient") or ""
+                else:
+                    ingredient_text = str(ingredient or "")
+
+                core = _core_ingredient_name(ingredient_text)
+                if not core:
                     continue
 
-                # Simple matching (you can improve this with normalize_ingredient_name)
-                ingredient_lower = ingredient.lower()
-
-                # Try to find matching food log
+                # Try matching using core tokens
                 matching_logs = FoodLogSys.objects.filter(
                     user=user,
                     is_consumed=False,
-                    name__icontains=ingredient_lower
+                    name__icontains=core
                 )
 
-                if matching_logs.exists():
-                    food_log = matching_logs.first()
+                if not matching_logs.exists():
+                    logger.debug(f"No inventory match for ingredient='{ingredient_text}' core='{core}'")
+                    continue
 
-                    # Estimate quantity (default 100g per ingredient)
-                    estimated_quantity = Decimal('100.00')
+                # Estimate quantity (default 100g per ingredient)
+                estimated_quantity = Decimal('100.00')
 
-                    if food_log.id not in consumption_tracker:
-                        consumption_tracker[food_log.id] = {
-                            'food_log': food_log,
-                            'total_quantity': Decimal('0')
-                        }
+                if matching_logs.first().id not in consumption_tracker:
+                    consumption_tracker[matching_logs.first().id] = {
+                        'food_log': matching_logs.first(),
+                        'total_quantity': Decimal('0')
+                    }
 
-                    consumption_tracker[food_log.id]['total_quantity'] += estimated_quantity
+                consumption_tracker[matching_logs.first().id]['total_quantity'] += estimated_quantity
 
-                    logger.debug(
-                        f"Meal {meal.meal_time}: {ingredient} → {food_log.name} - "
-                        f"{estimated_quantity}g (estimated)"
-                    )
+                logger.debug(
+                    f"Meal {meal.meal_time}: {ingredient} → {matching_logs.first().name} - "
+                    f"{estimated_quantity}g (estimated)"
+                )
 
     # Apply consumption to food logs
     for food_log_id, data in consumption_tracker.items():

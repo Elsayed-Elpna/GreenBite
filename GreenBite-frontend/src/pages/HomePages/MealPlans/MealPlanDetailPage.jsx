@@ -26,25 +26,52 @@ function Badge({ children, tone = "gray" }) {
     </span>
   );
 }
-
 export default function MealPlanDetailPage() {
   const { id } = useParams();
   const { data, isLoading, isError } = useMealPlanDetail(id);
-
+  
   const mealDialog = useDialogone();
   const confirmPlanMutation = useConfirmPlan();
   const confirmDayMutation = useConfirmDay();
   const replaceMutation = useReplacePlanMeal();
   const skipMutation = useSkipPlanMeal();
-
   const handleViewDetails = (mealSlot) => {
-    const mealdbId = mealSlot?.source_mealdb_id;
-    if (!mealdbId) {
-      toast.error("No MealDB id found for this meal.");
-      return;
-    }
-    mealDialog.open(() => getMealdbRecipeById(mealdbId));
-  };
+      // If API already includes full details, use them directly
+      const hasInlineDetails =
+        (mealSlot?.ingredients && mealSlot.ingredients.length) ||
+        mealSlot?.instructions ||
+        (mealSlot?.steps && mealSlot.steps.length);
+  
+      if (hasInlineDetails) {
+        const recipe = {
+          title: mealSlot.title || mealSlot.recipe || "Recipe",
+          thumbnail: mealSlot.thumbnail || mealSlot.photo || null,
+          cuisine: mealSlot.cuisine || "",
+          ingredients: mealSlot.ingredients || [],
+          instructions: mealSlot.instructions || (Array.isArray(mealSlot.steps) ? mealSlot.steps.join("\n") : ""),
+          mealdb_id: mealSlot.source_mealdb_id || mealSlot.draft_source_mealdb_id || null,
+        };
+        mealDialog.open(recipe);
+        return;
+      }
+  
+      // fallback to MealDB fetch
+      const mealdbId = mealSlot?.source_mealdb_id || mealSlot?.draft_source_mealdb_id;
+      if (!mealdbId) {
+        toast.error("No details available for this meal.");
+        return;
+      }
+      mealDialog.open(() => getMealdbRecipeById(mealdbId));
+    };
+
+  // const handleViewDetails = (mealSlot) => {
+  //   const mealdbId = mealSlot?.source_mealdb_id;
+  //   if (!mealdbId) {
+  //     toast.error("No MealDB id found for this meal.");
+  //     return;
+  //   }
+  //   mealDialog.open(() => getMealdbRecipeById(mealdbId));
+  // };
 
   if (isLoading) {
     return (
@@ -82,6 +109,8 @@ export default function MealPlanDetailPage() {
     try {
       await confirmDayMutation.mutateAsync(dayId);
       toast.success("Day confirmed.");
+      await refetch?.(); 
+
     } catch {
       toast.error("Failed to confirm day.");
     }
@@ -220,7 +249,7 @@ export default function MealPlanDetailPage() {
                       </p>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {m.source_mealdb_id && (
+                        {(m.source_mealdb_id || m.draft_source_mealdb_id) ? (
                           <button
                             type="button"
                             className="text-xs font-semibold text-[#4f9b5a] hover:underline"
@@ -228,7 +257,7 @@ export default function MealPlanDetailPage() {
                           >
                             View details
                           </button>
-                        )}
+                        ) : null}
 
                         {m.original_recipe && (
                           <p className="text-xs text-gray-500">

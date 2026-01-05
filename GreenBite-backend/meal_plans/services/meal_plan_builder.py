@@ -1,6 +1,3 @@
-"""
-MealPlanBuilder - Constructs MealPlan, MealPlanDay, and MealPlanMeal objects.
-"""
 from datetime import timedelta
 import logging
 from django.db import transaction
@@ -8,23 +5,51 @@ from meal_plans.models import MealPlan, MealPlanDay, MealPlanMeal
 from food.models import Meal
 
 logger = logging.getLogger(__name__)
+def _val(obj, key, default=None):
+    """
+    Safe getter that supports:
+    - dict-like candidates: obj.get("title")
+    - object candidates: obj.title
+    """
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+def _s(x):
+    # ✅ string-safe
+    if x is None:
+        return ""
+    s = str(x).strip()
+    return "" if s.lower() == "none" else s
+def _i(x):
+    # int-safe for optional integer fields
+    try:
+        return int(x) if x is not None and str(x).strip() != "" else None
+    except Exception:
+        return None
 
+
+def _list(x):
+    if x is None:
+        return []
+    return x if isinstance(x, list) else [x]
+def _meta(obj, key, default=None):
+    """
+    Get value from obj.metadata when obj is RecipeCandidate-like.
+    """
+    if obj is None:
+        return default
+    md = getattr(obj, "metadata", None) or {}
+    if isinstance(md, dict):
+        return md.get(key, default)
+    return default
 
 class MealPlanBuilder:
-    """
-    Builds MealPlan database objects from a list of recipe candidates.
-    """
+
     
     def __init__(self, user, start_date, days, meals_per_day):
-        """
-        Initialize the builder.
-        
-        Args:
-            user: User instance
-            start_date: datetime.date for plan start
-            days: Number of days in plan
-            meals_per_day: Number of meals per day
-        """
+       
         self.user = user
         self.start_date = start_date
         self.days = days
@@ -33,18 +58,7 @@ class MealPlanBuilder:
     
     @transaction.atomic
     def build(self, recipes):
-        """
-        Build complete meal plan from recipe candidates.
-        
-        Args:
-            recipes: List of RecipeCandidate objects
-        
-        Returns:
-            MealPlan instance
-        
-        Raises:
-            ValueError: If not enough recipes provided
-        """
+      
         total_meals_needed = self.days * self.meals_per_day
         
         if len(recipes) < total_meals_needed:
@@ -90,24 +104,47 @@ class MealPlanBuilder:
                     break
                 
                 recipe = recipes[recipe_index]
+                cuisine = _val(recipe, "cuisine", "")
+                cuisine = "" if cuisine is None else str(cuisine).strip()
+
+                if cuisine is None:  # should never happen, but keep a hard guard
+                    cuisine = ""
+                mealdb_id = _meta(recipe, "mealdb_id") or _val(recipe, "mealdb_id") or _val(recipe, "idMeal")
+                mealdb_id = _s(mealdb_id)
+
+
+                # TEMP debug (remove later)
+                logger.error(
+                    "DEBUG draft_cuisine=%r type=%s recipe_class=%s recipe_repr=%r",
+                    cuisine,
+                    type(cuisine).__name__,
+                    type(recipe).__name__,
+                    str(recipe)[:500],
+                )
                 
                 # Create Meal object
-                meal = Meal.objects.create(
-                    user=self.user,
-                    recipe=recipe.title,
-                    ingredients=recipe.ingredients,
-                    mealTime=meal_time,
-                    photo=recipe.thumbnail or '',
-                    source_mealdb_id=recipe.metadata.get("mealdb_id")
-                )
+                MealPlanMeal.objects.create(
+                meal_plan_day=plan_day,
+                meal_time=meal_time,
+                meal=None,
+                draft_title=_s(_val(recipe, "title") or _val(recipe, "recipe")),
+                draft_ingredients=_list(_val(recipe, "ingredients")),
+                draft_steps=_list(_val(recipe, "steps") or _val(recipe, "instructions")),
+                draft_cuisine=cuisine,
+                draft_calories=_i(_val(recipe, "calories")),
+                draft_serving=_i(_val(recipe, "serving")),
+                draft_photo=_s(_val(recipe, "photo") or _val(recipe, "thumbnail")),
+                draft_source_mealdb_id=mealdb_id,
+                is_skipped=False,
+            )
                 
                 # Link meal to plan day
-                MealPlanMeal.objects.create(
-                    meal_plan_day=plan_day,
-                    meal_time=meal_time,
-                    meal=meal,
-                    is_skipped=False
-                )
+                # MealPlanMeal.objects.create(
+                #     meal_plan_day=plan_day,
+                #     meal_time=meal_time,
+                #     meal=meal,
+                   
+                # )
                 
                 meals_created += 1
                 recipe_index += 1
@@ -124,16 +161,7 @@ class MealPlanBuilder:
         return meal_plan
     
     def build_partial(self, recipes, skip_incomplete_days=False):
-        """
-        Build a partial meal plan (useful when not enough recipes available).
         
-        Args:
-            recipes: List of available recipe candidates
-            skip_incomplete_days: If True, skip days that can't be fully filled
-        
-        Returns:
-            MealPlan instance
-        """
         if skip_incomplete_days:
             # Calculate how many complete days we can make
             complete_days = len(recipes) // self.meals_per_day

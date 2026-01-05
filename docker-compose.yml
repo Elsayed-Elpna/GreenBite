@@ -22,6 +22,18 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/1
       # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - RUN_MIGRATIONS=1
+      - BOOTSTRAP_ONCE=1
+      # run these only when you want
+      - IMPORT_MEALDB=1
+      - TOKENIZE_INGREDIENTS=1
+      - BUILD_EMBEDDINGS=1
+
+      - MEALDB_LIMIT=0
+      - MEALDB_SLEEP=0.25
+      - TOKENS_BATCH_SIZE=300
+      - TOKENS_LIMIT=0
+
   celery:
     build: ./GreenBite-backend
     container_name: greenbite-celery
@@ -42,6 +54,16 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/1  
+      - RUN_MIGRATIONS=1
+      - RUN_MAKEMIGRATIONS_MERGE=0
+
+      - BOOTSTRAP_ONCE=1
+
+      # don't run heavy jobs in celery container
+      - IMPORT_MEALDB=0
+      - TOKENIZE_INGREDIENTS=0
+      - EMBED_MEALS=1
+      
 
   db:
     image: postgres:15
