@@ -1,6 +1,3 @@
-"""
-Celery tasks for asynchronous meal plan generation.
-"""
 from celery import shared_task
 import logging
 from datetime import datetime
@@ -17,28 +14,6 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def _normalize_waste_payload(payload):
-    """
-    Accepts common payload shapes and returns a list[dict] ready for WasteLogSerializer.
-    Supported:
-      - dict (single waste log)
-      - {"waste_logs": [...]} / {"wastes": [...]} / {"items": [...]}
-      - list[dict]
-    """
-    if payload is None:
-        return []
-
-    if isinstance(payload, list):
-        return [x for x in payload if isinstance(x, dict)]
-
-    if isinstance(payload, dict):
-        for key in ("waste_logs", "wastes", "items", "data"):
-            v = payload.get(key)
-            if isinstance(v, list):
-                return [x for x in v if isinstance(x, dict)]
-        return [payload]
-
-    return []
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=30)
@@ -52,7 +27,6 @@ def generate_and_store_waste_logs_for_day(self, day_id: int, user_id: int):
         .get(id=day_id, meal_plan__user=user)
     )
 
-    # serializer expects context['request'].user
     fake_request = type("Req", (), {"user": user})
 
     results = []
@@ -79,7 +53,6 @@ def generate_and_store_waste_logs_for_day(self, day_id: int, user_id: int):
                 if not isinstance(wi, dict):
                     continue
 
-                # ✅ Map AI output -> WasteLogSerializer expected fields
                 payload = {
                     "name": wi.get("name", ""),
                     "why": wi.get("why", ""),
@@ -89,7 +62,6 @@ def generate_and_store_waste_logs_for_day(self, day_id: int, user_id: int):
                     "reuse_ideas": wi.get("reuse_ideas", []),
                 }
 
-                # attach meal if your serializer/model has it
                 payload["meal"] = meal_obj.id
 
                 serializer = WasteLogSerializer(data=payload, context={"request": fake_request})
@@ -135,19 +107,6 @@ def async_generate_meal_plan(
     meals_per_day,
     use_ai_fallback=True
 ):
-    """
-    Asynchronously generate a meal plan.
-    
-    Args:
-        user_id: User primary key
-        start_date_str: Start date as string (YYYY-MM-DD)
-        days: Number of days
-        meals_per_day: Meals per day
-        use_ai_fallback: Whether to use AI if MealDB insufficient
-    
-    Returns:
-        dict with meal_plan_id and status
-    """
     from django.contrib.auth import get_user_model
     from datetime import datetime
     from .services.meal_planning_service import MealPlanningService

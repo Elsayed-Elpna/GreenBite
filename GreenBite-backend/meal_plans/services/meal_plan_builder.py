@@ -1,6 +1,3 @@
-"""
-MealPlanBuilder - Constructs MealPlan, MealPlanDay, and MealPlanMeal objects.
-"""
 from datetime import timedelta
 import logging
 from django.db import transaction
@@ -49,20 +46,10 @@ def _meta(obj, key, default=None):
     return default
 
 class MealPlanBuilder:
-    """
-    Builds MealPlan database objects from a list of recipe candidates.
-    """
+
     
     def __init__(self, user, start_date, days, meals_per_day):
-        """
-        Initialize the builder.
-        
-        Args:
-            user: User instance
-            start_date: datetime.date for plan start
-            days: Number of days in plan
-            meals_per_day: Number of meals per day
-        """
+       
         self.user = user
         self.start_date = start_date
         self.days = days
@@ -71,18 +58,7 @@ class MealPlanBuilder:
     
     @transaction.atomic
     def build(self, recipes):
-        """
-        Build complete meal plan from recipe candidates.
-        
-        Args:
-            recipes: List of RecipeCandidate objects
-        
-        Returns:
-            MealPlan instance
-        
-        Raises:
-            ValueError: If not enough recipes provided
-        """
+      
         total_meals_needed = self.days * self.meals_per_day
         
         if len(recipes) < total_meals_needed:
@@ -151,18 +127,12 @@ class MealPlanBuilder:
                 meal_plan_day=plan_day,
                 meal_time=meal_time,
                 meal=None,
-
                 draft_title=_s(_val(recipe, "title") or _val(recipe, "recipe")),
                 draft_ingredients=_list(_val(recipe, "ingredients")),
                 draft_steps=_list(_val(recipe, "steps") or _val(recipe, "instructions")),
-
-                # ✅ critical: always non-null string
                 draft_cuisine=cuisine,
-
-                # ✅ keep numeric types
                 draft_calories=_i(_val(recipe, "calories")),
                 draft_serving=_i(_val(recipe, "serving")),
-
                 draft_photo=_s(_val(recipe, "photo") or _val(recipe, "thumbnail")),
                 draft_source_mealdb_id=mealdb_id,
                 is_skipped=False,
@@ -191,16 +161,7 @@ class MealPlanBuilder:
         return meal_plan
     
     def build_partial(self, recipes, skip_incomplete_days=False):
-        """
-        Build a partial meal plan (useful when not enough recipes available).
         
-        Args:
-            recipes: List of available recipe candidates
-            skip_incomplete_days: If True, skip days that can't be fully filled
-        
-        Returns:
-            MealPlan instance
-        """
         if skip_incomplete_days:
             # Calculate how many complete days we can make
             complete_days = len(recipes) // self.meals_per_day
