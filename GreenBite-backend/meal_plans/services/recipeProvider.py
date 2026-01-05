@@ -20,6 +20,7 @@ class RecipeCandidate:
         thumbnail: str = "",
         instructions: str = "",
         ingredient_tokens: Optional[List[str]] = None,
+        cuisine: str = "",
         metadata: Optional[Dict[str, Any]] = None,
     ):
         self.title = title
@@ -28,6 +29,7 @@ class RecipeCandidate:
         self.thumbnail = thumbnail
         self.instructions = instructions
         self.ingredient_tokens = ingredient_tokens or []
+        self.cuisine = cuisine
         self.metadata = metadata or {}
         self.score = 0.0  # Will be set by scorer
     
@@ -83,6 +85,7 @@ class AIRecipeProvider(RecipeProvider):
                     thumbnail="",  # AI recipes don't have images
                     instructions="",  # Could be enhanced in future
                     ingredient_tokens=getattr(rec, 'ingredients', []),
+                    cuisine=getattr(rec, 'cuisine', ''),
                     metadata={
                         'generated_by': 'openai',
                         'model': 'gpt-4o-mini',
@@ -128,6 +131,7 @@ class MealDBRecipeProvider(RecipeProvider):
                     thumbnail=recipe.thumbnail,
                     instructions=recipe.instructions,
                     ingredient_tokens=rec_tokens,
+                    cuisine=recipe.cuisine,
                     metadata={
                         'recipe_id': recipe.id,
                         'category': recipe.category,
@@ -218,6 +222,7 @@ class CompositeRecipeProvider(RecipeProvider):
                         thumbnail=original.thumbnail,
                         instructions=original.instructions,
                         ingredient_tokens=original.ingredient_tokens,
+                        cuisine=original.cuisine,
                         metadata=original.metadata.copy()
                     )
                     repeat.score = original.score * 0.9  
