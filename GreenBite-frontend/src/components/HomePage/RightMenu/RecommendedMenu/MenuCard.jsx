@@ -6,7 +6,38 @@ import { PiBreadLight } from "react-icons/pi";
 import { PiFish } from "react-icons/pi";
 import { IoWaterOutline } from "react-icons/io5";
 
-const MenuCard = () => {
+const MenuCard = ({ recipe, loading, error, onRefresh }) => {
+  const safeRecipe = recipe ?? {};
+  const title = safeRecipe.title || "-";
+  const image = safeRecipe.thumbnail || "https://placehold.co/64x64";
+  const category = safeRecipe.category || "Category";
+  const cuisine = safeRecipe.cuisine || "Cuisine";
+
+  if (loading) {
+    return (
+      <div className="self-stretch p-4 mt-4 bg-white rounded-2xl inline-flex flex-col justify-start items-start gap-4">
+        <h4 className="text-xs font-semibold text-zinc-800">Loading...</h4>
+        <div className="w-full h-16 bg-neutral-100 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="self-stretch p-4 mt-4 bg-white rounded-2xl inline-flex flex-col justify-start items-start gap-3">
+        <h4 className="text-xs font-semibold text-zinc-800">Recommended Menu</h4>
+        <p className="text-xs text-red-600">{error}</p>
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="text-xs underline text-zinc-800"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="self-stretch p-4 mt-4 bg-white rounded-2xl inline-flex flex-col justify-start items-start gap-4">
@@ -14,17 +45,17 @@ const MenuCard = () => {
           <div className="w-16 h-16 relative bg-lime-200 rounded-xl overflow-hidden">
             <img
               className="w-16 h-16 left-0 top-0 absolute"
-              src="https://placehold.co/64x64"
+              src={image} alt={title}
             />
           </div>
           <div className="flex-1 self-stretch inline-flex flex-col justify-between items-start">
             <div className="self-stretch justify-start text-zinc-800 text-xs font-semibold font-['Poppins'] leading-4">
-              Oatmeal with Almond Butter and Berries
+              {title}
             </div>
             <div className="self-stretch inline-flex justify-between items-end">
               <div className="px-1.5 py-1 bg-lime-200 rounded-md flex justify-center items-center gap-1">
                 <div className="justify-start text-zinc-800 text-xs font-normal font-['Poppins'] leading-3">
-                  Breakfast
+                  {cuisine}
                 </div>
               </div>
               <div
