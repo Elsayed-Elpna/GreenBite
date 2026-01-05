@@ -27,6 +27,9 @@ const NavBar = () => {
     staleTime: Infinity,
   });
   const navigate = useNavigate();
+  
+
+ 
 
   if (!user || isLoading || !data) return null;
 

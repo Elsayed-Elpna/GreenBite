@@ -51,7 +51,7 @@ class MealPlanDay(models.Model):
 class MealPlanMeal(models.Model):
     meal_plan_day = models.ForeignKey(MealPlanDay, on_delete=models.CASCADE, related_name="meals")
     meal_time = models.CharField(max_length=20, choices=MealTime.choices)
-    meal = models.ForeignKey(Meal, on_delete=models.SET_NULL, null=True, blank=True)
+    meal = models.ForeignKey(Meal, on_delete=models.SET_NULL, null=True, blank=True, related_name="meal_plan_meals")
     is_skipped = models.BooleanField(default=False)
     
     is_replaced = models.BooleanField(default=False)
@@ -64,6 +64,15 @@ class MealPlanMeal(models.Model):
         related_name="replaced_from",
         help_text="Original meal before replacement"
     )
+    draft_title = models.CharField(max_length=255, blank=True, default="")
+    draft_ingredients = models.JSONField(blank=True, default=list)
+    draft_steps = models.JSONField(blank=True, default=list)
+    draft_cuisine = models.CharField(max_length=64, blank=True, default="")
+    draft_calories = models.IntegerField(null=True, blank=True)
+    draft_serving = models.IntegerField(null=True, blank=True)
+    draft_photo = models.TextField(blank=True, default="")
+    draft_source_mealdb_id = models.CharField(max_length=50, blank=True, default="")
+
 
     def __str__(self):
         return f"{self.meal_plan_day.date} - {self.meal_time}"

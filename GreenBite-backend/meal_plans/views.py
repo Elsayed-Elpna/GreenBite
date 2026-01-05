@@ -14,6 +14,7 @@ from .services.recipeProvider import MealDBRecipeProvider, AIRecipeProvider
 from .tasks import async_generate_meal_plan
 from .serializers import MealPlanDetailSerializer
 import logging
+from celery.result import AsyncResult
 
 logger = logging.getLogger(__name__)
 
@@ -281,3 +282,31 @@ class MealPlanListAPIView(APIView):
         ]
         
         return Response(data)
+
+class MealPlanTaskStatusAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, task_id):
+        res = AsyncResult(task_id)
+
+        payload = {
+            "task_id": task_id,
+            "state": res.state,
+        }
+
+        if res.state == "SUCCESS":
+            # task returns plan id (per your task code)
+            result = res.result
+            if isinstance(result, dict):
+                payload["meal_plan_id"] = result.get("meal_plan_id")
+                payload["result"] = result
+            else:
+                payload["meal_plan_id"] = res.result
+                payload["result"] = res.result
+            return Response(payload, status=status.HTTP_200_OK)
+
+        if res.state in ("FAILURE", "REVOKED"):
+            payload["error"] = str(res.result)
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(payload, status=status.HTTP_202_ACCEPTED)

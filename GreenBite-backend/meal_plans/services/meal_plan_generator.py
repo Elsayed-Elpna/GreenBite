@@ -72,29 +72,42 @@ def generate_meal_plan(user, start_date, num_days, meals_per_day, use_ai_fallbac
                     source_recipe = MealDBRecipe.objects.get(id=meta["recipe_id"])
                 except MealDBRecipe.DoesNotExist:
                     source_recipe = None
-
-            
-            meal = Meal.objects.create(
-                user=user,
-                recipe=recipe.title,
-                ingredients=recipe.ingredients,
-                mealTime=meal_time,
-                photo=recipe.thumbnail,
-                source_mealdb_id=meta.get("mealdb_id"),
-
-            )
-            logger.info(
-                "CREATED MEAL: id=%s, recipe=%s, source_mealdb_id=%s",
-                meal.id,
-                meal.recipe,
-                meal.source_mealdb_id,
-            )
-            
-            MealPlanMeal.objects.create(
+                MealPlanMeal.objects.create(
                 meal_plan_day=plan_day,
                 meal_time=meal_time,
-                meal=meal
+                meal=None,  # ✅ no saving Meals yet
+                draft_title=recipe.get("title") or recipe.get("recipe") or "",
+                draft_ingredients=recipe.get("ingredients") or [],
+                draft_steps=recipe.get("steps") or [],
+                draft_cuisine=recipe.get("cuisine") or "",
+                draft_calories=recipe.get("calories"),
+                draft_serving=recipe.get("serving"),
+                draft_photo=recipe.get("photo") or recipe.get("thumbnail") or "",
+                draft_source_mealdb_id=str(recipe.get("source_mealdb_id") or ""),
             )
+
+            
+            # meal = Meal.objects.create(
+            #     user=user,
+            #     recipe=recipe.title,
+            #     ingredients=recipe.ingredients,
+            #     mealTime=meal_time,
+            #     photo=recipe.thumbnail,
+            #     source_mealdb_id=meta.get("mealdb_id"),
+
+            # )
+            # logger.info(
+            #     "CREATED MEAL: id=%s, recipe=%s, source_mealdb_id=%s",
+            #     meal.id,
+            #     meal.recipe,
+            #     meal.source_mealdb_id,
+            # )
+            
+            # MealPlanMeal.objects.create(
+            #     meal_plan_day=plan_day,
+            #     meal_time=meal_time,
+            #     meal=meal
+            # )
             
             recipe_index += 1
     

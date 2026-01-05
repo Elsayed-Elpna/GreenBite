@@ -8,7 +8,25 @@ from meal_plans.models import MealPlan, MealPlanDay, MealPlanMeal
 from food.models import Meal
 
 logger = logging.getLogger(__name__)
+def _val(obj, key, default=None):
+    """
+    Safe getter that supports:
+    - dict-like candidates: obj.get("title")
+    - object candidates: obj.title
+    """
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+def _s(x):
+    # ✅ string-safe
+    return "" if x is None else str(x)
 
+def _list(x):
+    if x is None:
+        return []
+    return x if isinstance(x, list) else [x]
 
 class MealPlanBuilder:
     """
@@ -92,22 +110,28 @@ class MealPlanBuilder:
                 recipe = recipes[recipe_index]
                 
                 # Create Meal object
-                meal = Meal.objects.create(
-                    user=self.user,
-                    recipe=recipe.title,
-                    ingredients=recipe.ingredients,
-                    mealTime=meal_time,
-                    photo=recipe.thumbnail or '',
-                    source_mealdb_id=recipe.metadata.get("mealdb_id")
-                )
+                MealPlanMeal.objects.create(
+                meal_plan_day=plan_day,
+                meal_time=meal_time,
+                meal=None,  # ✅ no saving Meals yet
+                draft_title=_s(_val(recipe, "title") or _val(recipe, "recipe") or ""),
+                draft_ingredients=_list(_val(recipe, "ingredients")),
+                draft_steps=_list(_val(recipe, "steps")),
+                draft_cuisine=_s(_val(recipe, "cuisine")),
+                draft_calories=_s(_val(recipe, "calories")),
+                draft_serving=_s(_val(recipe, "serving")),
+                draft_photo=_s(_val(recipe, "photo") or _val(recipe, "thumbnail")),
+                draft_source_mealdb_id=_s(_val(recipe, "source_mealdb_id")),
+                is_skipped=False
+            )
                 
                 # Link meal to plan day
-                MealPlanMeal.objects.create(
-                    meal_plan_day=plan_day,
-                    meal_time=meal_time,
-                    meal=meal,
-                    is_skipped=False
-                )
+                # MealPlanMeal.objects.create(
+                #     meal_plan_day=plan_day,
+                #     meal_time=meal_time,
+                #     meal=meal,
+                   
+                # )
                 
                 meals_created += 1
                 recipe_index += 1
