@@ -50,7 +50,7 @@ class MealPlanMealNestedSerializer(serializers.ModelSerializer):
             "photo",
             "thumbnail",
             "source_mealdb_id",
-
+            "draft_source_mealdb_id",
             "planned_usages",
             "is_replaced",
             "replaced_at",
@@ -133,9 +133,11 @@ class MealPlanMealNestedSerializer(serializers.ModelSerializer):
         return self.get_photo(obj)
 
     def get_source_mealdb_id(self, obj: MealPlanMeal):
-        meal = self._meal(obj)
-        val = getattr(meal, "source_mealdb_id", None)
-        return val if val is not None else (getattr(obj, "draft_source_mealdb_id", None) or None)
+        meal= self._meal(obj)
+        confirmed = getattr(meal, "source_mealdb_id", None) if meal else None
+        if confirmed:
+            return confirmed
+        return getattr(obj, "draft_source_mealdb_id", None) or None
 
     def get_original_recipe(self, obj: MealPlanMeal):
         original_meal = getattr(obj, "original_meal", None)

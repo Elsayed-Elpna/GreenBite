@@ -44,6 +44,8 @@ export function useConfirmPlan() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries(["mealPlans"]);
       queryClient.invalidateQueries(["mealPlan", id]);
+      queryClient.invalidateQueries({ queryKey: ["meals"] });
+      queryClient.invalidateQueries({ queryKey: ["myMeals"] });
     },
   });
 }
@@ -57,8 +59,18 @@ export function useConfirmDay() {
       queryClient.invalidateQueries(["mealPlans"]);
       // all plans might be impacted; simplest:
       queryClient.invalidateQueries({ queryKey: ["mealPlan"] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlanDetail"] });
+      queryClient.invalidateQueries({ queryKey: ["mealPlans"] });
+
+      // ✅ refresh "My Meals" / home meals list (update this key to match your app)
+      queryClient.invalidateQueries({ queryKey: ["meals"] });
+      queryClient.invalidateQueries({ queryKey: ["myMeals"] });
+
+      // If you have a day-specific query:
+      queryClient.invalidateQueries({ queryKey: ["mealPlanDay", id] });
     },
   });
+
 }
 
 export function useReplacePlanMeal() {

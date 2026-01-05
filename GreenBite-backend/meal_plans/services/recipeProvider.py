@@ -145,7 +145,7 @@ class MealDBRecipeProvider(RecipeProvider):
                 recipes.append(candidate)
             logger.info(f"MealDBRecipeProvider: Found {len(recipes)} suitable recipes.")
             recipes.sort(key=lambda r: r.score, reverse=True)
-            recipes = recipes[:limit]
+        recipes = recipes[:limit]
         return recipes
     def find_by_category(self, category: str, limit: int = 10) -> List[RecipeCandidate]:
         logger.info(f"MealDBRecipeProvider: Fetching recipes in category '{category}'")

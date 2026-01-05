@@ -21,12 +21,32 @@ def _val(obj, key, default=None):
     return getattr(obj, key, default)
 def _s(x):
     # ✅ string-safe
-    return "" if x is None else str(x)
+    if x is None:
+        return ""
+    s = str(x).strip()
+    return "" if s.lower() == "none" else s
+def _i(x):
+    # int-safe for optional integer fields
+    try:
+        return int(x) if x is not None and str(x).strip() != "" else None
+    except Exception:
+        return None
+
 
 def _list(x):
     if x is None:
         return []
     return x if isinstance(x, list) else [x]
+def _meta(obj, key, default=None):
+    """
+    Get value from obj.metadata when obj is RecipeCandidate-like.
+    """
+    if obj is None:
+        return default
+    md = getattr(obj, "metadata", None) or {}
+    if isinstance(md, dict):
+        return md.get(key, default)
+    return default
 
 class MealPlanBuilder:
     """
@@ -108,21 +128,44 @@ class MealPlanBuilder:
                     break
                 
                 recipe = recipes[recipe_index]
+                cuisine = _val(recipe, "cuisine", "")
+                cuisine = "" if cuisine is None else str(cuisine).strip()
+
+                if cuisine is None:  # should never happen, but keep a hard guard
+                    cuisine = ""
+                mealdb_id = _meta(recipe, "mealdb_id") or _val(recipe, "mealdb_id") or _val(recipe, "idMeal")
+                mealdb_id = _s(mealdb_id)
+
+
+                # TEMP debug (remove later)
+                logger.error(
+                    "DEBUG draft_cuisine=%r type=%s recipe_class=%s recipe_repr=%r",
+                    cuisine,
+                    type(cuisine).__name__,
+                    type(recipe).__name__,
+                    str(recipe)[:500],
+                )
                 
                 # Create Meal object
                 MealPlanMeal.objects.create(
                 meal_plan_day=plan_day,
                 meal_time=meal_time,
-                meal=None,  # ✅ no saving Meals yet
-                draft_title=_s(_val(recipe, "title") or _val(recipe, "recipe") or ""),
+                meal=None,
+
+                draft_title=_s(_val(recipe, "title") or _val(recipe, "recipe")),
                 draft_ingredients=_list(_val(recipe, "ingredients")),
-                draft_steps=_list(_val(recipe, "steps")),
-                draft_cuisine=_s(_val(recipe, "cuisine")),
-                draft_calories=_s(_val(recipe, "calories")),
-                draft_serving=_s(_val(recipe, "serving")),
+                draft_steps=_list(_val(recipe, "steps") or _val(recipe, "instructions")),
+
+                # ✅ critical: always non-null string
+                draft_cuisine=cuisine,
+
+                # ✅ keep numeric types
+                draft_calories=_i(_val(recipe, "calories")),
+                draft_serving=_i(_val(recipe, "serving")),
+
                 draft_photo=_s(_val(recipe, "photo") or _val(recipe, "thumbnail")),
-                draft_source_mealdb_id=_s(_val(recipe, "source_mealdb_id")),
-                is_skipped=False
+                draft_source_mealdb_id=mealdb_id,
+                is_skipped=False,
             )
                 
                 # Link meal to plan day

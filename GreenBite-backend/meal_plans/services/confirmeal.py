@@ -8,6 +8,8 @@ from django.utils import timezone
 from meal_plans.models import MealPlanDay, MealPlanMeal, MealPlanFoodUsage
 from food.models import FoodLogSys,Meal
 from decimal import Decimal
+from food.utils.caching import bump_list_version, invalidate_cache
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +62,10 @@ def confirm_meal_plan_day(meal_plan_day, user):
     if meal_plan_day.is_confirmed:
         logger.warning(f"Day {meal_plan_day.id} already confirmed at {meal_plan_day.confirmed_at}")
         raise ValueError("This day is already confirmed")
+    bump_list_version("meals", user.id)
+
+    # Optional: if you create/update FoodLogSys during confirmation
+    bump_list_version("foodlog", user.id)
 
     # Get all meals for this day (QuerySet, not list)
     meals = MealPlanMeal.objects.filter(
@@ -78,6 +84,9 @@ def confirm_meal_plan_day(meal_plan_day, user):
         # Skip skipped meals
         if meal.is_skipped:
             logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - skipped")
+            continue
+        if meal.meal_id:
+            logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - already confirmed")
             continue
 
         # ✅ Create Meal only on confirmation
