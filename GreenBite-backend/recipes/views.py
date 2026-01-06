@@ -114,7 +114,7 @@ class RecommendRecipesAPIView(APIView):
             "thumbnail",
             "category",
             "cuisine",
-            "ingredients_norm",
+            "ingredient_tokens",
             "meal_time",
             "difficulty",
             "instructions",
@@ -125,7 +125,7 @@ class RecommendRecipesAPIView(APIView):
         # Prefer DB overlap filter if supported; else fallback
         try:
             candidates_qs = candidates_qs.extra(
-                where=["ingredients_norm::varchar[] && %s::varchar[]"],
+                where=["ingredient_tokens::jsonb ?| %s"],
                 params=[inv_norms],
             )[:400]
         except Exception:
@@ -133,7 +133,7 @@ class RecommendRecipesAPIView(APIView):
 
         candidates_scored = []
         for r in candidates_qs:
-            ing_norms = r.ingredients_norm or []
+            ing_norms = r.ingredient_tokens or []
             ing_set = set(ing_norms)
 
             matched = list(ing_set & inv_set)
@@ -153,7 +153,7 @@ class RecommendRecipesAPIView(APIView):
                     "cuisine": r.cuisine,
                     "meal_time": r.meal_time,
                     "difficulty": r.difficulty,
-                    "ingredients_norm": list(ing_set)[:30],
+                    "ingredient_tokens": list(ing_set)[:30],
                     "match_count": match_count,
                     "min_days_left": min_days,
                 }
@@ -188,7 +188,7 @@ class RecommendRecipesAPIView(APIView):
                         {
                             "recipe_id": c["recipe_id"],
                             "title": c["title"],
-                            "ingredients_norm": c["ingredients_norm"],
+                            "ingredient_tokens": c["ingredient_tokens"],
                             "match_count": c["match_count"],
                             "min_days_left": c["min_days_left"],
                             "meal_time": c["meal_time"],
@@ -247,7 +247,7 @@ class RecommendRecipesAPIView(APIView):
 
         out = []
         for r in ordered:
-            ing_norms = r.ingredients_norm or []
+            ing_norms = r.ingredient_tokens or []
             matched = [n for n in ing_norms if n in inv_days]
 
             expiring_soon = sorted(
@@ -296,7 +296,7 @@ class ConsumePreviewAPIView(APIView):
         recipe = get_object_or_404(MealDBRecipe, id=s.validated_data["recipe_id"])
 
         today = timezone.now().date()
-        recipe_norms = sorted(set([x for x in (recipe.ingredients_norm or []) if x]))
+        recipe_norms = sorted(set([x for x in (recipe.ingredient_tokens or []) if x]))
 
         logs = FoodLogSys.objects.filter(
             user=request.user,
@@ -352,7 +352,7 @@ class ConsumeConfirmAPIView(APIView):
         items = s.validated_data["items"]
 
         recipe = get_object_or_404(MealDBRecipe, id=recipe_id)
-        recipe_norms = set(recipe.ingredients_norm or [])
+        recipe_norms = set(recipe.ingredient_tokens or [])
 
         ids = [x["foodlog_id"] for x in items]
         with transaction.atomic():
@@ -392,8 +392,6 @@ class ConsumeConfirmAPIView(APIView):
                     used_quantity=used_qty,
                 )
 
-        # NOTE: make sure your FoodLog endpoints bump_list_version("foodlog", user_id)
-        # so recommendation cache is invalidated automatically.
 
         return Response(
             {"detail": "Consumption recorded successfully"},
