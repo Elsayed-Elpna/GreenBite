@@ -28,5 +28,6 @@ urlpatterns = [
     path("waste-log/<int:pk>/", wasteLogviews.waste_log_detail, name="waste-log-detail"),
     # path("mealdb/random/", views.mealdb_random),
     # path("mealdb/<str:mealdb_id>/", views.mealdb_detail),
-    path("food-safety/scan/", imageProcessing.food_safety_scan, name = "food-safety-scan")
+    path("food-safety/scan/", imageProcessing.food_safety_scan, name = "food-safety-scan"),
+    path("food-safety/scan-status/<int:job_id>/", imageProcessing.food_safety_scan_status, name = "food-safety-scan-status"),
 ]
