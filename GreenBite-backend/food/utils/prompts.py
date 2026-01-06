@@ -12,6 +12,8 @@ LANGUAGE RULE:
 Rules:
 - You can add 2-3 extra ingredients and salt, oil, water, spices, pepper if needed.
 - Be more specific about cuisine countries especially middle eastern return country cuisines.
+- Return only halal food.
+- Don't mention Israel or return Israeli food.
 - Ingredients must have realistic quantities.
 - Keep steps short
 - calculate calories
