@@ -1,48 +1,61 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Mousewheel } from "swiper/modules";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { CUISINE_COUNTRY_MAP, getCuisineVisuals } from "@/utils/constants";
 import { getRandomRecipe } from "@/api/mealdb.api";
 import MenuCard from "../RightMenu/RecommendedMenu/MenuCard";
 
 import "swiper/css";
+
 const SLIDES_COUNT = 6;
+
 const MyCarousel = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   const fetchRecipes = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setError("");
 
-      const data = await getRandomRecipe(SLIDES_COUNT);
+      // NOTE: adapt this to your real API return shape.
+      // - If getRandomRecipe() returns ONE recipe object, we’ll duplicate it to fill the slider.
+      // - If it returns an array, we’ll use it.
+      const data = await getRandomRecipe();
 
-      const list = Array.isArray(data) ? data:data ? [data] : [];
+      const list = Array.isArray(data) ? data : data ? [data] : [];
 
-      const filled = list.length ? Array.from({length: SLIDES_COUNT}, (_,i) => list[i % list.length]) : [];
-      setRecipes(filled)
+      const filled = list.length
+        ? Array.from({ length: SLIDES_COUNT }, (_, i) => list[i % list.length])
+        : [];
 
-    } catch(e){
-      const details = 
-      e?.response?.data?.detail ||
-      e?.response?.data?.message ||
-      e?.message ||
-      "unknown error";
-      setError(`Failed to load recommended recipes: ${details}`);
-    } finally{
+      setRecipes(filled);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail ||
+        e?.response?.data?.message ||
+        e?.message ||
+        "Failed to load recommended menu";
+      setError(msg);
+      setRecipes([]);
+    } finally {
       setLoading(false);
-  }
-};
-    useEffect(() => {
-      fetchRecipes();
-    }, []);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
+
+  // build slides array so we always render SLIDES_COUNT items (skeletons if needed)
+  const slides = useMemo(() => {
+    if (!loading && recipes.length > 0) return recipes;
+    return Array.from({ length: SLIDES_COUNT }, () => null);
+  }, [loading, recipes]);
+
   return (
     <div className="h-full flex flex-col min-h-0">
-      <h3 className="mb-3 font-semibold text-center  text-sm">
-        Recommended Recipes
-      </h3>
-
       <div className="flex-1 min-h-0">
         <Swiper
           direction="vertical"
@@ -50,7 +63,7 @@ const MyCarousel = () => {
           slidesPerView={5}
           spaceBetween={14}
           mousewheel
-          loop = {recipes.length > 0}
+          loop={recipes.length > 0}
           autoplay={{
             delay: 3000,
             disableOnInteraction: false,
@@ -59,18 +72,40 @@ const MyCarousel = () => {
           speed={700}
           className="h-full"
         >
-          {recipes.length > 0?
-          recipes.map((r, idx) => (
-          <SwiperSlide key = {r.id ?? r.mealdb_id ??  idx}>
-            <MenuCard recipe={r} loading={false} error = {null} onRefresh={fetchRecipes} />
-          </SwiperSlide>))
-          : Array.from ({length: SLIDES_COUNT}).map((_, idx) => (
-            <SwiperSlide key = {`skeleton-${idx}`}>
-              <MenuCard recipe = {null} loading = {loading} error = {error} onRefresh={fetchRecipes}/>
-            </SwiperSlide>
-          ))}
+          {slides.map((recipe, idx) => {
+            // If recipe exists, compute visuals from constants.js (normalized inside getCuisineVisuals)
+            const cuisine = recipe?.cuisine ?? "";
+
+            // Option A (recommended): use the resolver you already have
+            const cuisineVisuals = recipe ? getCuisineVisuals(cuisine) : null;
+
+            // Option B (direct map usage) — in case you want it explicitly:
+            // const key = (cuisine || "").trim().toLowerCase();
+            // const countryCode = CUISINE_COUNTRY_MAP[key];
+            // const cuisineVisuals = recipe ? { ...getCuisineVisuals(cuisine), countryCode } : null;
+
+            const key = recipe?.id ?? recipe?.mealdb_id ?? `${idx}`;
+
+            return (
+              <SwiperSlide key={key}>
+                <MenuCard
+                  recipe={recipe}
+                  loading={loading && !recipe}
+                  error={!loading && !recipe ? error : ""}
+                  onRefresh={fetchRecipes}
+                  onAdd={() => {}}
+                  cuisineVisuals={cuisineVisuals}
+                />
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
       </div>
+
+      {/* Optional: if you want a small error hint below the carousel */}
+      {!loading && error ? (
+        <p className="mt-2 text-xs text-red-600">{error}</p>
+      ) : null}
     </div>
   );
 };

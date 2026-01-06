@@ -1,128 +1,136 @@
 import React from "react";
-
+import ReactCountryFlag from "react-country-flag";
 import { FaPlus } from "react-icons/fa6";
-import { PiFire } from "react-icons/pi";
-import { PiBreadLight } from "react-icons/pi";
-import { PiFish } from "react-icons/pi";
-import { IoWaterOutline } from "react-icons/io5";
 
-const MenuCard = ({ recipe, loading, error, onRefresh }) => {
+const CARD_HEIGHT = "h-[140px]";
+
+const MenuCard = ({
+  recipe,
+  loading,
+  error,
+  onRefresh,
+  onAdd,
+  cuisineVisuals, // pass this from parent (same as RecipeCard.jsx usage)
+}) => {
   const safeRecipe = recipe ?? {};
   const title = safeRecipe.title || "-";
   const image = safeRecipe.thumbnail || "https://placehold.co/64x64";
   const category = safeRecipe.category || "Category";
   const cuisine = safeRecipe.cuisine || "Cuisine";
 
+  // --- Loading state (keeps the same card height) ---
   if (loading) {
     return (
-      <div className="self-stretch p-4 mt-4 bg-white rounded-2xl inline-flex flex-col justify-start items-start gap-4">
-        <h4 className="text-xs font-semibold text-zinc-800">Loading...</h4>
-        <div className="w-full h-16 bg-neutral-100 rounded-xl" />
+      <div className={`self-stretch mt-4 bg-white rounded-2xl p-4 flex flex-col ${CARD_HEIGHT}`}>
+        <div className="flex gap-4 flex-1 min-h-0">
+          <div className="w-16 h-16 rounded-xl bg-neutral-100 flex-shrink-0" />
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="h-4 w-3/4 bg-neutral-100 rounded" />
+            <div className="mt-2 h-6 w-24 bg-neutral-100 rounded-md" />
+            <div className="flex-1" />
+          </div>
+        </div>
+
+        {/* Full-width divider */}
+        <div className="h-px bg-neutral-200 w-full mt-3" />
+
+        {/* Footer skeleton */}
+        <div className="pt-3 flex items-center gap-2">
+          <div className="w-6 h-4 bg-neutral-100 rounded" />
+          <div className="h-4 w-1/2 bg-neutral-100 rounded" />
+        </div>
       </div>
     );
   }
 
+  // --- Error state (keeps same card height + full-width divider) ---
   if (error) {
     return (
-      <div className="self-stretch p-4 mt-4 bg-white rounded-2xl inline-flex flex-col justify-start items-start gap-3">
-        <h4 className="text-xs font-semibold text-zinc-800">Recommended Menu</h4>
-        <p className="text-xs text-red-600">{error}</p>
-        <button
-          type="button"
-          onClick={onRefresh}
-          className="text-xs underline text-zinc-800"
-        >
-          Try again
-        </button>
+      <div className={`self-stretch mt-4 bg-white rounded-2xl p-4 flex flex-col ${CARD_HEIGHT}`}>
+        <div className="flex gap-4 flex-1 min-h-0">
+          <div className="w-16 h-16 rounded-xl bg-neutral-100 flex-shrink-0" />
+          <div className="flex-1 flex flex-col min-w-0">
+            <h4 className="text-xs font-semibold text-zinc-800">Recommended Menu</h4>
+            <p className="mt-1 text-xs text-red-600 line-clamp-2">{error}</p>
+            <div className="flex-1" />
+          </div>
+        </div>
+
+        {/* Full-width divider */}
+        <div className="h-px bg-neutral-200 w-full mt-3" />
+
+        <div className="pt-3">
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="text-xs underline text-zinc-800 w-fit"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
 
+  // --- Normal card ---
   return (
-    <>
-      <div className="self-stretch p-4 mt-4 bg-white rounded-2xl inline-flex flex-col justify-start items-start gap-4">
-        <div className="self-stretch h-16 inline-flex justify-start items-start gap-4">
-          <div className="w-16 h-16 relative bg-lime-200 rounded-xl overflow-hidden">
-            <img
-              className="w-16 h-16 left-0 top-0 absolute"
-              src={image} alt={title}
-            />
-          </div>
-          <div className="flex-1 self-stretch inline-flex flex-col justify-between items-start">
-            <div className="self-stretch justify-start text-zinc-800 text-xs font-semibold font-['Poppins'] leading-4">
+    <div className={`self-stretch mt-4 bg-white rounded-2xl p-4 flex flex-col ${CARD_HEIGHT}`}>
+      {/* Top row (image + content) */}
+      <div className="flex gap-4 flex-1 min-h-0">
+        {/* Image (fixed size) */}
+        <div className="w-16 h-16 relative bg-lime-200 rounded-xl overflow-hidden flex-shrink-0">
+          <img className="w-full h-full object-cover" src={image} alt={title} loading="lazy" />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Title + add button */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="text-zinc-800 text-xs font-semibold leading-4 line-clamp-2">
               {title}
             </div>
-            <div className="self-stretch inline-flex justify-between items-end">
-              <div className="px-1.5 py-1 bg-lime-200 rounded-md flex justify-center items-center gap-1">
-                <div className="justify-start text-zinc-800 text-xs font-normal font-['Poppins'] leading-3">
-                  {cuisine}
-                </div>
-              </div>
-              <div
-                data-show-badge="true"
-                data-size="xSmall"
-                data-type="Primary"
-                className="p-0.75 bg-lime-300 rounded-md flex justify-start items-start gap-2"
-              >
-                <div className="w-4 h-4 relative">
-                  <FaPlus />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="self-stretch h-0 outline-1 outline-offset-[-0.50px] outline-neutral-200" />
-        <div className="self-stretch inline-flex justify-between items-center">
-          <div className="flex justify-center items-center gap-1.5">
-            <div className="flex justify-start items-center gap-0.5">
-              <PiFire className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3" />
 
-              <div className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3">
-                C
-              </div>
-            </div>
-            <div className="justify-start text-zinc-800 text-xs font-normal font-['Poppins'] leading-3">
-              350 kcal
-            </div>
+            <button
+              type="button"
+              onClick={onAdd}
+              className="w-9 h-9 bg-lime-300 rounded-md flex items-center justify-center flex-shrink-0"
+              aria-label="Add"
+            >
+              <FaPlus className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex justify-center items-center gap-1.5">
-            <div className="flex justify-start items-center gap-0.5">
-              <PiBreadLight className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3" />
 
-              <div className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3">
-                C
-              </div>
-            </div>
-            <div className="justify-start text-zinc-800 text-xs font-normal font-['Poppins'] leading-3">
-              45g
-            </div>
+          {/* Category tag */}
+          <div className="mt-2">
+            <span className="px-1.5 py-1 bg-lime-200 rounded-md inline-flex justify-center items-center">
+              <span className="text-zinc-800 text-xs font-normal leading-3">{category}</span>
+            </span>
           </div>
-          <div className="flex justify-center items-center gap-1.5">
-            <div className="flex justify-start items-center gap-0.5">
-              <PiFish className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3" />
-              <div className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3">
-                P
-              </div>
-            </div>
-            <div className="justify-start text-zinc-800 text-xs font-normal font-['Poppins'] leading-3">
-              12g
-            </div>
-          </div>
-          <div className="flex justify-center items-center gap-1.5">
-            <div className="flex justify-start items-center gap-0.5">
-              <IoWaterOutline className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3" />
 
-              <div className="justify-start text-neutral-400 text-xs font-normal font-['Poppins'] leading-3">
-                F
-              </div>
-            </div>
-            <div className="justify-start text-zinc-800 text-xs font-normal font-['Poppins'] leading-3">
-              14g
-            </div>
-          </div>
+          {/* Push divider/footer to bottom */}
+          <div className="flex-1" />
         </div>
       </div>
-    </>
+
+      {/* Divider: FULL WIDTH of the card */}
+      <div className="h-px bg-neutral-200 w-full mt-3" />
+
+      {/* Footer: cuisine + flag beside it */}
+      <div className="pt-3 flex items-center gap-2 min-w-0">
+        {cuisineVisuals?.countryCode && (
+          <ReactCountryFlag
+            svg
+            countryCode={cuisineVisuals.countryCode}
+            style={{ width: "1.3em", height: "1.3em" }}
+            aria-label={cuisineVisuals.countryCode}
+          />
+        )}
+
+        <span className="text-xs text-zinc-800 font-normal leading-3 truncate">
+          {cuisine}
+        </span>
+      </div>
+    </div>
   );
 };
 
