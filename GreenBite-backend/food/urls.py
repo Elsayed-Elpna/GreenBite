@@ -30,4 +30,8 @@ urlpatterns = [
     # path("mealdb/<str:mealdb_id>/", views.mealdb_detail),
     path("food-safety/scan/", imageProcessing.food_safety_scan, name = "food-safety-scan"),
     path("food-safety/scan-status/<int:job_id>/", imageProcessing.food_safety_scan_status, name = "food-safety-scan-status"),
+    path("food/expiry-soon/", foodlogsysviews.expiring_soon, name="expiring-soon"),
+
+path("food/summary/", foodlogsysviews.food_log_summary, name="food-log-summary"),
+path("food/category-breakdown/", foodlogsysviews.food_log_category_breakdown, name="food-log-category-breakdown"),
 ]
