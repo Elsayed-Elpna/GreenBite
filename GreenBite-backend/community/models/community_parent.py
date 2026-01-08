@@ -1,10 +1,11 @@
-import uuid
+# import uuid
 from django.db import models
 from django.utils import timezone
 
 class CommunityParent(models.Model):
     # Primary Key
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
+
 
     # Creator of the content
     creator = models.ForeignKey(

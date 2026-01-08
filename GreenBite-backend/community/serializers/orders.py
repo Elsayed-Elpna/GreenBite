@@ -21,75 +21,23 @@ class MarketOrderAddressSerializer(serializers.ModelSerializer):
 
 class MarketOrderCreateSerializer(serializers.ModelSerializer):
     address = MarketOrderAddressSerializer(write_only=True)
+    market_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = MarketOrder
         fields = [
             'id',
-            'market',
+            'market_id',
             'quantity',
-            'unit',
             'payment_method',
             'buyer_note',
             'address',
         ]
         read_only_fields = ['id']
 
-    def validate(self, attrs):
-        request = self.context['request']
-        user = request.user
-
-        market = attrs.get('market')
-        quantity = attrs.get('quantity')
-        payment_method = attrs.get('payment_method')
-
-        # Listing must be ACTIVE
-        if market.status != 'ACTIVE':
-            raise serializers.ValidationError("Listing is not active.")
-
-        # Listing must not be expired
-        if market.available_until and market.available_until < timezone.now().date():
-            raise serializers.ValidationError("Listing has expired.")
-
-        # Buyer cannot be seller
-        if market.seller == user:
-            raise serializers.ValidationError("You cannot buy your own listing.")
-
-        # Quantity validation
-        if quantity < 1:
-            raise serializers.ValidationError("Quantity must be at least 1.")
-
-        if quantity > market.quantity:
-            raise serializers.ValidationError(
-                "Requested quantity exceeds available quantity."
-            )
-
-        # Payment method validation
-        if payment_method != 'COD':
-            raise serializers.ValidationError(
-                "Only Cash on Delivery (COD) is supported."
-            )
-
-        return attrs
-
     def create(self, validated_data):
-        address_data = validated_data.pop('address')
-        request = self.context['request']
-        market = validated_data['market']
-
-        order = MarketOrder.objects.create(
-            buyer=request.user,
-            seller=market.seller,
-            total_price=market.price * validated_data['quantity'],
-            **validated_data
-        )
-
-        MarketOrderAddress.objects.create(
-            order=order,
-            **address_data
-        )
-
-        return order
+        # handled in service
+        raise NotImplementedError
 
 
 class MarketOrderAcceptSerializer(serializers.ModelSerializer):
@@ -139,25 +87,74 @@ class MarketOrderStatusUpdateSerializer(serializers.ModelSerializer):
 
         return value
 
+class BuyerOrderListSerializer(serializers.ModelSerializer):
+    order_id = serializers.IntegerField(source="id", read_only=True)
+    listing_id = serializers.IntegerField(source="market.id", read_only=True)
+    listing_title = serializers.CharField(source="market.title", read_only=True)
 
-class MarketOrderReadSerializer(serializers.ModelSerializer):
-    address = MarketOrderAddressSerializer(read_only=True)
-    market_title = serializers.CharField(
-        source='market.title',
+    class Meta:
+        model = MarketOrder
+        fields = [
+            "order_id",
+            "listing_id",
+            "listing_title",
+            "quantity",
+            "unit",
+            "total_price",
+            "status",
+            "created_at",
+        ]
+
+class SellerOrderListSerializer(serializers.ModelSerializer):
+    order_id = serializers.IntegerField(source="id", read_only=True)
+    buyer_name = serializers.CharField(
+        source="buyer.get_full_name",
+        read_only=True
+    )
+    listing_title = serializers.CharField(
+        source="market.title",
         read_only=True
     )
 
     class Meta:
         model = MarketOrder
         fields = [
-            'id',
-            'market_title',
-            'quantity',
-            'unit',
-            'total_price',
-            'status',
-            'payment_method',
-            'buyer_note',
-            'created_at',
-            'address',
+            "order_id",
+            "buyer_name",
+            "listing_title",
+            "quantity",
+            "unit",
+            "status",
+            "created_at",
         ]
+
+
+class OrderDetailsSerializer(serializers.ModelSerializer):
+    order_id = serializers.IntegerField(source="id", read_only=True)
+
+    listing = serializers.SerializerMethodField()
+    address = MarketOrderAddressSerializer(read_only=True)
+
+    class Meta:
+        model = MarketOrder
+        fields = [
+            "order_id",
+            "status",
+            "payment_method",
+            "buyer_note",
+            "created_at",
+            "listing",
+            "quantity",
+            "total_price",
+            "address",
+        ]
+
+    def get_listing(self, obj):
+        return {
+            "id": obj.market.id,
+            "title": obj.market.title,
+            "price": obj.market.price,
+            "currency": obj.market.currency,
+            "unit": obj.market.unit,
+        }
+

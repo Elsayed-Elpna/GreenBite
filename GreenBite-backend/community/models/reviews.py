@@ -1,21 +1,19 @@
-import uuid
+# import uuid
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class MarketReview(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
 
     # Relations
-    market_id = models.ForeignKey(
+    market = models.ForeignKey(
         'ComMarket',
         on_delete=models.CASCADE,
-        db_column='market_id',
         related_name='reviews'
     )
-    reviewer_id = models.ForeignKey(
+    reviewer = models.ForeignKey(
         'accounts.User',
         on_delete=models.CASCADE,
-        db_column='reviewer_id',
         related_name='market_reviews'
     )
 
@@ -30,7 +28,7 @@ class MarketReview(models.Model):
     class Meta:
         db_table = 'market_review'
         ordering = ['-created_at']
-        unique_together = ('market_id', 'reviewer_id')  # one review per buyer per listing
+        unique_together = ('market', 'reviewer')  # one review per buyer per listing
 
     def __str__(self):
-        return f"Review {self.id} - {self.market_id.title} - {self.rating} stars"
+        return f"Review {self.id} - {self.market.title} - {self.rating} stars"

@@ -1,9 +1,9 @@
-import uuid
+# import uuid
 from django.db import models
 from django.utils import timezone
 
 class MarketOrder(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
 
     # Relations
     market = models.ForeignKey(
@@ -65,7 +65,7 @@ class MarketOrder(models.Model):
 
 
 class MarketOrderAddress(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
     order = models.OneToOneField(
         'MarketOrder',
         on_delete=models.CASCADE,

@@ -16,19 +16,20 @@ class CommunityReportCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def validate_target_type(self, value):
-        allowed_types = ['MARKET', 'USER']
-        if value not in allowed_types:
+        if value not in ['MARKET', 'USER']:
             raise serializers.ValidationError(
                 "target_type must be either 'MARKET' or 'USER'."
             )
         return value
 
     def validate(self, attrs):
-        target_type = attrs.get('target_type')
-        target_id = attrs.get('target_id')
-        reporter = self.context['request'].user
+        request = self.context['request']
+        reporter = request.user
 
-        # Validate target existence
+        target_type = attrs['target_type']
+        target_id = attrs['target_id']
+
+        # Target existence check
         if target_type == 'MARKET':
             if not ComMarket.objects.filter(id=target_id).exists():
                 raise serializers.ValidationError(
@@ -41,18 +42,18 @@ class CommunityReportCreateSerializer(serializers.ModelSerializer):
                     "The user you are reporting does not exist."
                 )
 
-        # Self-report check (only relevant for USER reports)
-        if target_type == 'USER' and target_id == reporter.id:
-            raise serializers.ValidationError("You cannot report yourself.")
+            # Prevent self-report
+            if target_id == reporter.id:
+                raise serializers.ValidationError(
+                    "You cannot report yourself."
+                )
 
-        # Prevent duplicate reports by same user on same target
-        duplicate_exists = CommunityReport.objects.filter(
+        # Prevent duplicate reports
+        if CommunityReport.objects.filter(
             reporter=reporter,
             target_type=target_type,
-            target_id=target_id,
-        ).exists()
-
-        if duplicate_exists:
+            target_id=target_id
+        ).exists():
             raise serializers.ValidationError(
                 "You have already reported this target."
             )
@@ -62,6 +63,147 @@ class CommunityReportCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         reporter = self.context['request'].user
         return CommunityReport.objects.create(
-            reporter=reporter,  # <-- use 'reporter', not 'reporter_id'
+            reporter=reporter,
             **validated_data
         )
+
+
+class ReportListSerializer(serializers.ModelSerializer):
+    reporter = serializers.SerializerMethodField()
+    target_snapshot = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CommunityReport
+        fields = [
+            "id",
+            "status",
+            "target_type",
+            "target_id",
+            "reason",
+            "reporter",
+            "target_snapshot",
+            "created_at",
+        ]
+
+    def get_reporter(self, obj):
+        return {"id": obj.reporter.id, "email": obj.reporter.email}
+
+    def get_target_snapshot(self, obj):
+        if obj.target_type == "MARKET":
+            market = ComMarket.objects.select_related('seller').filter(id=obj.target_id).first()
+            if not market:
+                return None
+            return {
+                "type": "MARKET", 
+                "title": market.title, 
+                "seller": {
+                    "id": market.seller.id,
+                    "email": market.seller.email
+                }
+            }
+
+        if obj.target_type == "USER":
+            user = User.objects.filter(id=obj.target_id).first()
+            if not user:
+                return None
+            return {
+                "type": "USER", 
+                "email": user.email
+            }
+
+        return None
+
+
+class ReportDetailSerializer(serializers.ModelSerializer):
+    reporter = serializers.SerializerMethodField()
+    reviewed_by = serializers.SerializerMethodField()
+    target_snapshot = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CommunityReport
+        fields = [
+            "id",
+            "status",
+            "target_type",
+            "target_id",
+            "reason",
+            "details",
+            "reporter",
+            "target_snapshot",
+            "created_at",
+            "reviewed_by",
+            "reviewed_at",
+        ]
+
+    def get_reporter(self, obj):
+        return {
+            "id": obj.reporter.id,
+            "email": obj.reporter.email,
+        }
+
+    def get_reviewed_by(self, obj):
+        if obj.reviewed_by:
+            return {
+                "id": obj.reviewed_by.id,
+                "email": obj.reviewed_by.email,
+            }
+        return None
+
+    def get_target_snapshot(self, obj):
+        if obj.target_type == "MARKET":
+            market = ComMarket.objects.select_related('seller').filter(id=obj.target_id).first()
+            if not market:
+                return None
+            return {
+                "type": "MARKET",
+                "title": market.title,
+                "seller": {
+                    "id": market.seller.id,
+                    "email": market.seller.email
+                }
+            }
+
+        if obj.target_type == "USER":
+            user = User.objects.filter(id=obj.target_id).first()
+            if not user:
+                return None
+            return {
+                "type": "USER",
+                "email": user.email
+            }
+
+        return None
+
+
+class ReportModerateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=["APPROVED", "DISMISSED"])
+    admin_action = serializers.ChoiceField(
+        choices=[
+            "NONE",
+            "SUSPEND_SELLER",
+            "BAN_USER",
+            "DELETE_MARKET",
+        ],
+        required=False,
+        allow_null=True,
+    )
+    admin_notes = serializers.CharField(required=False, allow_blank=True)
+    ban_until = serializers.DateField(required=False, allow_null=True)
+
+    def validate(self, data):
+        report = self.context["report"]
+
+        if report.status != "PENDING":
+            raise serializers.ValidationError("Report already reviewed.")
+
+        if data["status"] == "APPROVED" and not data.get("admin_action"):
+            raise serializers.ValidationError(
+                "Admin action is required when approving."
+            )
+        
+        if data.get("admin_action") == "BAN_USER" and not data.get("ban_until"):
+            raise serializers.ValidationError(
+                "ban_until is required when banning a user."
+            )
+
+        return data
