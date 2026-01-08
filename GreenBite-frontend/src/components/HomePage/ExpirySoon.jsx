@@ -28,7 +28,12 @@ const ExpirySoonn = () => {
   if (isError) return <div className="py-8 text-red-500">Failed to load items</div>;
 
   return (
-    <section className="py-8 rounded-2xl p-6 bg-gradient-to-r from-emerald-50 via-green-50 to-orange-50 border border-emerald-100 shadow-sm">
+    <section className="
+      py-4 rounded-2xl p-6
+      bg-gradient-to-r from-emerald-50/60 via-green-50/50 to-orange-50/50
+      border border-emerald-100/70
+      shadow-sm
+    ">
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">

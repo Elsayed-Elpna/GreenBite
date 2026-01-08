@@ -72,8 +72,14 @@ const SpoilageDetection = () => {
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   return (
-    <section className="py-8">
-      <div className="rounded-2xl p-6 md:p-2 lg:p-10 flex flex-col lg:flex-row gap-4 items-center bg-gradient-to-r from-emerald-50 via-green-50 to-orange-50 border border-emerald-100 shadow-sm">
+    <section className="py-4">
+      <div className="
+        rounded-2xl p-6 md:p-8 lg:p-10
+        flex flex-col lg:flex-row gap-6 items-center
+        bg-gradient-to-r from-emerald-50/60 via-green-50/50 to-orange-50/50
+        border border-emerald-100/70
+        shadow-sm
+      ">
         {/* hidden inputs */}
         <input
           ref={cameraRef}
@@ -113,12 +119,15 @@ const SpoilageDetection = () => {
               className="gap-2 bg-emerald-700 hover:bg-emerald-800"
               onClick={onPickFile}
               disabled={isBusy}
+
             >
-              {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-              {isCreating ? "Uploading…" : isPolling ? "Analyzing…" : isMobile ? "Take Photo" : "Upload Photo"}
+              <p className="flex items-center gap-2">
+                {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                {isCreating ? "Uploading…" : isPolling ? "Analyzing…" : isMobile ? "Take Photo" : "Upload"}
+              </p>
             </Button>
 
-            {/* Optional: always allow camera even on desktop */}
+            {/*  always allow camera even on desktop */}
             <Button
               variant="outline"
               className="gap-2 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
@@ -126,8 +135,10 @@ const SpoilageDetection = () => {
               type="button"
               disabled={isBusy}
             >
-              <Camera className="w-4 h-4" />
-              Camera
+              <p className="flex items-center gap-2">
+                <Camera className="w-4 h-4" />
+                Camera
+              </p>
             </Button>
 
             <Button
@@ -136,8 +147,10 @@ const SpoilageDetection = () => {
               onClick={() => setShowHow((v) => !v)}
               type="button"
             >
-              <Info className="w-4 h-4" />
-              {showHow ? "Hide" : "How it Works"}
+              <p className="flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                {showHow ? "Hide" : "How it Works"}
+              </p>
             </Button>
           </div>
 

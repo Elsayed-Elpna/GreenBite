@@ -3,8 +3,13 @@ import Button  from '@/components/ui/Button';
 
 const JoinCommunity = () => {
   return (
-    <section className="py-8">
-      <div className="gradient-hero rounded-2xl p-8 md:p-12 border border-green-100 shadow-sm rounded-2xl p-6 bg-gradient-to-r from-[#eaf7ed] via-[#f6fff6] to-[#e9f6ea] border border-green-100 shadow-sm  ">
+    <section className="py-4">
+      <div className="
+      rounded-2xl p-8 md:p-12
+      bg-gradient-to-r from-emerald-50/60 via-green-50/50 to-orange-50/50
+      border border-emerald-100/70
+      shadow-sm
+    ">
   <div className="flex flex-col lg:flex-row items-center gap-8 ">
     {/* Left content */}
     <div className="flex-1 text-center lg:text-left">

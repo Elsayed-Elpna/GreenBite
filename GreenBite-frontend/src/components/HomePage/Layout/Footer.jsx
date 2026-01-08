@@ -16,6 +16,7 @@ const Footer = () => {
           Ai Recipes
         </NavLink>
       </nav>
+
       <nav>
         <h6 className="footer-title">Company</h6>
         <NavLink to="/#vision" className="link link-hover">
@@ -25,6 +26,7 @@ const Footer = () => {
           Offers
         </NavLink>
       </nav>
+
       <nav>
         <h6 className="footer-title">Social</h6>
         <div className="grid grid-flow-col gap-4">
@@ -63,6 +65,24 @@ const Footer = () => {
           </a>
         </div>
       </nav>
+
+      {/* Advertisement */}
+      <aside>
+        <h6 className="footer-title">Advertisement</h6>
+        <a
+          href=""
+          target="_blank"
+          rel="noreferrer"
+          className="block"
+        >
+          <img
+            src="/images/essense.png"
+            alt="Advertisement"
+            className="w-64 max-w-full rounded-xl border border-emerald-100/60 shadow-sm object-cover"
+            loading="lazy"
+          />
+        </a>
+      </aside>
     </footer>
   );
 };

@@ -90,10 +90,15 @@ const DashboardSummary = () => {
   }, [summary.generated_at, summary.updated_at]);
 
   return (
-    <section className="py-8">
+    <section className="py-4 rounded-2xl p-6
+    bg-gradient-to-r from-emerald-50/60 via-green-50/50 to-orange-50/50
+    border border-emerald-100/70
+    shadow-sm
+  ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6 rounded-2xl p-6 bg-gradient-to-r from-[#eaf7ed] via-[#f6fff6] to-[#e9f6ea] border border-green-100 shadow-sm">
+        <div className="
+    mb-6 ">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-foreground">Dashboard Summary</h2>
@@ -108,7 +113,7 @@ const DashboardSummary = () => {
                 onToggle={() => setDetailsOpen((v) => !v)}
                 controlsId="dashboard-details"
               />
-              <div className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-medium">{updatedLabel}</div>
+              {/* <div className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-medium">{updatedLabel}</div> */}
             </div>
           </div>
         </div>
