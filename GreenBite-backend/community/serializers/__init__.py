@@ -31,5 +31,6 @@ from .reports import (
     ReportListSerializer,
     ReportDetailSerializer,
     ReportModerateSerializer,
+    ReportTargetSnapshotMixin,
 
 )

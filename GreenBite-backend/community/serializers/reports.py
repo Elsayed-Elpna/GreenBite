@@ -15,60 +15,45 @@ class CommunityReportCreateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
-    def validate_target_type(self, value):
-        if value not in ['MARKET', 'USER']:
-            raise serializers.ValidationError(
-                "target_type must be either 'MARKET' or 'USER'."
+class ReportTargetSnapshotMixin:
+
+    def get_target_snapshot(self, obj):
+        if obj.target_type == "MARKET":
+            market = (
+                ComMarket.objects
+                .select_related("seller")
+                .filter(id=obj.target_id)
+                .first()
             )
-        return value
+            if not market:
+                return None
 
-    def validate(self, attrs):
-        request = self.context['request']
-        reporter = request.user
+            return {
+                "type": "MARKET",
+                "title": market.title,
+                "seller": {
+                    "id": market.seller.id,
+                    "email": market.seller.email,
+                }
+            }
 
-        target_type = attrs['target_type']
-        target_id = attrs['target_id']
+        if obj.target_type == "USER":
+            user = User.objects.filter(id=obj.target_id).first()
+            if not user:
+                return None
 
-        # Target existence check
-        if target_type == 'MARKET':
-            if not ComMarket.objects.filter(id=target_id).exists():
-                raise serializers.ValidationError(
-                    "The marketplace listing you are reporting does not exist."
-                )
+            return {
+                "type": "USER",
+                "email": user.email,
+            }
 
-        elif target_type == 'USER':
-            if not User.objects.filter(id=target_id).exists():
-                raise serializers.ValidationError(
-                    "The user you are reporting does not exist."
-                )
-
-            # Prevent self-report
-            if target_id == reporter.id:
-                raise serializers.ValidationError(
-                    "You cannot report yourself."
-                )
-
-        # Prevent duplicate reports
-        if CommunityReport.objects.filter(
-            reporter=reporter,
-            target_type=target_type,
-            target_id=target_id
-        ).exists():
-            raise serializers.ValidationError(
-                "You have already reported this target."
-            )
-
-        return attrs
-
-    def create(self, validated_data):
-        reporter = self.context['request'].user
-        return CommunityReport.objects.create(
-            reporter=reporter,
-            **validated_data
-        )
+        return None
 
 
-class ReportListSerializer(serializers.ModelSerializer):
+class ReportListSerializer(
+    ReportTargetSnapshotMixin,
+    serializers.ModelSerializer
+):
     reporter = serializers.SerializerMethodField()
     target_snapshot = serializers.SerializerMethodField()
 
@@ -86,35 +71,16 @@ class ReportListSerializer(serializers.ModelSerializer):
         ]
 
     def get_reporter(self, obj):
-        return {"id": obj.reporter.id, "email": obj.reporter.email}
-
-    def get_target_snapshot(self, obj):
-        if obj.target_type == "MARKET":
-            market = ComMarket.objects.select_related('seller').filter(id=obj.target_id).first()
-            if not market:
-                return None
-            return {
-                "type": "MARKET", 
-                "title": market.title, 
-                "seller": {
-                    "id": market.seller.id,
-                    "email": market.seller.email
-                }
-            }
-
-        if obj.target_type == "USER":
-            user = User.objects.filter(id=obj.target_id).first()
-            if not user:
-                return None
-            return {
-                "type": "USER", 
-                "email": user.email
-            }
-
-        return None
+        return {
+            "id": obj.reporter.id,
+            "email": obj.reporter.email,
+        }
 
 
-class ReportDetailSerializer(serializers.ModelSerializer):
+class ReportDetailSerializer(
+    ReportTargetSnapshotMixin,
+    serializers.ModelSerializer
+):
     reporter = serializers.SerializerMethodField()
     reviewed_by = serializers.SerializerMethodField()
     target_snapshot = serializers.SerializerMethodField()
@@ -142,38 +108,13 @@ class ReportDetailSerializer(serializers.ModelSerializer):
         }
 
     def get_reviewed_by(self, obj):
-        if obj.reviewed_by:
-            return {
-                "id": obj.reviewed_by.id,
-                "email": obj.reviewed_by.email,
-            }
-        return None
+        if not obj.reviewed_by:
+            return None
 
-    def get_target_snapshot(self, obj):
-        if obj.target_type == "MARKET":
-            market = ComMarket.objects.select_related('seller').filter(id=obj.target_id).first()
-            if not market:
-                return None
-            return {
-                "type": "MARKET",
-                "title": market.title,
-                "seller": {
-                    "id": market.seller.id,
-                    "email": market.seller.email
-                }
-            }
-
-        if obj.target_type == "USER":
-            user = User.objects.filter(id=obj.target_id).first()
-            if not user:
-                return None
-            return {
-                "type": "USER",
-                "email": user.email
-            }
-
-        return None
-
+        return {
+            "id": obj.reviewed_by.id,
+            "email": obj.reviewed_by.email,
+        }
 
 class ReportModerateSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=["APPROVED", "DISMISSED"])

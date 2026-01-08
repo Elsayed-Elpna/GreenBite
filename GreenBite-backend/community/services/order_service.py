@@ -12,6 +12,11 @@ from community.models import ComMarket, MarketOrder, MarketOrderAddress
 
 class MarketOrderService:
 
+    ALLOWED_TRANSITIONS = {
+        "PENDING": ["CANCELLED", "ACCEPTED"],
+        "ACCEPTED": ["DELIVERED"],
+    }
+
     @staticmethod
     @transaction.atomic
     def create_order(*, buyer, market_id, validated_data):
@@ -79,19 +84,19 @@ class MarketOrderService:
             .get(id=order.market_id)
         )
 
-        # ───── AUTH ─────
+        # ───── PERMISSIONS ─────
         if not (user.is_staff or order.seller == user):
             raise PermissionDenied("Not authorized.")
 
         # ───── STATUS ─────
-        if order.status != "PENDING":
-            raise ValidationError("Order is not pending.")
+        if "ACCEPTED" not in MarketOrderService.ALLOWED_TRANSITIONS.get(order.status, []):
+            raise ValidationError("Order cannot be accepted.")
 
-        # ───── STOCK CHECK ─────
+        # ───── STOCK ─────
         if order.quantity > market.quantity:
             raise ValidationError("Insufficient quantity.")
 
-        # ───── APPLY CHANGES ─────
+        # ───── APPLY ─────
         market.quantity -= order.quantity
         if market.quantity == 0:
             market.status = "SOLD_OUT"
@@ -111,6 +116,7 @@ class MarketOrderService:
             order = (
                 MarketOrder.objects
                 .select_for_update()
+                .select_related("seller")
                 .get(id=order_id)
             )
         except MarketOrder.DoesNotExist:
@@ -120,32 +126,29 @@ class MarketOrderService:
         if user.is_staff:
             pass
         elif new_status == "CANCELLED":
-            if user not in [order.buyer, order.seller]:
+            if user not in (order.buyer, order.seller):
                 raise PermissionDenied("Not authorized.")
-            if order.status != "PENDING":
-                raise ValidationError("Only pending orders can be cancelled.")
         elif new_status == "DELIVERED":
             if user != order.seller:
                 raise PermissionDenied("Only seller can deliver.")
         else:
             raise ValidationError("Invalid status.")
 
-        # ───── TRANSITIONS ─────
-        allowed = {
-            "PENDING": ["CANCELLED"],
-            "ACCEPTED": ["DELIVERED"],
-        }
-
-        if new_status not in allowed.get(order.status, []):
-            raise ValidationError("Invalid status transition.")
+        # ───── TRANSITION ─────
+        allowed = MarketOrderService.ALLOWED_TRANSITIONS.get(order.status, [])
+        if new_status not in allowed:
+            raise ValidationError(
+                f"Invalid status transition from {order.status} to {new_status}."
+            )
 
         order.status = new_status
         order.save(update_fields=["status"])
 
-        # ───── BUSINESS SIDE EFFECT ─────
+        # ───── SIDE EFFECT ─────
         if new_status == "DELIVERED":
             profile = order.seller.community_profile
             profile.total_sales += order.total_price
             profile.save(update_fields=["total_sales"])
 
         return order
+

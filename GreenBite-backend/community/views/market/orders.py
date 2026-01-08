@@ -10,6 +10,7 @@ from community.serializers.orders import (
     BuyerOrderListSerializer,
     SellerOrderListSerializer,
     OrderDetailsSerializer,
+    MarketOrderStatusUpdateSerializer,
 )
 from community.services.order_service import MarketOrderService
 from community.permissions import IsActiveSeller
@@ -65,12 +66,13 @@ class MarketOrderStatusUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, order_id):
-        status_value = request.data.get("status")
+        serializer = MarketOrderStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         order = MarketOrderService.update_order_status(
             order_id=order_id,
             user=request.user,
-            new_status=status_value,
+            new_status=serializer.validated_data["status"],
         )
 
         return Response(
@@ -78,8 +80,9 @@ class MarketOrderStatusUpdateAPIView(APIView):
                 "order_id": order.id,
                 "status": order.status,
             },
-            status=201,
+            status=status.HTTP_200_OK,
         )
+
 
 class BuyerOrdersListAPIView(ListAPIView):
     serializer_class = BuyerOrderListSerializer

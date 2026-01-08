@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from community.models import ComMarket
 
+
 class MarketCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComMarket
@@ -26,7 +27,6 @@ class MarketCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Title cannot be empty.")
         return value
 
-
     def validate_price(self, value):
         if value <= 0:
             raise serializers.ValidationError("Price must be greater than zero.")
@@ -45,9 +45,18 @@ class MarketCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-class MarketListSerializer(serializers.ModelSerializer):
-    seller = serializers.CharField(source='seller.email', read_only=True)
+# Base serializer for common fields
+class MarketBaseSerializer(serializers.ModelSerializer):
+    seller = serializers.SerializerMethodField()
 
+    def get_seller(self, obj):
+        return {
+            "id": obj.seller.id,
+            "email": obj.seller.email
+        }
+
+
+class MarketListSerializer(MarketBaseSerializer):
     class Meta:
         model = ComMarket
         fields = [
@@ -66,9 +75,7 @@ class MarketListSerializer(serializers.ModelSerializer):
         ]
 
 
-class MarketDetailSerializer(serializers.ModelSerializer):
-    seller = serializers.CharField(source='seller.email', read_only=True)
-
+class MarketDetailSerializer(MarketBaseSerializer):
     class Meta:
         model = ComMarket
         fields = [

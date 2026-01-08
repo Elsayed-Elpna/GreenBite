@@ -1,10 +1,8 @@
-from django.utils import timezone
 from rest_framework import serializers
 
 from community.models import (
     MarketOrder,
     MarketOrderAddress,
-    ComMarket,
 )
 
 
@@ -61,31 +59,6 @@ class MarketOrderStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MarketOrder
         fields = ['status']
-
-    def validate_status(self, value):
-        order = self.instance
-
-        if order.status == 'DELIVERED':
-            raise serializers.ValidationError(
-                "Delivered orders cannot be modified."
-            )
-
-        if order.status == 'CANCELLED':
-            raise serializers.ValidationError(
-                "Cancelled orders cannot be reactivated."
-            )
-
-        allowed_transitions = {
-            'PENDING': ['CANCELLED', 'ACCEPTED'],
-            'ACCEPTED': ['DELIVERED'],
-        }
-
-        if value not in allowed_transitions.get(order.status, []):
-            raise serializers.ValidationError(
-                f"Invalid status transition from {order.status} to {value}."
-            )
-
-        return value
 
 class BuyerOrderListSerializer(serializers.ModelSerializer):
     order_id = serializers.IntegerField(source="id", read_only=True)

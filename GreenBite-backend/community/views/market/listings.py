@@ -1,11 +1,15 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from community.models import ComMarket
-from community.serializers.market import MarketCreateUpdateSerializer, MarketListSerializer, MarketDetailSerializer
+from community.serializers.market import (
+    MarketCreateUpdateSerializer, 
+    MarketListSerializer, 
+    MarketDetailSerializer
+)
 from community.permissions import IsActiveSeller, IsOwnerOrAdmin
-from community.services.listing_service import create_listing, update_listing, delete_listing
+from community.services.listing_service import MarketListingService
 from community.filters.market_filters import MarketListingFilter
 from django.shortcuts import get_object_or_404
 
@@ -21,23 +25,34 @@ class MarketListingView(generics.GenericAPIView):
     pagination_class = MarketListingPagination
 
     def get_queryset(self):
-        queryset = ComMarket.objects.all()
+        queryset = ComMarket.objects.select_related('seller')
         return MarketListingFilter(queryset, self.request.query_params, self.request.user).filter()
 
     def get(self, request, *args, **kwargs):
+        """List all marketplace listings"""
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
         serializer = MarketListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
     def post(self, request, *args, **kwargs):
-        # Only active sellers can create
+        """Create new marketplace listing (active sellers only)"""
+        # Permission check
         if not IsActiveSeller().has_permission(request, self):
-            return Response({"detail": "You are not allowed to create listings."}, status=403)
+            return Response(
+                {"detail": "You are not allowed to create listings."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
 
+        # Validate and create
         serializer = MarketCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        listing = create_listing(request.user, serializer.validated_data)
+        
+        listing = MarketListingService.create_listing(
+            request.user, 
+            serializer.validated_data
+        )
+        
         return Response({
             "id": listing.id,
             "title": listing.title,
@@ -50,66 +65,72 @@ class MarketListingDetailView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_serializer_class(self):
-        # Use different serializer depending on method
         if self.request.method == "GET":
             return MarketDetailSerializer
         return MarketCreateUpdateSerializer
 
-    def get_object(self, listing_id):
-        # Fetch listing or 404
-        listing = get_object_or_404(ComMarket, id=listing_id)
-        # Object-level permission
-        self.check_object_permissions(self.request, listing)
-        return listing
-
     def get_permissions(self):
-        """
-        Apply IsOwnerOrAdmin for PATCH and DELETE
-        IsAuthenticated for GET
-        """
+        """Apply IsOwnerOrAdmin for PATCH and DELETE"""
         if self.request.method in ["PATCH", "DELETE"]:
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return [permissions.IsAuthenticated()]
 
     def get(self, request, listing_id):
-        listing = self.get_object(listing_id)
+        """Get listing details"""
+        listing = get_object_or_404(
+            ComMarket.objects.select_related('seller'), 
+            id=listing_id
+        )
         serializer = self.get_serializer(listing)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data)
 
     def patch(self, request, listing_id):
+        """Update listing (owner or admin only)"""
+        # ✅ First check if listing exists and user has permission
+        listing = get_object_or_404(ComMarket, id=listing_id)
+        self.check_object_permissions(request, listing)
+        
+        # Validate
         serializer = self.get_serializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        
+        # Update (service handles transaction and select_for_update)
         try:
-            listing = update_listing(request.user, listing_id, serializer.validated_data)
-        except PermissionDenied as e:
-            return Response({"detail": str(e)}, status=403)
+            listing = MarketListingService.update_listing(
+                request.user, 
+                listing_id, 
+                serializer.validated_data
+            )
         except ValidationError as e:
-            return Response({"detail": str(e)}, status=400)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=500)
+            return Response(
+                {"detail": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         return Response({
             "id": listing.id,
             "title": listing.title,
             "status": listing.status,
             "updated_at": listing.updated_at
-        }, status=200)
+        })
 
     def delete(self, request, listing_id):
+        """Delete listing (owner or admin only)"""
+        # ✅ First check if listing exists and user has permission
+        listing = get_object_or_404(ComMarket, id=listing_id)
+        self.check_object_permissions(request, listing)
+        
+        # Delete (service handles transaction and select_for_update)
         try:
-            delete_listing(request.user, listing_id)
-        except PermissionDenied as e:
-            return Response({"detail": str(e)}, status=403)
+            MarketListingService.delete_listing(request.user, listing_id)
         except ValidationError as e:
             msg = str(e)
             if msg == "Listing not found.":
-                return Response({"detail": msg}, status=404)
+                return Response({"detail": msg}, status=status.HTTP_404_NOT_FOUND)
             elif msg == "Cannot delete listing with active orders.":
-                return Response({"detail": msg}, status=409)
+                return Response({"detail": msg}, status=status.HTTP_409_CONFLICT)
             elif msg == "Listing already deleted.":
-                return Response({"detail": msg}, status=410)
-            return Response({"detail": msg}, status=400)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=500)
+                return Response({"detail": msg}, status=status.HTTP_410_GONE)
+            return Response({"detail": msg}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)

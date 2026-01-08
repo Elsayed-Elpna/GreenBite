@@ -6,25 +6,28 @@ from accounts.models import User
 
 
 class ReportService:
+
+    VALID_TARGETS = {"MARKET", "USER"}
+
     @staticmethod
     def create_report(*, reporter, target_type, target_id, reason, details=None):
-        """Create a new report"""
-        # Validate target existence
-        if target_type == 'MARKET':
-            if not ComMarket.objects.filter(id=target_id).exists():
-                raise NotFound("The marketplace listing you are reporting does not exist.")
-        
-        elif target_type == 'USER':
-            if not User.objects.filter(id=target_id).exists():
-                raise NotFound("The user you are reporting does not exist.")
-            
-            # Prevent self-report
-            if target_id == reporter.id:
-                raise PermissionDenied("You cannot report yourself.")
-        else:
+
+        if target_type not in ReportService.VALID_TARGETS:
             raise ValidationError("Invalid target type.")
 
-        # Prevent duplicate reports
+        # ───── TARGET VALIDATION ─────
+        if target_type == "MARKET":
+            if not ComMarket.objects.filter(id=target_id).exists():
+                raise NotFound("The marketplace listing you are reporting does not exist.")
+
+        elif target_type == "USER":
+            if not User.objects.filter(id=target_id).exists():
+                raise NotFound("The user you are reporting does not exist.")
+
+            if target_id == reporter.id:
+                raise PermissionDenied("You cannot report yourself.")
+
+        # ───── DUPLICATE REPORT ─────
         if CommunityReport.objects.filter(
             reporter=reporter,
             target_type=target_type,
@@ -32,16 +35,14 @@ class ReportService:
         ).exists():
             raise ValidationError("You have already reported this target.")
 
-        # Create report
-        report = CommunityReport.objects.create(
+        return CommunityReport.objects.create(
             reporter=reporter,
             target_type=target_type,
             target_id=target_id,
             reason=reason,
-            details=details
+            details=details,
         )
-        
-        return report
+
 
     @staticmethod
     @transaction.atomic
