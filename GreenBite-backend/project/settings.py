@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "food",
     "recipes",
     "meal_plans",
+    'community',
 ]
 SITE_ID = 1
 
