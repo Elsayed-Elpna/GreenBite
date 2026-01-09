@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from accounts.models import User
-from community.models import CommunityProfile
+from community.models import CommunityProfile, ComMarket
 from django.utils import timezone
 
 
@@ -11,6 +11,10 @@ def create_community_profile(sender, instance, created, **kwargs):
     if created:
         CommunityProfile.objects.create(user=instance)
 
+@receiver(pre_save, sender=ComMarket)
+def auto_expire_market_listing(sender, instance, **kwargs):
+    if instance.available_until and instance.available_until < timezone.now().date():
+        instance.status = "EXPIRED"
 
 @receiver(pre_save, sender=CommunityProfile)
 def check_unban(sender, instance, **kwargs):

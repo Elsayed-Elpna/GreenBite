@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.db import transaction
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
-from community.models import CommunityReport, ComMarket
+from community.models import CommunityReport, ComMarket, MarketOrder
 from accounts.models import User
 
 
@@ -43,6 +43,17 @@ class ReportService:
             details=details,
         )
 
+    @staticmethod
+    def cancel_pending_orders(*, market=None, seller=None):
+        qs = MarketOrder.objects.filter(status='PENDING')
+
+        if market:
+            qs = qs.filter(market=market)
+
+        if seller:
+            qs = qs.filter(seller=seller)
+
+        qs.update(status='CANCELLED')
 
     @staticmethod
     @transaction.atomic
@@ -77,6 +88,7 @@ class ReportService:
                     # Only delete the market listing
                     market.status = "DELETED"
                     market.save(update_fields=['status'])
+                    ReportService.cancel_pending_orders(market=market)
                 
                 elif action == "SUSPEND_SELLER":
                     # Suspend the seller AND delete the market
@@ -86,6 +98,7 @@ class ReportService:
                     # Also delete the reported market
                     market.status = "DELETED"
                     market.save(update_fields=['status'])
+                    ReportService.cancel_pending_orders(market=market)
                 
                 elif action == "BAN_USER":
                     # Ban the seller with date AND delete the market
@@ -100,6 +113,7 @@ class ReportService:
                     # Also delete the reported market
                     market.status = "DELETED"
                     market.save(update_fields=['status'])
+                    ReportService.cancel_pending_orders(market=market)
 
             # Handle USER target actions
             elif report.target_type == "USER":
@@ -112,6 +126,8 @@ class ReportService:
                 if action == "SUSPEND_SELLER":
                     profile.seller_status = "SUSPENDED"
                     profile.save(update_fields=['seller_status', 'updated_at'])
+
+                    ReportService.cancel_pending_orders(market=market)
                 
                 elif action == "BAN_USER":
                     ban_until = data.get("ban_until")
@@ -121,6 +137,7 @@ class ReportService:
                     profile.banned_until = ban_until
                     profile.seller_status = "SUSPENDED"
                     profile.save(update_fields=['banned_until', 'seller_status', 'updated_at'])
+                    ReportService.cancel_pending_orders(market=market)
 
         report.save()
         return report

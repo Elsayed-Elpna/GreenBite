@@ -14,10 +14,9 @@ from community.serializers.orders import (
 )
 from community.services.order_service import MarketOrderService
 from community.permissions import IsActiveSeller
-from community.filters.order_filters import BuyerOrderFilter, SellerOrderFilter
 from community.pagination import StandardPagination
 from rest_framework.exceptions import PermissionDenied
-
+from community.serializers.filters import BuyerOrderFilterSerializer, SellerOrderFilterSerializer
 
 class MarketOrderCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -87,8 +86,6 @@ class MarketOrderStatusUpdateAPIView(APIView):
 class BuyerOrdersListAPIView(ListAPIView):
     serializer_class = BuyerOrderListSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = BuyerOrderFilter
     pagination_class = StandardPagination
 
     def get_queryset(self):
@@ -98,14 +95,20 @@ class BuyerOrdersListAPIView(ListAPIView):
         if not user.is_staff:
             queryset = queryset.filter(buyer=user)
 
+        # ✅ Validate and filter query params
+        filter_serializer = BuyerOrderFilterSerializer(data=self.request.query_params)
+        filter_serializer.is_valid(raise_exception=True)
+        data = filter_serializer.validated_data
+
+        if status := data.get("status"):
+            queryset = queryset.filter(status=status)
+
         return queryset.order_by("-created_at")
 
 
 class SellerOrdersListAPIView(ListAPIView):
     serializer_class = SellerOrderListSerializer
     permission_classes = [IsAuthenticated, IsActiveSeller]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = SellerOrderFilter
     pagination_class = StandardPagination
 
     def get_queryset(self):
@@ -115,8 +118,15 @@ class SellerOrdersListAPIView(ListAPIView):
         if not user.is_staff:
             queryset = queryset.filter(seller=user)
 
-        return queryset.order_by("-created_at")
+        # ✅ Validate and filter query params
+        filter_serializer = SellerOrderFilterSerializer(data=self.request.query_params)
+        filter_serializer.is_valid(raise_exception=True)
+        data = filter_serializer.validated_data
 
+        if status := data.get("status"):
+            queryset = queryset.filter(status=status)
+
+        return queryset.order_by("-created_at")
 
 class OrderDetailsAPIView(RetrieveAPIView):
     serializer_class = OrderDetailsSerializer

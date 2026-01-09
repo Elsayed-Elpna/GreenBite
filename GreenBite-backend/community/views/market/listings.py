@@ -12,7 +12,7 @@ from community.permissions import IsActiveSeller, IsOwnerOrAdmin
 from community.services.listing_service import MarketListingService
 from community.filters.market_filters import MarketListingFilter
 from django.shortcuts import get_object_or_404
-
+from community.serializers.filters import MarketListingFilterSerializer
 
 class MarketListingPagination(PageNumberPagination):
     page_size = 10
@@ -25,8 +25,18 @@ class MarketListingView(generics.GenericAPIView):
     pagination_class = MarketListingPagination
 
     def get_queryset(self):
-        queryset = ComMarket.objects.select_related('seller')
-        return MarketListingFilter(queryset, self.request.query_params, self.request.user).filter()
+        base_qs = ComMarket.objects.select_related("seller")
+    
+        # ✅ Validate query params first
+        filter_serializer = MarketListingFilterSerializer(data=self.request.query_params)
+        filter_serializer.is_valid(raise_exception=True)
+    
+        # ✅ Apply filter
+        return MarketListingFilter(
+            base_qs,
+            filter_serializer.validated_data,
+            self.request.user
+        ).filter()
 
     def get(self, request, *args, **kwargs):
         """List all marketplace listings"""

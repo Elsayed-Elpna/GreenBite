@@ -14,8 +14,7 @@ from community.serializers import (
 from community.services.report_service import ReportService
 from community.permissions import IsAdminUser
 from community.pagination import StandardPagination
-from community.filters.reports_filters import ReportFilter
-
+from community.serializers.filters import ReportFilterSerializer
 
 class CommunityReportView(APIView):
     """
@@ -56,11 +55,19 @@ class CommunityReportView(APIView):
         queryset = CommunityReport.objects.all()
         
         # Apply filtering
-        filtered_qs = ReportFilter(request.GET, queryset=queryset).qs
+        filter_serializer = ReportFilterSerializer(data=request.query_params)
+        filter_serializer.is_valid(raise_exception=True)
+        data = filter_serializer.validated_data
+
+        if status := data.get("status"):
+            queryset = queryset.filter(status=status)
+
+        if target_type := data.get("target_type"):
+            queryset = queryset.filter(target_type=target_type)
         
         # Apply pagination
         paginator = StandardPagination()
-        page = paginator.paginate_queryset(filtered_qs, request)
+        page = paginator.paginate_queryset(queryset, request)
         
         serializer = ReportListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
