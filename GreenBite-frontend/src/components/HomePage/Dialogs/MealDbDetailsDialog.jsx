@@ -1,23 +1,26 @@
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
+
 import { getMealdbRecipeById } from "@/api/mealdb.api";
-import { saveMeal } from "@/api/recipes.api";
 import useSaveMeal from "@/hooks/useSaveMeals";
-import { mapMealDbFromBackend,formatIngredient, instructionsToSteps, buildSavePayloadFromMealDb } from "@/utils/mealdb.mapper";
-import {useNavigate} from "react-router-dom";
+import {
+  mapMealDbFromBackend,
+  formatIngredient,
+  instructionsToSteps,
+  buildSavePayloadFromMealDb,
+} from "@/utils/mealdb.mapper";
 
 export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
+  // ✅ Hook: router
+  const navigate = useNavigate();
+
+  // ✅ Hook: mutation (must be called every render)
   const saveMealMutation = useSaveMeal(mealdbId);
 
-  const handleSave = () => {
-    saveMealMutation.mutate(buildSavePayloadFromMealDb(data), {
-        onSuccess: () => {
-        onClose();
-        navigate("/home");
-        },
-    });
-    };
-  
+  // ✅ Hook: query (must be called every render; enabled handles skipping)
   const { data, isLoading, isError } = useQuery({
     queryKey: ["mealdb", mealdbId],
     queryFn: async () => {
@@ -27,14 +30,41 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
     enabled: isOpen && !!mealdbId,
     staleTime: 2 * 60 * 1000,
   });
-  const navigate = useNavigate;
+
+  // ✅ Lock page scroll while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  // ✅ After hooks: safe early return
   if (!isOpen) return null;
-  
+
   const steps = instructionsToSteps(data?.instructions);
 
-  return (
-    <div className="fixed inset-0 bg-black/40 z-9999 flex items-center justify-center">
-      <div className="bg-white rounded-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto z-10000">
+  const handleSave = () => {
+    // if data not ready, don’t try saving
+    if (!data) return;
+
+    saveMealMutation.mutate(buildSavePayloadFromMealDb(data), {
+      onSuccess: () => {
+        onClose();
+        // use replace so user doesn't go “back” to the modal state
+        navigate("/home", { replace: true });
+      },
+    });
+  };
+
+  // ✅ PORTAL: render modal at document.body so it’s above all layouts/Swiper/sidebar
+  return createPortal(
+    <div className="fixed inset-0 bg-black/40 z-[99999] flex items-center justify-center">
+      <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto z-[100000]">
         {/* Header */}
         <div className="relative mb-4">
           <h2 className="text-xl font-bold text-center">
@@ -96,46 +126,44 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
             {/* Ingredients */}
             <h3 className="font-semibold mb-2">Ingredients</h3>
             <ul className="list-disc pl-6 mb-6 text-sm">
-            {(data?.ingredients || []).map((i, idx) => (
+              {(data.ingredients || []).map((i, idx) => (
                 <li key={idx}>{formatIngredient(i) || "—"}</li>
-            ))}
+              ))}
             </ul>
 
-            {/* Instructions */}
-
+            {/* Steps */}
             <h3 className="font-semibold mb-2">Steps</h3>
             {steps.length === 0 ? (
-            <p className="text-sm text-gray-500">No steps found.</p>
+              <p className="text-sm text-gray-500">No steps found.</p>
             ) : (
-            <ul className="list-disc pl-6 mb-6 text-sm">
+              <ul className="list-disc pl-6 mb-6 text-sm">
                 {steps.map((s, idx) => (
-                <li key={idx}>{s}</li>
+                  <li key={idx}>{s}</li>
                 ))}
-            </ul>
+              </ul>
             )}
-            <button
-            type="button"
-            onClick={() => saveMealMutation.mutate(buildSavePayloadFromMealDb(data), {
-                onSuccess: () => {
-                    onClose();
-                    navigate("/home");
-                },
-                })
-            }
-            disabled={saveMealMutation.isPending}
-            className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
-            >
-            {saveMealMutation.isPending ? "Saving..." : "Save meal"}
-            </button>
 
-            {saveMealMutation.isError ? (
-            <p className="text-xs text-red-600 mt-2">
-                {saveMealMutation.error?.message || "Save failed"}
-            </p>
-            ) : null}
+            {/* Save button at end */}
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saveMealMutation.isPending}
+                className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {saveMealMutation.isPending ? "Saving..." : "Save meal"}
+              </button>
+
+              {saveMealMutation.isError ? (
+                <p className="text-xs text-red-600">
+                  {saveMealMutation.error?.message || "Save failed"}
+                </p>
+              ) : null}
+            </div>
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
