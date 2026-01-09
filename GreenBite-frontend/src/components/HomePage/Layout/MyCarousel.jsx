@@ -3,8 +3,8 @@ import { Autoplay, Mousewheel } from "swiper/modules";
 import { useEffect, useMemo, useState } from "react";
 import { CUISINE_COUNTRY_MAP, getCuisineVisuals } from "@/utils/constants";
 import { getRandomRecipe } from "@/api/mealdb.api";
-import MenuCard from "../RightMenu/RecommendedMenu/MenuCard";
-import MealDbDetailsDialog from "../Dialogs/MealdbDetailsDialog";
+import MenuCard from "@/components/HomePage/RightMenu/RecommendedMenu/MenuCard.jsx";
+import MealDbDetailsDialog from "@/components/HomePage/Dialogs/MealDbDetailsDialog.jsx";
 
 import "swiper/css";
 

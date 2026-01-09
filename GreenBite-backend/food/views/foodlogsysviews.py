@@ -10,6 +10,8 @@ from ..filters import FoodLogFilter
 from ..utils.caching import bump_list_version, detail_key, list_key, invalidate_cache
 from ..pagination import FoodLogPagination
 from meal_plans.services.inventory import InventoryService
+from datetime import date, timedelta
+
 NAMESPACE = "foodlog"
 SORTABLE_FIELDS = {"name", "category", "storage_type", "quantity", "expiry_date"}
 DUAL_SORT_FIELDS = {"quantity", "expiry_date"}
@@ -147,6 +149,50 @@ def food_log_detail(request, pk):
             {"message": "Food log deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def expiring_soon(request):
+    today = date.today()
+    soon = today + timedelta(days=3)
+    items = (
+        FoodLogSys.objects.filter(user=request.user, expiry_date__lte=soon, is_consumed=False)
+        .order_by("expiry_date")
+        .values("id", "name", "category", "expiry_date")
+    )
+    out = []
+    for item in items:
+        days_left = (item["expiry_date"] - today).days
+        out.append({
+            "id": item["id"],
+            "name": item["name"],
+            "category": item["category"],
+            "expiryDate": item["expiry_date"],
+            "daysLeft": days_left,
+        })
+    return Response(out)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def food_log_summary(request):
+    try:
+        inv = InventoryService(request.user)
+        summary = inv.get_food_log_summary()
+        return Response(summary, status=status.HTTP_200_OK)
+    except Exception as e:
+        import traceback
+        return Response({"error": str(e), "trace": traceback.format_exc()}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def food_log_category_breakdown(request):
+    """
+    Returns a breakdown of food logs by category.
+    """
+    inv = InventoryService(request.user)
+    ava = inv.get_available_logs()
+    breakdown = inv._get_category_breakdown(ava)
+    return Response(breakdown, status=status.HTTP_200_OK)
 
 # @api_view(['POST'])
 # @permission_classes([IsAuthenticated])

@@ -3,7 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
-import { FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaCog, FaSignOutAlt,FaCalendar , FaPagelines, FaShoppingCart} from "react-icons/fa";
 
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/hooks/settings/useProfile";
@@ -361,6 +361,42 @@ const NavBar = () => {
                   →
                 </span>
               </NavLink>
+              <NavLink
+                to="/home/mymeals"
+                className={({ isActive }) =>
+                  `relative flex items-center px-4 py-3 rounded-xl transition-all duration-300 ease-in-out overflow-hidden group ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#C2E66E] to-[#a8cc5e] text-white shadow-md transform translate-x-1"
+                      : "text-gray-700 hover:bg-gray-50 hover:translate-x-1"
+                  }`
+                }
+              >
+                <span className="absolute left-0 w-1 h-full bg-[#C2E66E] transition-all duration-300 scale-y-0 group-hover:scale-y-100 origin-center rounded-r-full" />
+                <FaCalendar className="relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
+                <span className="relative z-10 text-[15px] ml-3 font-medium">
+                  My Meals
+                </span>
+                <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  →
+                </span>
+              </NavLink>
+              <NavLink
+                to="/home/marketplace"
+                className={({ isActive }) =>
+                  `relative flex items-center px-4 py-3 rounded-xl transition-all duration-300 ease-in-out overflow-hidden group ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#C2E66E] to-[#a8cc5e] text-white shadow-md transform translate-x-1"
+                      : "text-gray-700 hover:bg-gray-50 hover:translate-x-1"
+                  }`
+                }
+              >
+                <span className="absolute left-0 w-1 h-full bg-[#C2E66E] transition-all duration-300 scale-y-0 group-hover:scale-y-100 origin-center rounded-r-full" />
+                <FaShoppingCart className="relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
+                <span className="relative z-10 text-[15px] ml-3 font-medium">
+                  Marketplace
+                </span>
+               
+              </NavLink>
 
             </li>
           </ul>
@@ -445,7 +481,8 @@ const NavBar = () => {
                 Recipe Center
               </span>
             </NavLink>
-          </li><li>
+          </li>
+          <li>
             <NavLink
               to="/home/mealplans"
               className={({ isActive }) =>
@@ -457,12 +494,49 @@ const NavBar = () => {
               }
             >
               <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out scale-0 group-hover:scale-100 rounded-full bg-gradient-to-r from-[#7eb685]/10 to-[#6aa571]/10" />
-              <GiHotMeal className="relative z-10 transition-transform duration-300 group-hover:rotate-12" />
+              < FaCalendar className="relative z-10 transition-transform duration-300 group-hover:rotate-12" />
               <span className="relative z-10 text-[14px] ml-2.5 font-medium">
                 Meal Plans
               </span>
             </NavLink>
           </li>
+          <li>
+            <NavLink
+                to="/home/mymeals"
+                className={({ isActive }) =>
+                `relative flex items-center justify-center px-5 py-2.5 rounded-full transition-all duration-300 ease-in-out overflow-hidden group ${
+                  isActive
+                    ? "bg-gradient-to-r from-[#7eb685] to-[#6aa571] text-white shadow-lg shadow-[#7eb685]/50 scale-105"
+                    : "text-gray-700 hover:bg-gray-100 hover:scale-105"
+                }`
+              }
+              >
+              <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out scale-0 group-hover:scale-100 rounded-full bg-gradient-to-r from-[#7eb685]/10 to-[#6aa571]/10" />
+                < FaPagelines className="relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
+                <span className="relative z-10 text-[15px] ml-3 font-medium">
+                  My Meals
+                </span>
+              </NavLink>
+
+            </li>
+            <li>
+              <NavLink
+                to="/home/marketplace"
+                className={({ isActive }) =>
+                  `relative flex items-center justify-center px-5 py-2.5 rounded-full transition-all duration-300 ease-in-out overflow-hidden group ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#7eb685] to-[#6aa571] text-white shadow-lg shadow-[#7eb685]/50 scale-105"
+                      : "text-gray-700 hover:bg-gray-100 hover:scale-105"
+                  }`
+                }
+              >
+                <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out scale-0 group-hover:scale-100 rounded-full bg-gradient-to-r from-[#7eb685]/10 to-[#6aa571]/10" />
+                <FaShoppingCart  className="relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
+                <span className="relative z-10 text-[15px] ml-3 font-medium">
+                  Marketplace
+                </span>
+              </NavLink>
+            </li>
         </ul>
       </div>
 

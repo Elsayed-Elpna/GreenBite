@@ -175,6 +175,16 @@ export const MEAL_TIME_IMAGES = {
   Dessert: "/images/mymeals/DESSERT.webp",
   Appetizer: "/images/mymeals/appetizer.jpg",
 };
+export const CATEGORY_IMAGES = {
+  dairy: "/images/categories/dairy.png",
+  meat: "/images/categories/meat.png",
+  grain: "/images/categories/grains.png",
+  bread: "/images/categories/bread.png",
+  other: "/images/categories/other.png",
+  vegetable: "/images/categories/vegetables.png",
+  fruit: "/images/categories/fruits.png",
+};
+
 
 export const DEFAULT_MEAL_IMAGE = "/images/mymeals/default.webp";
 
