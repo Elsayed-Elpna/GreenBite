@@ -8,11 +8,13 @@ from community.serializers.market import (
     MarketListSerializer, 
     MarketDetailSerializer
 )
-from community.permissions import IsActiveSeller, IsOwnerOrAdmin
+from community.permissions import IsActiveSeller, IsOwnerOrAdmin, IsAdminUser
 from community.services.listing_service import MarketListingService
 from community.filters.market_filters import MarketListingFilter
 from django.shortcuts import get_object_or_404
 from community.serializers.filters import MarketListingFilterSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 class MarketListingPagination(PageNumberPagination):
     page_size = 10
@@ -23,6 +25,7 @@ class MarketListingPagination(PageNumberPagination):
 class MarketListingView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = MarketListingPagination
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         base_qs = ComMarket.objects.select_related("seller")
@@ -48,14 +51,14 @@ class MarketListingView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         """Create new marketplace listing (active sellers only)"""
         # Permission check
-        if not IsActiveSeller().has_permission(request, self):
+        if not IsActiveSeller().has_permission(request, self) and not IsAdminUser().has_permission(request, self):
             return Response(
                 {"detail": "You are not allowed to create listings."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
 
         # Validate and create
-        serializer = MarketCreateUpdateSerializer(data=request.data)
+        serializer = MarketCreateUpdateSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         
         listing = MarketListingService.create_listing(
@@ -73,6 +76,8 @@ class MarketListingView(generics.GenericAPIView):
 
 class MarketListingDetailView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
     
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -96,7 +101,7 @@ class MarketListingDetailView(generics.GenericAPIView):
 
     def patch(self, request, listing_id):
         """Update listing (owner or admin only)"""
-        # ✅ First check if listing exists and user has permission
+        #  First check if listing exists and user has permission
         listing = get_object_or_404(ComMarket, id=listing_id)
         self.check_object_permissions(request, listing)
         

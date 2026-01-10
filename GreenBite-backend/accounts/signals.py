@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 import shutil
 import os 
-
+from accounts.services.minio_storage import delete_profile_avatar
 from .models import Profile
 
 User = get_user_model()
@@ -29,33 +29,25 @@ def create_profile(sender, instance, created, **kwargs):
 
 @receiver(pre_save, sender=Profile)
 def delete_old_avatar(sender, instance, **kwargs):
-  if not instance.pk:
-    return
-  
-  try:
-    old_instance = Profile.objects.get(pk=instance.pk)
-  except Profile.DoesNotExist:
-    return
-  
-  old_avatar = old_instance.avatar
-  new_avatar = instance.avatar
+    # On update only
+    if not instance.pk:
+        return
 
-  if old_avatar and not new_avatar:
-    if os.path.isfile(old_avatar.path):
-      os.remove(old_avatar.path)
+    try:
+        old_instance = Profile.objects.get(pk=instance.pk)
+    except Profile.DoesNotExist:
+        return
 
-  elif old_avatar and new_avatar and old_avatar != new_avatar:
-    if os.path.isfile(old_avatar.path):
-      os.remove(old_avatar.path)
+    old_key = old_instance.avatar_key
+    new_key = instance.avatar_key
 
-@receiver(post_delete, sender=User)
-def delete_user_media(sender, instance, **kwargs):
-  user_media_path = os.path.join(
-    settings.MEDIA_ROOT,
-    "profiles",
-    "avatars",
-    f"user_{instance.id}"
-)
+    # If avatar changed, delete old object from MinIO
+    if old_key and old_key != new_key:
+        delete_profile_avatar(old_key)
 
-  if os.path.isdir(user_media_path):
-    shutil.rmtree(user_media_path)
+
+@receiver(post_delete, sender=Profile)
+def delete_profile_media(sender, instance, **kwargs):
+    # Delete avatar object when profile is deleted
+    if instance.avatar_key:
+        delete_profile_avatar(instance.avatar_key)

@@ -33,7 +33,7 @@ const NavBar = () => {
 
   if (!user || isLoading || !data) return null;
 
-  const { first_name, last_name, profile: { avatar } = {} } = data;
+  const { first_name, last_name, avatar_url  } = data;
 
   const handelLogout = () => {
     logout();
@@ -61,7 +61,7 @@ const NavBar = () => {
               <img
                 alt="Tailwind CSS Navbar component"
                 src={
-                  avatar ||
+                  avatar_url ||
                   "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
                 }
               />

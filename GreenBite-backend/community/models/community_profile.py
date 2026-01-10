@@ -14,7 +14,7 @@ class CommunityProfile(models.Model):
     
     # Membership info
     is_community_member = models.BooleanField(default=True)
-    joined_at = models.DateTimeField(null=True, blank=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
     
     # Reputation / Trust
     trust_score = models.DecimalField(max_digits=3, decimal_places=2, default=0)
