@@ -8,7 +8,7 @@ from djoser.serializers import (
 
 from accounts.models import User
 from accounts.serializers.profile import ProfileSerializer
-
+from community.serializers import CommunityProfileSerializer
 
 
 class UserCreateSerializer(UserCreatePasswordRetypeSerializer):
@@ -27,6 +27,7 @@ class UserCreateSerializer(UserCreatePasswordRetypeSerializer):
             "password",
             "first_name",
             "last_name",
+            "is_staff",
         )
 
     def validate(self, attrs):
@@ -73,21 +74,43 @@ class UserCreateSerializer(UserCreatePasswordRetypeSerializer):
 class UserMeSerializer(UserSerializer):
     """
     Read-only user serializer
-    Used for current user endpoints
+    Used for current user endpoint (/users/me/)
     """
+
     profile = ProfileSerializer(read_only=True)
+
+    # 👇 Community Profile (Seller / Trust / Sales)
+    community = CommunityProfileSerializer(
+        source="community_profile",
+        read_only=True
+    )
+
     is_subscribed = serializers.SerializerMethodField()
     subscription = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         model = User
+
         fields = (
             "id",
             "email",
             "first_name",
             "last_name",
-            "profile",
+            "is_staff",
             "is_subscribed",
+            "profile",
+            "community",
+            "subscription",
+        )
+        read_only_fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_subscribed",
+            "profile",
+            "community",
             "subscription",
         )
 

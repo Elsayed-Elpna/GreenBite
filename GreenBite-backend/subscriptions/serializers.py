@@ -16,3 +16,8 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
             "duration_label",
             "price",
         )
+        read_only_fields = ("id",
+                            "name",
+                            "duration",
+                            "duration_label",
+                            "price",)
