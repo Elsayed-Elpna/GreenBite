@@ -72,7 +72,8 @@ INSTALLED_APPS = [
     "recipes",
     "meal_plans",
     "payments",
-    "subscriptions.apps.SubscriptionsConfig",    'community',
+    "subscriptions.apps.SubscriptionsConfig",  
+    'community',
 ]
 SITE_ID = 1
 

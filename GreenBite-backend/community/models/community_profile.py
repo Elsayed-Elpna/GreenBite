@@ -60,6 +60,17 @@ class CommunityProfile(models.Model):
         if self.banned_until:
             return timezone.now() < self.banned_until
         return False
+    
+    def suspend_seller(self):
+        self.seller_status = "SUSPENDED"
+        self.subscription_plan = None
+        self.save(
+            update_fields=[
+                "seller_status",
+                "subscription_plan",
+                "updated_at"
+            ]
+        )
 
     @property
     def effective_seller_status(self):

@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated: !!user,
         isSubscribed: user?.is_subscribed ?? false,
+        isAdmin: user?.is_staff ?? false,
         login,
         logout,
       }}
