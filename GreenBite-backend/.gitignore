@@ -22,6 +22,9 @@ media/
 staticfiles/
 *.log
 
+# Celery beat schedule file
+celerybeat-schedule
+
 # Env files (secrets)
 .env
 

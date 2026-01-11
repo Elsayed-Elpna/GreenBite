@@ -20,7 +20,8 @@ import Activate from "./pages/Activate";
 import WasteLog from "./pages/HomePages/WasteLog/WasteLog";
 import GenerateRecipesPage from "./pages/HomePages/Recipes/GenerateRecipesPage";
 import MyMealsPage from "./pages/HomePages/Meals/MyMealsPage";
-
+import SubscriptionRoute from "@/routes/SubscriptionRoute";
+import AdminRoute from "@/routes/AdminRoute";
 import UserLayout from "./layouts/UserLayout";
 import Settings from "./pages/user/Settings";
 import MealPlansListPage from "./pages/HomePages/MealPlans/MealPlansListPage";
@@ -29,6 +30,8 @@ import MealPlanDetailPage from "./pages/HomePages/MealPlans/MealPlanDetailPage";
 import Pricing from "./pages/Pricing/Pricing";
 import PaymentResult from "@/pages/payment/PaymentResult";
 import Marketplace from "./pages/HomePages/Market/MarketPage";
+import ProfileLayout from "@/layouts/ProfileLayout";
+import UserInfo from "@/pages/marketplace/UserInfo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +71,15 @@ function App() {
             <Route element={<ProtectedRoute />}>
               {/* /User */}
               <Route path="/user" element={<UserLayout />}>
+                {/* /User/Profile */}
+                <Route path="profile" element={<ProfileLayout />}>
+                  <Route index element={<UserInfo />} />
+                  {/* SubscriptionRoute*/}
+                  <Route element={<SubscriptionRoute />}></Route>
+                  {/* AdminRoute*/}
+                  <Route element={<AdminRoute />}></Route>
+                </Route>
+                {/* /User/settings */}
                 <Route path="settings" element={<Settings />} />
               </Route>
               {/* --------------------------------------- */}
