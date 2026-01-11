@@ -14,7 +14,7 @@ class CommunityProfile(models.Model):
     
     # Membership info
     is_community_member = models.BooleanField(default=True)
-    joined_at = models.DateTimeField(null=True, blank=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
     
     # Reputation / Trust
     trust_score = models.DecimalField(max_digits=3, decimal_places=2, default=0)
@@ -60,6 +60,17 @@ class CommunityProfile(models.Model):
         if self.banned_until:
             return timezone.now() < self.banned_until
         return False
+    
+    def suspend_seller(self):
+        self.seller_status = "SUSPENDED"
+        self.subscription_plan = None
+        self.save(
+            update_fields=[
+                "seller_status",
+                "subscription_plan",
+                "updated_at"
+            ]
+        )
 
     @property
     def effective_seller_status(self):

@@ -1,16 +1,28 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useProfile } from "@/hooks/settings/useProfile";
+
 const ProfileAvatar = () => {
   const { updateProfile, data, isLoading } = useProfile();
-  const [avatars, setAvatars] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+
   if (isLoading) return <div className="skeleton h-32 w-full" />;
-  const { first_name, last_name, profile: { avatar } = {} } = data || {};
+
+  const first_name = data?.first_name;
+  const last_name = data?.last_name;
+  const avatarUrl = data?.avatar_url; 
+
   const handleSubmit = () => {
     const formData = new FormData();
-    if (avatars) formData.append("avatar", avatars);
-    updateProfile.mutate(formData);
+    if (avatarFile) formData.append("avatar", avatarFile);
+
+    updateProfile.mutate(formData, {
+      // if your hook doesn't auto-refetch, at least update UI from response
+      onSuccess: () => {
+        setAvatarFile(null);
+      },
+    });
   };
+
   return (
     <div className="card bg-base-100 shadow">
       <div className="card-body space-y-4">
@@ -19,7 +31,10 @@ const ProfileAvatar = () => {
         <div className="flex items-center gap-4">
           <div className="avatar">
             <div className="w-16 rounded-full">
-              <img src={avatar} alt="avatar" />
+              <img
+                src={avatarUrl || "/images/default-avatar.png"}
+                alt="avatar"
+              />
             </div>
           </div>
           <span className="font-medium">
@@ -30,7 +45,8 @@ const ProfileAvatar = () => {
         <input
           type="file"
           className="file-input file-input-bordered w-full"
-          onChange={(e) => setAvatars(e.target.files[0])}
+          accept="image/*"
+          onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
         />
 
         <button
@@ -44,19 +60,6 @@ const ProfileAvatar = () => {
         {updateProfile.isError && (
           <div className="alert alert-error shadow-lg">
             <div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="stroke-current flex-shrink-0 h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
               <span>
                 {updateProfile.error?.response?.data?.avatar ||
                   "Something went wrong"}

@@ -48,10 +48,18 @@ class Subscription(models.Model):
     self.is_active = True
     self.save()
   
-  def expire_if_needed(self):
-    if self.end_date and self.end_date <= timezone.now():
-      self.is_active = False
-      self.save()
+  def expire(self):
+    if not self.is_active:
+        return
+
+    self.is_active = False
+    self.save(update_fields=["is_active"])
+    
+    try:
+        self.user.community_profile.suspend_seller()
+    except Exception:
+        pass
+
   
   def __str__(self):
     return f"{self.user} - {self.plan}"
