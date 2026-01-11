@@ -1,10 +1,9 @@
 import api from "@/api/axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// GET PROFILE
-
+// GET PROFILE (use the same endpoint you update)
 export const getProfile = async () => {
-  const res = await api.get("/auth/users/me/");
+  const res = await api.get("/api/profile/");
   return res.data;
 };
 
@@ -16,8 +15,6 @@ const updateProfile = async (formData) => {
   return res.data;
 };
 
-// HOOK
-
 export const useProfile = () => {
   const queryClient = useQueryClient();
 
@@ -28,10 +25,10 @@ export const useProfile = () => {
 
   const updateMutation = useMutation({
     mutationFn: updateProfile,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["profile"],
-      });
+    onSuccess: (updated) => {
+      // update cache immediately (no delay) + force refetch
+      queryClient.setQueryData(["profile"], updated);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 
