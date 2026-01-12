@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useState } from 'react';
-import { Store, Plus } from 'lucide-react';
+import { Store, Plus, ShoppingBag } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import ListingCard from './ListingCard';
@@ -15,12 +15,14 @@ import { useListings } from "@/hooks/uselistings";
 import OrderDetailsDialog from '@/pages/HomePages/Market/OrderDetailsDialog'
 import { useNavigate } from 'react-router-dom';
 
+
 const MarketplaceListings = () => {
   const [state, dispatch] = useReducer(marketplaceReducer, initialMarketplaceState);
   const { listings, loading, error, filters } = state;
   const { user, isSubscribed } = useAuth();
   const isAdmin = user?.role === "admin";
   const isSeller = user?.role === "seller";
+
   const navigate = useNavigate();
 
   const { fetchListings, create, update, remove } = useListings();
@@ -171,14 +173,31 @@ const MarketplaceListings = () => {
           </Badge>
         </div>
 
+
         <div className="flex gap-2">
-          {/* Always show; gate with toast */}
+          {(isSeller || isAdmin) ? (
           <Button onClick={handleOpenCreate}>
             <p className="flex">
             <Plus className="h-4 w-4 mr-2" />
             Create Listing
             </p>
-          </Button>
+          </Button>) : (
+            <div className="flex gap-2">
+
+            <Button onClick={() => navigate(`/home/marketplace/orders/buyer/`)}>
+              <p className="flex">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                your Orders
+              </p>
+            </Button>
+            <Button onClick={() => navigate('/pricing/')}>
+              <p className="flex">
+                <Plus className="h-4 w-4 mr-2" />
+                Become a Seller
+              </p>
+            </Button>
+            </div>
+          )}
         </div>
       </div>
 
