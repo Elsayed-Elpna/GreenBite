@@ -17,7 +17,7 @@ This keeps your src/api/marketplacelisting.js from becoming a monster file.
  * POST /community/market/orders
  */
 export async function createOrder(payload){
-    const res = await api.post("/community/market/orders", payload);
+    const res = await api.post("/community/market/orders/", payload);
     return res.data;
 }
 
@@ -26,7 +26,7 @@ export async function createOrder(payload){
  * GET /community/market/orders/buyer?status=&page=&page_size=
  */
 export async function getBuyerOrders({status, page = 1, pageSize = 10 } = {}){ //destructuring in defaults
-    const res = await api.get("/community/market/orders/buyer", {
+    const res = await api.get("/api/community/market/orders/buyer/", {
         params: {
             status: status || undefined, //supports filtering by order status
             page,
@@ -37,7 +37,7 @@ export async function getBuyerOrders({status, page = 1, pageSize = 10 } = {}){ /
 }
 
 export async function getSellerOrders({status, page = 1, pageSize = 10 } = {}){ //destructuring in defaults
-    const res = await api.get("/community/market/orders/seller", {
+    const res = await api.get("/api/community/market/orders/seller/", {
         params: {
             status: status || undefined, //supports filtering by order status
             page,
@@ -52,7 +52,7 @@ export async function getSellerOrders({status, page = 1, pageSize = 10 } = {}){ 
  * GET /community/market/orders/{order_id}
  */
 export async function getOrderDetails(orderId){
-    const res = await api.get(`/community/market/orders/${orderId}`);
+    const res = await api.get(`/api/community/market/orders/${orderId}`);
     return res.data;
 }
 
@@ -61,7 +61,7 @@ export async function getOrderDetails(orderId){
  * PATCH /community/market/orders/{order_id}/accept
  */
 export async function acceptOrder(orderId){
-    const res = await api.patch(`/community/market/orders/${orderId}/accept`);
+    const res = await api.patch(`/api/community/market/orders/${orderId}/accept/`);
     return res.data;
 }
 /**
@@ -70,7 +70,7 @@ export async function acceptOrder(orderId){
  * body: { status: "DELIVERED" | "CANCELLED" }
  */
 export async function updateOrderStatus({orderId, status}){
-    const res = await api.patch(`/community/market/orders/${orderId}/status`,{
+    const res = await api.patch(`/api/community/market/orders/${orderId}/status/`,{
         status,
     });
     return res.data;

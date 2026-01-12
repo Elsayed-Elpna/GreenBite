@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useBuyerOrders } from "@/hooks/orders/useBuyerOrders";
 import OrderDetailsDialog from "./OrderDetailsDialog";
 
-const STATUSES = ["PENDING", "ACCEPTED", "DELIEVERD", "CANCELLED"]
+const STATUSES = ["PENDING", "ACCEPTED", "DELIVERED", "CANCELLED"]
 
 export default function BuyerOrdersPage() {
     const [status, setStatus] = useState("PENDING");
