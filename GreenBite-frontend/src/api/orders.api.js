@@ -25,6 +25,7 @@ export async function createOrder(payload){
  * Buyer orders
  * GET /community/market/orders/buyer?status=&page=&page_size=
  */
+
 export async function getBuyerOrders({status, page = 1, pageSize = 10 } = {}){ //destructuring in defaults
     const res = await api.get("/api/community/market/orders/buyer/", {
         params: {
