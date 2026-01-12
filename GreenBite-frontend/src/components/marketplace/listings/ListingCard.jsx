@@ -47,7 +47,7 @@ const ListingCard = ({ listing, onOrder, onViewDetails, onReview, onReport , onE
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            No Image
+            <img src="/images/listings.png" alt="Placeholder" className="w-16 h-16 opacity-50" />
           </div>
         )}
         <Badge
@@ -135,7 +135,7 @@ const ListingCard = ({ listing, onOrder, onViewDetails, onReview, onReport , onE
           )}
           {canManage && (
             <>
-              <div className="flex gap-2 w-full">
+              <div className="flex items-center gap-2 w-full">
                 <Button variant="outline" size="sm" onClick={() => onEdit?.(listing)} title="Edit">
                   <Pencil className="h-4 w-4" />
                 </Button>

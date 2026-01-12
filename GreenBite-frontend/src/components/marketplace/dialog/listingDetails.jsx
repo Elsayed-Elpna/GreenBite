@@ -73,7 +73,7 @@ const ListingDetailsDialog = ({
               <img src={featured_image} alt={title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-500">
-                No Image
+                <img src="/images/listings.png" alt="Placeholder" className="w-16 h-16 opacity-50" />
               </div>
             )}
 
@@ -151,14 +151,19 @@ const ListingDetailsDialog = ({
 
             {canEditDelete ? (
               <Button variant="outline" onClick={() => onEdit?.(listing)} className="border-emerald-300 text-emerald-800">
-                Edit
+                <p className="flex">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </p>
               </Button>
             ) : null}
 
             {canEditDelete ? (
               <Button variant="danger" onClick={() => onDelete?.(listing)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                <p className="flex">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </p>
               </Button>
             ) : null}
           </div>

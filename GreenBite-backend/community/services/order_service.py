@@ -43,7 +43,11 @@ class MarketOrderService:
         if quantity > market.quantity:
             raise ValidationError("Insufficient quantity.")
 
-        if validated_data["payment_method"] != "COD":
+        payment_method = validated_data.get("payment_method")
+        if not payment_method:
+            raise ValidationError({"payment_method": "This field is required."})
+
+        if payment_method != "COD":
             raise ValidationError("Only Cash on Delivery is supported.")
 
         order = MarketOrder.objects.create(
@@ -53,7 +57,7 @@ class MarketOrderService:
             quantity=quantity,
             unit=market.unit,
             total_price=market.price * quantity,
-            payment_method=validated_data["payment_method"],
+            payment_method=payment_method,
             buyer_note=validated_data.get("buyer_note"),
         )
 

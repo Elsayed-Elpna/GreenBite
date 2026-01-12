@@ -23,6 +23,7 @@ export default function CheckoutPage(){
         return{
             market_id: Number(listingId),
             quantity: Number(quantity),
+            payment_method: "COD", 
             buyer_note: buyerNote || "",
             address,
         };
