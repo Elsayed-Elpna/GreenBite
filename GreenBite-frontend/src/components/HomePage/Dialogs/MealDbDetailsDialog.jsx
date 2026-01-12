@@ -14,13 +14,13 @@ import {
 } from "@/utils/mealdb.mapper";
 
 export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
-  // ✅ Hook: router
+  //Hook: router
   const navigate = useNavigate();
 
-  // ✅ Hook: mutation (must be called every render)
+  //Hook: mutation (must be called every render)
   const saveMealMutation = useSaveMeal(mealdbId);
 
-  // ✅ Hook: query (must be called every render; enabled handles skipping)
+  //Hook: query (must be called every render; enabled handles skipping)
   const { data, isLoading, isError } = useQuery({
     queryKey: ["mealdb", mealdbId],
     queryFn: async () => {
@@ -31,7 +31,7 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
     staleTime: 2 * 60 * 1000,
   });
 
-  // ✅ Lock page scroll while modal is open
+  //Lock page scroll while modal is open
   useEffect(() => {
     if (!isOpen) return;
 
@@ -43,7 +43,7 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
     };
   }, [isOpen]);
 
-  // ✅ After hooks: safe early return
+  //After hooks: safe early return
   if (!isOpen) return null;
 
   const steps = instructionsToSteps(data?.instructions);
@@ -61,7 +61,7 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
     });
   };
 
-  // ✅ PORTAL: render modal at document.body so it’s above all layouts/Swiper/sidebar
+  //PORTAL: render modal at document.body so it’s above all layouts/Swiper/sidebar
   return createPortal(
     <div className="fixed inset-0 bg-black/40 z-[99999] flex items-center justify-center">
       <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto z-[100000]">
@@ -133,17 +133,15 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
 
             {/* Steps */}
             <h3 className="font-semibold mb-2">Steps</h3>
-            {steps.length === 0 ? (
+            {!data?.instructions ? (
               <p className="text-sm text-gray-500">No steps found.</p>
             ) : (
-              <ul className="list-disc pl-6 mb-6 text-sm">
-                {steps.map((s, idx) => (
-                  <li key={idx}>{s}</li>
-                ))}
-              </ul>
+              <div className="mb-6 text-sm whitespace-pre-line break-words leading-relaxed">
+                {data.instructions}
+              </div>
             )}
 
-            {/* Save button at end */}
+            {/* Actions at end */}
             <div className="mt-6 flex items-center gap-3">
               <button
                 type="button"
@@ -152,6 +150,14 @@ export default function MealDbDetailsDialog({ isOpen, onClose, mealdbId }) {
                 className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
               >
                 {saveMealMutation.isPending ? "Saving..." : "Save meal"}
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Close
               </button>
 
               {saveMealMutation.isError ? (
