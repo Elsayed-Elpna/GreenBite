@@ -167,7 +167,7 @@ const MarketplaceListings = () => {
           <h2 className="text-2xl font-bold text-foreground">Marketplace</h2>
 
           <Badge variant="outline" className="ml-2">
-            {isSeller ? 'Seller' : 'Buyer'}
+            {isSubscribed ? 'Seller' : 'Buyer'}
           </Badge>
         </div>
 

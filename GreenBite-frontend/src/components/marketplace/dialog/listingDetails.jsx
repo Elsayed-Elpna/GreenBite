@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Flag, Star, Clock, User } from 'lucide-react';
+import { Trash2, Flag, Star, Clock, User, Pencil } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -73,7 +73,7 @@ const ListingDetailsDialog = ({
               <img src={featured_image} alt={title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-500">
-                No Image
+                <img src="/images/listings.png" alt="Placeholder" className="w-16 h-16 opacity-50" />
               </div>
             )}
 
@@ -129,7 +129,7 @@ const ListingDetailsDialog = ({
 
           <Separator className="bg-emerald-200/70" />
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap justify-center"> 
             {canOrder ? (
               <Button className="flex-1" onClick={() => onOrder?.(listing)}>
                 Order Now
@@ -151,14 +151,19 @@ const ListingDetailsDialog = ({
 
             {canEditDelete ? (
               <Button variant="outline" onClick={() => onEdit?.(listing)} className="border-emerald-300 text-emerald-800">
-                Edit
+                <p className="flex">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </p>
               </Button>
             ) : null}
 
             {canEditDelete ? (
               <Button variant="danger" onClick={() => onDelete?.(listing)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                <p className="flex">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </p>
               </Button>
             ) : null}
           </div>

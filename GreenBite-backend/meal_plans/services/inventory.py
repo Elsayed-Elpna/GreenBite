@@ -3,15 +3,24 @@ from food.models import FoodLogSys
 from project.utils.ingredient_synonyms import expand_ingredient_tokens
 from project.utils.normalize import normalize_ingredient_name
 from decimal import Decimal
+from django.db.models.query import QuerySet
 def _safe_count(qs_or_list):
     if qs_or_list is None:
         return 0
-    if hasattr(qs_or_list, "count"):
+
+    #only QuerySet.count() takes zero args reliably
+    if isinstance(qs_or_list, QuerySet):
         return qs_or_list.count()
+
+    # lists/tuples/dicts/etc.
     try:
         return len(qs_or_list)
-    except Exception:
-        return 0
+    except TypeError:
+        # generator/iterator
+        try:
+            return sum(1 for _ in qs_or_list)
+        except Exception:
+            return 0
 
 def _to_float(val):
     try:
@@ -200,12 +209,22 @@ class InventoryService:
         }
     def _get_category_breakdown(self, food_logs):
         category_map = {}
+        if not food_logs:
+            return category_map
+
         for log in food_logs:
-            cat = log.category or "other"
+            cat = getattr(log, "category", None) or "other"
+            qty = getattr(log, "quantity", 0) or 0
+
             if cat not in category_map:
-                category_map[cat] = {'count': 0, 'total_quantity': Decimal('0')}
-            category_map[cat]['count'] += 1
-            category_map[cat]['total_quantity'] += log.quantity
+                category_map[cat] = {"count": 0, "total_quantity": Decimal("0")}
+
+            category_map[cat]["count"] += 1
+            try:
+                category_map[cat]["total_quantity"] += qty if isinstance(qty, Decimal) else Decimal(str(qty))
+            except Exception:
+                pass
+
         return category_map
     def has_ingredient(self, ingredient_name, minQ=None):
         norm = normalize_ingredient_name(ingredient_name)
@@ -241,6 +260,5 @@ class InventoryService:
         self._available_logs = None
         self._inventory_tokens = None
         self._inventory_map = None
-
 
 

@@ -97,7 +97,8 @@ const DashboardSummary = () => {
   ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6">
+        <div className="
+    mb-6 ">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-foreground">Dashboard Summary</h2>

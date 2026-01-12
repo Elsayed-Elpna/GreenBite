@@ -1,6 +1,3 @@
-"""
-Service for confirming meal plan days and logging food consumption.
-"""
 import logging
 import re
 from django.db import transaction
@@ -34,16 +31,6 @@ def _core_ingredient_name(text: str) -> str:
 
 @transaction.atomic
 def confirm_meal_plan_day(meal_plan_day, user):
-    """
-    Confirm a meal plan day and update food log consumption.
-
-    Args:
-        meal_plan_day: MealPlanDay instance or ID
-        user: User instance
-
-    Raises:
-        ValueError: If day already confirmed or invalid
-    """
     # Handle if passed as ID
     if isinstance(meal_plan_day, int):
         try:
@@ -70,7 +57,7 @@ def confirm_meal_plan_day(meal_plan_day, user):
     # Get all meals for this day (QuerySet, not list)
     meals = MealPlanMeal.objects.filter(
         meal_plan_day=meal_plan_day
-    ).select_related('meal').prefetch_related('planned_usages__food_log')
+    ).select_related('meal', 'original_meal').prefetch_related('planned_usages__food_log')
 
     if not meals.exists():
         raise ValueError("No meals found for this day")
@@ -85,11 +72,8 @@ def confirm_meal_plan_day(meal_plan_day, user):
         if meal.is_skipped:
             logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - skipped")
             continue
-        if meal.meal_id:
-            logger.debug(f"Skipping meal {meal.id} ({meal.meal_time}) - already confirmed")
-            continue
 
-        # ✅ Create Meal only on confirmation
+        # Create Meal only on confirmation
         if meal.meal is None:
             meal.meal = Meal.objects.create(
                 user=user,
@@ -108,7 +92,7 @@ def confirm_meal_plan_day(meal_plan_day, user):
 
         planned_usages_qs = meal.planned_usages.select_related("food_log")
 
-        if planned_usages_qs.exists():  # ✅ FIX: correct check
+        if planned_usages_qs.exists():
             for usage in planned_usages_qs:
                 food_log = usage.food_log
                 quantity = usage.planned_quantity
@@ -186,12 +170,12 @@ def confirm_meal_plan_day(meal_plan_day, user):
         if food_log.quantity <= 0:
             food_log.is_consumed = True
             food_log.quantity = Decimal('0')
-            logger.info(f"✅ {food_log.name} fully consumed")
+            logger.info(f" {food_log.name} fully consumed")
 
         food_log.save(update_fields=['quantity', 'is_consumed'])
 
         logger.info(
-            f"📉 Consumed {consume_quantity}g of {food_log.name} "
+            f"Consumed {consume_quantity}g of {food_log.name} "
             f"(remaining: {food_log.quantity}g)"
         )
 
@@ -201,7 +185,7 @@ def confirm_meal_plan_day(meal_plan_day, user):
     meal_plan_day.save(update_fields=['is_confirmed', 'confirmed_at'])
 
     logger.info(
-        f"✅ Confirmed day {meal_plan_day.date} - "
+        f"Confirmed day {meal_plan_day.date} - "
         f"consumed from {len(consumption_tracker)} food logs"
     )
 
