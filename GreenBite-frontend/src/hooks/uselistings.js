@@ -14,7 +14,7 @@ const normalizeListing = (l) => ({
 const toCreateFormData = (payload) => {
   const fd = new FormData();
   fd.append("title", payload.title ?? "");
-  if (payload.description) fd.append("description", payload.description);
+  fd.append("description", payload.description ?? "");
 
   fd.append("price", String(payload.price));
   fd.append("currency", payload.currency || "EGP");
@@ -25,7 +25,7 @@ const toCreateFormData = (payload) => {
   //must be a File object
   if (payload.featured_image instanceof File) {
     fd.append("featured_image", payload.featured_image);
-  }
+    } 
 
   return fd;
 };
@@ -78,10 +78,16 @@ export const useListings = () => {
       toast.success("Listing created");
       return created;
     } catch (e) {
-      const msg = e?.response?.data?.detail || e?.message || "Failed to create listing.";
-      toast.error(msg);
-      throw e;
-    }
+    const data = e?.response?.data;
+    const firstKey = data && typeof data === "object" ? Object.keys(data)[0] : null;
+    const msg =
+      data?.detail ||
+      (firstKey ? `${firstKey}: ${Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey]}` : null) ||
+      e?.message ||
+      "Failed to create listing.";
+    toast.error(msg);
+    throw e;
+  }
   }, []);
 
   const update = useCallback(async (listingId, payload) => {

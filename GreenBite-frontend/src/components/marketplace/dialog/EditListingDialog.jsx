@@ -4,7 +4,7 @@ import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/TextArea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
-
+import { MP_DIALOG } from '@/components/ui/DialogTheme';
 const UNIT_OPTIONS = ["kg", "g", "L", "ml", "pcs"];
 
 const pickEditable = (listing) => ({
@@ -43,7 +43,7 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
 
     setSubmitting(true);
     try {
-      // ✅ only send allowed fields
+      //only send allowed fields
       const payload = {
         title: form.title.trim(),
         description: form.description.trim() || null,
@@ -68,14 +68,14 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-green-50 text-slate-900 border border-green-200 shadow-xl">
+      <DialogContent className={MP_DIALOG.content}>
         <DialogHeader>
-          <DialogTitle className="text-green-900">Edit Listing</DialogTitle>
+          <DialogTitle className={MP_DIALOG.title}>Edit Listing</DialogTitle>
         </DialogHeader>
 
         <form className="space-y-3" onSubmit={handleSubmit}>
           <Input
-            className="bg-white text-slate-900 placeholder:text-slate-400 border-green-200"
+            className={MP_DIALOG.input}
             placeholder="Title"
             value={form.title}
             onChange={setField("title")}
@@ -83,7 +83,7 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
           />
 
           <Textarea
-            className="bg-white text-slate-900 placeholder:text-slate-400 border-green-200"
+            className={MP_DIALOG.input}
             placeholder="Description"
             value={form.description}
             onChange={setField("description")}
@@ -91,7 +91,7 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              className="bg-white text-slate-900 placeholder:text-slate-400 border-green-200"
+              className={MP_DIALOG.input}
               type="number"
               step="0.01"
               placeholder="Price"
@@ -100,7 +100,8 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
               required
             />
             <Input
-              className="bg-white text-slate-900 placeholder:text-slate-400 border-green-200"
+              className={MP_DIALOG.input}
+              type="text"
               placeholder="Currency"
               value={form.currency}
               onChange={setField("currency")}
@@ -110,7 +111,7 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              className="bg-white text-slate-900 placeholder:text-slate-400 border-green-200"
+              className={MP_DIALOG.input}
               type="number"
               placeholder="Quantity"
               value={form.quantity}
@@ -119,10 +120,10 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
             />
 
             <Select value={form.unit} onValueChange={(value) => setForm((p) => ({ ...p, unit: value }))}>
-              <SelectTrigger className="bg-white text-slate-900 border-green-200">
+              <SelectTrigger className={MP_DIALOG.selectTrigger}>
                 <SelectValue placeholder="Unit" />
               </SelectTrigger>
-              <SelectContent className="bg-white text-slate-900 border border-green-200">
+              <SelectContent className={MP_DIALOG.selectContent}>
                 {UNIT_OPTIONS.map((u) => (
                   <SelectItem key={u} value={u}>
                     {u}
@@ -133,7 +134,7 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
           </div>
 
           <Input
-            className="bg-white text-slate-900 border-green-200"
+            className={MP_DIALOG.input}
             type="date"
             value={form.available_until}
             onChange={setField("available_until")}
@@ -141,7 +142,7 @@ const EditListingDialog = ({ open, onOpenChange, listing, onSubmit }) => {
           />
 
           <Input
-            className="bg-white text-slate-900 border-green-200 file:text-slate-900"
+            className={`${MP_DIALOG.input} file:text-slate-900`}
             type="file"
             accept="image/*"
             onChange={handleFile}

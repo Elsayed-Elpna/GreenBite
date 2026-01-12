@@ -15,7 +15,7 @@ const RecommendedRecipesMobile = ({ limit = 5 }) => {
 
   return (
     <>
-      <section className="py-4 sm:hidden">
+      <section className="py-4 px-4">
         <div className={HOME_SECTION_SHELL}>
           <div className="mb-4">
             <h3 className="text-lg font-bold text-foreground">Recommended recipes</h3>

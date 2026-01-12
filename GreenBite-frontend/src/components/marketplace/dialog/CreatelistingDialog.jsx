@@ -10,6 +10,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/Select";
+import { MP_DIALOG } from '@/components/ui/DialogTheme';
+import { toast } from 'react-hot-toast';
 
 const UNIT_OPTIONS = ["kg", "g", "L", "ml", "pcs"];
 
@@ -41,38 +43,59 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onSubmit?.({
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        price: form.price, 
-        currency: form.currency,
-        quantity: Number(form.quantity),
-        unit: form.unit,
-        available_until: form.available_until,
-        featured_image: form.featured_image, 
-              });
-
-      onOpenChange?.(false);
-      setForm({
-        title: '',
-        description: '',
-        price: '',
-        currency: 'EGP',
-        quantity: '',
-        unit: 'kg',
-        available_until: '',
-        featured_image: null,
-      });
-    } finally {
-      setSubmitting(false);
+    // validate required fields before sending 
+    if (!form.available_until) {
+      toast.error("Please select an available-until date.");
+      return;
     }
-  };
+    if (!form.price || Number(form.price) <= 0) {
+      toast.error("Price must be greater than 0.");
+      return;
+    }
+    if (!form.quantity || Number(form.quantity) <= 0) {
+      toast.error("Quantity must be greater than 0.");
+      return;
+    }
+
+    const payload = {
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      price: Number(form.price),          //
+      currency: form.currency || "EGP",
+      quantity: Number(form.quantity),    
+      unit: form.unit,
+      available_until: form.available_until, 
+      
+    };
+    if (form.featured_image instanceof File) {
+      payload.featured_image = form.featured_image;
+    }
+
+    console.log("[CreateListingDialog] payload:", payload);
+
+    await onSubmit?.(payload);
+
+    onOpenChange?.(false);
+    setForm({
+      title: "",
+      description: "",
+      price: "",
+      currency: "EGP",
+      quantity: "",
+      unit: "kg",
+      available_until: "",
+      featured_image: null,
+    });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-green-50 text-slate-900 border border-green-200 shadow-xl">
+      <DialogContent className={MP_DIALOG.content}>
         <DialogHeader>
-          <DialogTitle className="text-green-900">Create Listing</DialogTitle>
+          <DialogTitle className={MP_DIALOG.title}>Create Listing</DialogTitle>
         </DialogHeader>
 
         <form className="space-y-3" onSubmit={handleSubmit}>
@@ -124,10 +147,10 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
               value={form.unit}
               onValueChange={(value) => setForm((p) => ({ ...p, unit: value }))}
             >
-              <SelectTrigger className="bg-white text-slate-900 border-green-200">
+              <SelectTrigger className={MP_DIALOG.selectTrigger}>
                 <SelectValue placeholder="Unit" />
               </SelectTrigger>
-              <SelectContent className="bg-white text-slate-900 border border-green-200">
+              <SelectContent className={MP_DIALOG.selectContent}>
                 {UNIT_OPTIONS.map((u) => (
                   <SelectItem key={u} value={u}>
                     {u}
@@ -138,7 +161,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
           </div>
 
           <Input
-            className="bg-white text-slate-900 border-green-200"
+            className={MP_DIALOG.input}
             type="date"
             value={form.available_until}
             onChange={setField('available_until')}
@@ -146,7 +169,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
           />
 
           <Input
-            className="bg-white text-slate-900 border-green-200 file:text-slate-900"
+            className={`${MP_DIALOG.input} file:text-slate-900`}
             type="file"
             accept="image/*"
             onChange={handleFile}

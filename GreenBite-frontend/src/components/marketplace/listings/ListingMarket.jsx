@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useState } from 'react';
-import { Store, Plus } from 'lucide-react';
+import { Store, Plus, ShoppingBag } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import ListingCard from './ListingCard';
@@ -12,6 +12,9 @@ import { useAuth } from '@/context/AuthProvider';
 import { getListings } from '@/api/marketplace.api';
 import { toast } from 'react-hot-toast';
 import { useListings } from "@/hooks/uselistings";
+import OrderDetailsDialog from '@/pages/HomePages/Market/OrderDetailsDialog'
+import { useNavigate } from 'react-router-dom';
+
 
 const MarketplaceListings = () => {
   const [state, dispatch] = useReducer(marketplaceReducer, initialMarketplaceState);
@@ -19,6 +22,8 @@ const MarketplaceListings = () => {
   const { user, isSubscribed } = useAuth();
   const isAdmin = user?.role === "admin";
   const isSeller = user?.role === "seller";
+
+  const navigate = useNavigate();
 
   const { fetchListings, create, update, remove } = useListings();
 
@@ -29,7 +34,6 @@ const MarketplaceListings = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -94,18 +98,19 @@ const MarketplaceListings = () => {
   };
 
   const handleOrder = (listing) => {
-    setSelectedListing(listing);
-    setOrderOpen(true);
+    if (!listing?.id) return;
+    navigate(`/home/marketplace/checkout/${listing.id}`);
+
   };
 
   const handleReview = (listing) => {
     setSelectedListing(listing);
-    setReviewOpen(true);
+    toast("Review not wired yet.");
   };
 
   const handleReport = (listing) => {
     setSelectedListing(listing);
-    setReportOpen(true);
+    toast("Report not wired yet.");
   };
 
   const refreshListings = async () => {
@@ -164,18 +169,35 @@ const MarketplaceListings = () => {
           <h2 className="text-2xl font-bold text-foreground">Marketplace</h2>
 
           <Badge variant="outline" className="ml-2">
-            {isSeller ? 'Seller' : 'Buyer'}
+            {isSubscribed ? 'Seller' : 'Buyer'}
           </Badge>
         </div>
 
+
         <div className="flex gap-2">
-          {/* Always show; gate with toast */}
+          {(isSubscribed || isAdmin) ? (
           <Button onClick={handleOpenCreate}>
             <p className="flex">
             <Plus className="h-4 w-4 mr-2" />
             Create Listing
             </p>
-          </Button>
+          </Button>) : (
+            <div className="flex gap-2">
+
+            <Button onClick={() => navigate(`/home/marketplace/orders/buyer/`)}>
+              <p className="flex">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                your Orders
+              </p>
+            </Button>
+            <Button onClick={() => navigate('/pricing/')}>
+              <p className="flex">
+                <Plus className="h-4 w-4 mr-2" />
+                Become a Seller
+              </p>
+            </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -205,6 +227,8 @@ const MarketplaceListings = () => {
               onOrder={handleOrder}
               onReview={handleReview}
               onReport={handleReport}
+              onEdit={handleOpenEdit}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -233,6 +257,7 @@ const MarketplaceListings = () => {
         listing={selectedListing}
         onSubmit={handleEditSubmit}
       />
+  
     </section>
   );
 };

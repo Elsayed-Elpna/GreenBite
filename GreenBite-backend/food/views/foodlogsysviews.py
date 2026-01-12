@@ -11,6 +11,9 @@ from ..utils.caching import bump_list_version, detail_key, list_key, invalidate_
 from ..pagination import FoodLogPagination
 from meal_plans.services.inventory import InventoryService
 from datetime import date, timedelta
+import logging
+logger = logging.getLogger(__name__)
+
 
 NAMESPACE = "foodlog"
 SORTABLE_FIELDS = {"name", "category", "storage_type", "quantity", "expiry_date"}
@@ -149,7 +152,6 @@ def food_log_detail(request, pk):
             {"message": "Food log deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
         )
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def expiring_soon(request):
@@ -193,44 +195,3 @@ def food_log_category_breakdown(request):
     ava = inv.get_available_logs()
     breakdown = inv._get_category_breakdown(ava)
     return Response(breakdown, status=status.HTTP_200_OK)
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def food_log_create(request):
-#     """
-#     Create a new food log entry.
-#     """
-#     serializer = FoodLogSysSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save(user=request.user)
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['PUT', 'PATCH'])
-# @permission_classes([IsAuthenticated])
-# def food_log_update(request, pk):
-#     """
-#     Update an existing food log entry.
-#     """
-#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-#     partial = request.method == 'PATCH'
-#     serializer = FoodLogSysSerializer(food_log, data=request.data, partial=partial)
-#     if serializer.is_valid():
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def food_log_delete(request, pk):
-#     """
-#     Delete a food log entry.
-#     """
-#     food_log = get_object_or_404(FoodLogSys, pk=pk, user=request.user)
-#     food_log.delete()
-#     return Response(
-#         {'message': f'Food log "{food_log.name}" deleted successfully'}, 
-#         status=status.HTTP_204_NO_CONTENT
-#     )
