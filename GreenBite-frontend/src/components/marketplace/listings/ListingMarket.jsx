@@ -175,7 +175,7 @@ const MarketplaceListings = () => {
 
 
         <div className="flex gap-2">
-          {(isSeller || isAdmin) ? (
+          {(isSubscribed || isAdmin) ? (
           <Button onClick={handleOpenCreate}>
             <p className="flex">
             <Plus className="h-4 w-4 mr-2" />
