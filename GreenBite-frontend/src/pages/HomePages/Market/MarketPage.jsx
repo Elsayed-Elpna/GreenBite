@@ -1,4 +1,4 @@
-import MarketplaceListings from '@/components/marketplace/ListingMarket';
+import MarketplaceListings from '@/components/marketplace/listings/ListingMarket';
 const Marketplace = () => {
 
   return (

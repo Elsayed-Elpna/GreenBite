@@ -27,7 +27,7 @@ def _s3_client(endpoint_url: str):
 
     
 def ensure_bucket_exists(bucket: str) -> None:
-    client = _s3_client()
+    client = _internal_s3_client()
     try:
         client.head_bucket(Bucket=bucket)
     except ClientError as e:
