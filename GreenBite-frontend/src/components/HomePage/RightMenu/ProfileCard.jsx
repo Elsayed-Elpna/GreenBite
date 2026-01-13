@@ -10,7 +10,7 @@ function ProfileCard() {
   const navigate = useNavigate();
   const handelLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/", { replace: true });
   };
   return (
     <div className=" w-full flex items-center justify-start mb-7 ">
