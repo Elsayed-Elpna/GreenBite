@@ -42,7 +42,7 @@ class CommunityProfile(models.Model):
     )
     
     # Ban info
-    banned_until = models.DateTimeField(null=True, blank=True)
+    banned_until = models.DateField(null=True, blank=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -58,7 +58,7 @@ class CommunityProfile(models.Model):
     def is_banned(self):
         """Check if user is currently banned"""
         if self.banned_until:
-            return timezone.now() < self.banned_until
+            return timezone.now().date() <= self.banned_until
         return False
     
     def suspend_seller(self):
@@ -75,6 +75,6 @@ class CommunityProfile(models.Model):
     @property
     def effective_seller_status(self):
         """Returns the real seller status taking into account banned_until"""
-        if self.banned_until and timezone.now() < self.banned_until:
+        if self.banned_until and timezone.now().date() <= self.banned_until:
             return "SUSPENDED"
         return self.seller_status

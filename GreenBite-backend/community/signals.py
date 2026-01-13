@@ -20,9 +20,8 @@ def auto_expire_market_listing(sender, instance, **kwargs):
 def check_unban(sender, instance, **kwargs):
     """
     Automatically set seller_status back to ACTIVE if banned_until has passed.
-    Using pre_save to avoid infinite loop.
     """
-    if instance.banned_until and instance.banned_until <= timezone.now():
+    if instance.banned_until and instance.banned_until < timezone.now().date():
         if instance.seller_status == "SUSPENDED":
             instance.seller_status = "ACTIVE"
             instance.banned_until = None
