@@ -144,15 +144,17 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={MP_DIALOG.content}>
+      <DialogContent className="bg-white border-2 border-green-500 shadow-2xl shadow-green-500/20">
         <DialogHeader>
-          <DialogTitle className={MP_DIALOG.title}>Create Listing</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-green-700">
+            Create Listing
+          </DialogTitle>
         </DialogHeader>
 
         <form className="space-y-3" onSubmit={handleSubmit}>
           {/* Title */}
           <Input
-            className={MP_DIALOG.input}
+            className="bg-white border-2 border-green-400 text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-green-600 transition-colors"
             placeholder="Title"
             value={form.title}
             onChange={setField("title")}
@@ -163,7 +165,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
 
           {/* Description */}
           <Textarea
-            className={MP_DIALOG.textarea}
+            className="bg-white border-2 border-green-400 text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-green-600 transition-colors resize-none"
             placeholder="Description"
             value={form.description}
             onChange={setField("description")}
@@ -176,6 +178,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
                 type="number"
                 step="0.01"
                 placeholder="Price"
+                className="bg-white border-2 border-green-400 text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-green-600 transition-colors"
                 value={form.price}
                 onChange={setField("price")}
               />
@@ -187,6 +190,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
             <div>
               <Input
                 placeholder="Currency"
+                className="bg-white border-2 border-green-400 text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-green-600 transition-colors"
                 value={form.currency}
                 onChange={setField("currency")}
               />
@@ -202,6 +206,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
               <Input
                 type="number"
                 placeholder="Quantity"
+                className="bg-white border-2 border-green-400 text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-green-600 transition-colors"
                 value={form.quantity}
                 onChange={setField("quantity")}
               />
@@ -217,12 +222,16 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
                   setForm((p) => ({ ...p, unit: value }))
                 }
               >
-                <SelectTrigger className={MP_DIALOG.selectTrigger}>
+                <SelectTrigger className="bg-white border-2 border-green-400 text-gray-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-green-600 transition-colors [&>button]:outline-none [&>button]:focus:outline-none [&>button]:focus-visible:outline-none">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
-                <SelectContent className={MP_DIALOG.selectContent}>
+                <SelectContent className="bg-white border-2 border-green-400 text-gray-900 outline-none focus:outline-none focus-visible:outline-none">
                   {UNIT_OPTIONS.map((u) => (
-                    <SelectItem key={u} value={u}>
+                    <SelectItem
+                      key={u}
+                      value={u}
+                      className="focus:bg-green-100 focus:text-green-900 outline-none focus:outline-none focus-visible:outline-none"
+                    >
                       {u}
                     </SelectItem>
                   ))}
@@ -237,6 +246,7 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
           {/* Date */}
           <Input
             type="date"
+            className="bg-white border-2 border-green-400 text-gray-900 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-green-600 transition-colors"
             value={form.available_until}
             onChange={setField("available_until")}
           />
@@ -245,7 +255,28 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
           )}
 
           {/* Image */}
-          <Input type="file" accept="image/*" onChange={handleFile} />
+          <div className="relative">
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="hidden"
+            />
+            <label
+              htmlFor="file-upload"
+              className="flex items-center justify-center w-full px-4 py-2.5 bg-white border-2 border-green-400 rounded-md cursor-pointer hover:border-green-600 transition-colors outline-none focus:outline-none focus-visible:outline-none"
+            >
+              <span className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded mr-3 text-sm font-medium transition-colors">
+                Choose File
+              </span>
+              <span className="text-gray-600 text-sm">
+                {form.featured_image
+                  ? form.featured_image.name
+                  : "No file chosen"}
+              </span>
+            </label>
+          </div>
           {errors.featured_image && (
             <p className="text-xs text-red-600">{errors.featured_image}</p>
           )}
@@ -255,12 +286,17 @@ const CreateListingDialog = ({ open, onOpenChange, onSubmit }) => {
             <Button
               type="button"
               variant="outline"
+              className="border-2 border-green-500 text-green-700 hover:bg-green-50 outline-none focus:outline-none focus-visible:outline-none transition-colors"
               onClick={() => onOpenChange?.(false)}
               disabled={submitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
+            <Button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 text-white outline-none focus:outline-none focus-visible:outline-none transition-colors shadow-lg shadow-green-600/30"
+              disabled={submitting}
+            >
               {submitting ? "Creating..." : "Create"}
             </Button>
           </div>

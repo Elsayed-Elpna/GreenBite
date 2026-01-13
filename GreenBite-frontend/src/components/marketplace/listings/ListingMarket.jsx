@@ -1,5 +1,6 @@
 import { useReducer, useEffect, useState } from "react";
-import { Store, Plus, ShoppingBag } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Store, Plus, ShoppingBag, Sparkles } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import ListingCard from "./ListingCard";
@@ -47,6 +48,7 @@ const MarketplaceListings = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const reportDialog = useDialog();
+
   useEffect(() => {
     let cancelled = false;
 
@@ -74,7 +76,7 @@ const MarketplaceListings = () => {
         // Normalize backend fields to what UI expects
         const results = rawResults.map((l) => ({
           ...l,
-          featured_image: l.featured_image_url ?? null, // used by ListingCard + ListingDetailsDialog
+          featured_image: l.featured_image_url ?? null,
           seller: {
             ...l.seller,
             name: l.seller?.name ?? l.seller?.email ?? "Unknown",
@@ -180,78 +182,268 @@ const MarketplaceListings = () => {
   };
 
   return (
-    <section className="py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Store className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold text-foreground">Marketplace</h2>
+    <section className="py-8 px-4 min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 rounded-3xl">
+      {/* Header Section with Gradient Background */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative mb-8 p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 shadow-2xl shadow-emerald-500/30 overflow-hidden"
+      >
+        {/* Decorative Elements */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+          className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"
+        />
 
-          <Badge variant="outline" className="ml-2">
-            {isSubscribed ? "Seller" : "Buyer"}
-          </Badge>
-        </div>
-
-        <div className="flex gap-2">
-          {isSubscribed || isAdmin ? (
-            <Button onClick={handleOpenCreate}>
-              <p className="flex">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Listing
-              </p>
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => navigate(`/home/marketplace/orders/buyer/`)}
-              >
-                <p className="flex">
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  your Orders
-                </p>
-              </Button>
-              <Button onClick={() => navigate("/pricing/")}>
-                <p className="flex">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Become a Seller
-                </p>
-              </Button>
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex items-center gap-3 sm:gap-4"
+          >
+            <motion.div
+              whileHover={{ rotate: 360, scale: 1.1 }}
+              transition={{ duration: 0.6 }}
+              className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg"
+            >
+              <Store className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+            </motion.div>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-1">
+                Marketplace
+              </h2>
+              <Badge className="bg-white/25 text-white border-white/30 backdrop-blur-sm px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold">
+                {isSubscribed ? "✨ Seller Account" : "🛍️ Buyer Account"}
+              </Badge>
             </div>
-          )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto"
+          >
+            {isSubscribed || isAdmin ? (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={handleOpenCreate}
+                    className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 shadow-lg font-semibold flex-1 sm:flex-none px-4"
+                  >
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    Create Listing
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={() => navigate(`/user/profile/buyer`)}
+                    className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 shadow-lg font-semibold flex-1 sm:flex-none px-4"
+                  >
+                    <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    Your Orders
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={() => navigate("/pricing/")}
+                    className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 shadow-lg font-semibold flex-1 sm:flex-none px-4"
+                  >
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    Become a Seller
+                  </Button>
+                </motion.div>
+              </>
+            )}
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      <MarketplaceFilters filters={filters} dispatch={dispatch} />
+      {/* Filters Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="mb-8"
+      >
+        <MarketplaceFilters filters={filters} dispatch={dispatch} />
+      </motion.div>
 
-      {loading && (
-        <div className="text-center py-8 text-muted-foreground">Loading...</div>
-      )}
+      {/* Loading State */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
+            <div className="relative">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-500 rounded-full"
+              />
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 180, 360],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              >
+                <Sparkles className="h-6 w-6 text-emerald-500" />
+              </motion.div>
+            </div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mt-4 text-emerald-600 font-medium"
+            >
+              Loading marketplace...
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {error && (
-        <div className="text-center py-8 text-destructive">{error}</div>
-      )}
+      {/* Error State */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+            className="max-w-2xl mx-auto"
+          >
+            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-center shadow-lg">
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.5 }}
+                className="text-5xl mb-3"
+              >
+                ⚠️
+              </motion.div>
+              <p className="text-red-600 font-semibold text-lg">{error}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {!loading && !error && listings.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No listings found. Try adjusting your filters.
-        </div>
-      )}
+      {/* Empty State */}
+      <AnimatePresence>
+        {!loading && !error && listings.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="max-w-2xl mx-auto"
+          >
+            <div className="bg-white border-2 border-emerald-200 rounded-3xl p-12 text-center shadow-xl">
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-emerald-100 to-green-100 rounded-full flex items-center justify-center"
+              >
+                <Store className="h-12 w-12 text-emerald-500" />
+              </motion.div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                No Listings Found
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Try adjusting your filters or check back later for new items.
+              </p>
+              {(isSubscribed || isAdmin) && (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    onClick={handleOpenCreate}
+                    className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-8"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Create First Listing
+                  </Button>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {!loading && !error && listings.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {listings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              onViewDetails={handleViewDetails}
-              onOrder={handleOrder}
-              onReview={handleReview}
-              onReport={handleReport}
-              onEdit={handleOpenEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+      {/* Listings Grid */}
+      <AnimatePresence>
+        {!loading && !error && listings.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {listings.map((listing, index) => (
+              <motion.div
+                key={listing.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.1,
+                }}
+              >
+                <ListingCard
+                  listing={listing}
+                  onViewDetails={handleViewDetails}
+                  onOrder={handleOrder}
+                  onReview={handleReview}
+                  onReport={handleReport}
+                  onEdit={handleOpenEdit}
+                  onDelete={handleDelete}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Dialogs */}
       <ListingDetailsDialog

@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Pencil,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -22,8 +23,8 @@ const ListingCard = ({
   onEdit,
   onDelete,
 }) => {
-  const { user, isSubscribed } = useAuth();
-  const isSeller = user?.role === "seller"; // adjust to your actual role field
+  const { user } = useAuth();
+
   const {
     title,
     price,
@@ -37,157 +38,146 @@ const ListingCard = ({
     average_rating,
     review_count,
   } = listing;
+
   const [imgError, setImgError] = React.useState(false);
 
   const daysLeft = Math.ceil(
     (new Date(available_until) - new Date()) / (1000 * 60 * 60 * 24)
   );
-  const isOwner = seller?.id === user?.id;
+
   const isExpired = daysLeft <= 0;
-  const isActive = (status === "Active" || status === "ACTIVE") && !isExpired;
+  const isActive = (status === "ACTIVE" || status === "Active") && !isExpired;
+  const isOwner = seller?.id === user?.id;
   const isAdmin = user?.role === "admin";
+  const isSeller = user?.role === "seller";
 
   const canManage = isOwner || isAdmin;
   const canOrder = !isOwner && !isSeller;
 
   return (
     <Card
-      className="overflow-hidden transition-all duration-300 hover:shadow-recipe-hover hover:-translate-y-1 cursor-pointer"
       onClick={() => onViewDetails?.(listing)}
+      className="group cursor-pointer overflow-hidden rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-white via-emerald-50/30 to-white transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-300/30"
     >
-      <div className="relative h-40 bg-muted">
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-emerald-100 via-green-50 to-teal-50">
         {featured_image && !imgError ? (
           <img
             src={featured_image}
             alt={title}
-            className="w-full h-full object-cover"
             onError={() => setImgError(true)}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <img
-              src="/images/listings.png"
-              alt="Placeholder"
-              className="w-16 h-16 opacity-50"
-            />
+          <div className="flex h-full w-full items-center justify-center">
+            <Sparkles className="h-20 w-20 text-emerald-300 opacity-40" />
           </div>
         )}
+
         <Badge
-          className={`absolute top-2 right-2 ${
-            isActive ? "bg-secondary" : "bg-muted"
+          className={`absolute top-3 right-3 text-xs font-semibold ${
+            isActive ? "bg-emerald-600 text-white" : "bg-gray-500 text-white"
           }`}
         >
           {isExpired ? "Expired" : status}
         </Badge>
+
+        <div className="absolute bottom-3 left-3 right-3 flex justify-between">
+          <div className="rounded-xl bg-emerald-600 px-3 py-1 text-white shadow-lg">
+            <span className="text-xl font-bold">{price}</span>{" "}
+            <span className="text-sm">{currency}</span>
+          </div>
+          <div className="rounded-xl bg-white px-3 py-1 text-sm font-bold text-emerald-700 shadow">
+            {quantity} {unit}
+          </div>
+        </div>
       </div>
 
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-foreground truncate mb-2">{title}</h3>
+      {/* Content */}
+      <CardContent className="p-5 pt-4 pb-5">
+        <div className="space-y-3 mb-3">
+          <h3 className="truncate text-lg font-bold text-gray-800 group-hover:text-emerald-700">
+            {title}
+          </h3>
 
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xl font-bold text-primary">
-            {price} {currency}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {quantity} {unit}
-          </span>
-        </div>
-
-        {/* Average Rating - shown for sellers on their products or for all products */}
-        {average_rating !== undefined && (
-          <div className="flex items-center gap-2 text-sm mb-3">
-            <Star className="h-4 w-4 text-warning fill-warning" />
-            <span className="font-medium">
-              {average_rating?.toFixed(1) || "N/A"}
-            </span>
-            <span className="text-muted-foreground">
-              ({review_count || 0} reviews)
-            </span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-          <Clock className="h-4 w-4" />
-          <span>{daysLeft > 0 ? `${daysLeft} days left` : "Expired"}</span>
-        </div>
-
-        {canOrder && (
-          <div className="flex items-center justify-between text-sm mb-4">
-            <span className="text-muted-foreground">by {seller.name}</span>
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 text-warning fill-warning" />
-              <span className="font-medium">{seller.trust_score}</span>
+          {average_rating !== undefined && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+              <span className="font-bold">
+                {average_rating?.toFixed(1) || "N/A"}
+              </span>
+              <span className="text-sm text-gray-600">
+                ({review_count || 0})
+              </span>
             </div>
+          )}
+
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="h-4 w-4 text-emerald-600" />
+            <span className="text-emerald-700">
+              {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
+            </span>
           </div>
-        )}
 
-        <div
-          className="flex gap-2 justify-center"
-          onClick={(e) => e.stopPropagation()}
-        >
           {canOrder && (
-            <>
+            <p className="text-sm text-gray-600">by {seller?.name}</p>
+          )}
+        </div>
+
+        {/* ===== ACTIONS ===== */}
+        <div onClick={(e) => e.stopPropagation()}>
+          {canOrder && (
+            <div className="flex gap-2">
               <Button
-                variant="outline"
-                className="w-full"
                 size="sm"
-                onClick={() => onViewDetails?.(listing)}
-              >
-                View Details
-              </Button>
-              <Button
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white"
                 onClick={() => onOrder?.(listing)}
-                disabled={!canOrder}
-                size="sm"
               >
-                <p flex className="flex">
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  Order
-                </p>
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Order
               </Button>
 
               <Button
-                variant="outline"
                 size="sm"
+                variant="outline"
                 onClick={() => onReview?.(listing)}
               >
-                <MessageSquare className="h-4 w-4 mx-auto" />
-                review
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Review
               </Button>
 
               <Button
-                variant="outline"
                 size="sm"
+                variant="outline"
                 onClick={() => onReport?.(listing)}
               >
-                {" "}
-                <Flag className="h-4 w-4 mx-auto " />
-                report
+                <Flag className="h-4 w-4 mr-1" />
+                Report
               </Button>
-            </>
+            </div>
           )}
+
           {canManage && (
-            <>
-              <div className="flex items-center gap-2 w-full justify-center">
-                <Button
-                  variant="outline"
-                  size="m"
-                  onClick={() => onEdit?.(listing)}
-                  title="Edit"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="danger"
-                  size="m"
-                  onClick={() => onDelete?.(listing)}
-                  title="Delete"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => onEdit?.(listing)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+
+              <Button
+                size="sm"
+                className="flex-1 bg-gradient-to-r from-red-500 to-rose-500 text-white"
+                onClick={() => onDelete?.(listing)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </div>
           )}
         </div>
       </CardContent>

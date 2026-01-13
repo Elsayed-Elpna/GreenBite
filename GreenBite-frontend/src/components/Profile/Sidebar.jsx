@@ -45,7 +45,7 @@ function Sidebar({ isSubscribed, isAdmin }) {
             id: "reports",
             label: "Reports",
             icon: ShieldUser,
-            path: "/user/reports",
+            path: "/user/profile/reports",
           },
         ]
       : []),

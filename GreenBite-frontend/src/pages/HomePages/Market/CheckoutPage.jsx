@@ -1,98 +1,160 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import * as yup from "yup";
 import { useCreateOrder } from "@/hooks/orders/useCreateOrder";
 
-export default function CheckoutPage(){
-    const { listingId } = useParams();
-    const navigate = useNavigate();
-    const createMutation = useCreateOrder();
+/* ---------------- YUP SCHEMA (FIXED) ---------------- */
+const schema = yup.object({
+  quantity: yup
+    .number()
+    .typeError("Quantity must be a number")
+    .required("Quantity is required")
+    .min(1, "Quantity must be at least 1"),
 
-    const [quantity, setQuantity] = useState(1);
-    const [buyerNote, setBuyerNote] = useState("");
+  buyerNote: yup.string().required("Buyer note is required"),
 
-    const [address, setAddress] = useState({
-        full_name: "",
-        phone_number: "",
-        email: "",
-        address_line: "",
-        city: "",
-        notes: "",
-    });
+  address: yup.object({
+    full_name: yup
+      .string()
+      .required("Full name is required")
+      .matches(/^[A-Za-z\s]+$/, "Full name must contain letters only")
+      .min(3, "Full name must be at least 3 characters"),
 
-    const payload = useMemo(() => {
-        return{
-            market_id: Number(listingId),
-            quantity: Number(quantity),
-            payment_method: "COD",
-            buyer_note: buyerNote || "",
-            address,
-        };
-    }, [listingId, quantity, buyerNote, address]);
+    phone_number: yup
+      .string()
+      .required("Phone number is required")
+      .matches(/^[0-9]+$/, "Phone number must contain numbers only")
+      .min(10, "Phone number must be at least 10 digits")
+      .max(15, "Phone number must be at most 15 digits"),
 
-    const canSubmit =
-        payload.market_id &&
-        payload.quantity >= 1 &&
-        address.full_name &&
-        address.phone_number &&
-        address.email &&
-        address.address_line &&
-        address.city;
-    
+    email: yup
+      .string()
+      .required("Email is required")
+      .email("Please enter a valid email"),
 
-    async function submit(){
-        try{
-            await createMutation.mutateAsync(payload);
-            navigate("/home/marketplace/orders/buyer");
-        } catch(e){
-            console.error(e);
-        }
+    address_line: yup
+      .string()
+      .required("Address line is required")
+      .min(5, "Address line is too short"),
+
+    city: yup
+      .string()
+      .required("City is required")
+      .matches(/^[A-Za-z\s]+$/, "City must contain letters only"),
+
+    notes: yup.string().notRequired(),
+  }),
+});
+
+export default function CheckoutPage() {
+  const { listingId } = useParams();
+  const navigate = useNavigate();
+  const createMutation = useCreateOrder();
+
+  /* ---------------- STATE ---------------- */
+  const [quantity, setQuantity] = useState(1);
+  const [buyerNote, setBuyerNote] = useState("");
+  const [address, setAddress] = useState({
+    full_name: "",
+    phone_number: "",
+    email: "",
+    address_line: "",
+    city: "",
+    notes: "",
+  });
+
+  const [errors, setErrors] = useState({});
+
+  /* ---------------- PAYLOAD ---------------- */
+  const payload = useMemo(() => {
+    return {
+      market_id: Number(listingId),
+      quantity: Number(quantity),
+      payment_method: "COD",
+      buyer_note: buyerNote,
+      address,
+    };
+  }, [listingId, quantity, buyerNote, address]);
+
+  /* ---------------- VALIDATION ---------------- */
+  const validateForm = async () => {
+    try {
+      await schema.validate(
+        { quantity, buyerNote, address },
+        { abortEarly: false }
+      );
+      setErrors({});
+      return true;
+    } catch (err) {
+      const newErrors = {};
+      err.inner.forEach((e) => {
+        if (e.path) newErrors[e.path] = e.message;
+      });
+      setErrors(newErrors);
+      return false;
     }
+  };
 
-    return (
+  const validateField = async (path, value) => {
+    try {
+      await yup.reach(schema, path).validate(value);
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[path];
+        return copy;
+      });
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, [path]: err.message }));
+    }
+  };
+
+  /* ---------------- SUBMIT ---------------- */
+  async function submit() {
+    const isValid = await validateForm();
+    if (!isValid) return;
+
+    try {
+      await createMutation.mutateAsync(payload);
+      navigate("/home/marketplace/orders/buyer");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  /* ---------------- UI ---------------- */
+  return (
     <div className="min-h-[calc(100vh-80px)] bg-[#fbf7f2] px-4 py-6">
       <div className="mx-auto max-w-2xl">
-        {/* Header */}
-        <div className="mb-5 rounded-3xl border border-emerald-100 bg-white/80 backdrop-blur p-6 shadow-sm">
-          <h1 className="text-2xl font-extrabold tracking-tight text-emerald-950">
-            Checkout
-          </h1>
-          <p className="mt-1 text-sm text-emerald-900/70">
-            Complete your order details
-          </p>
-          <p className="mt-1 text-xs text-emerald-900/50">
-            Listing ID: {listingId}
-          </p>
-        </div>
-
-        {/* Quantity + note */}
-        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-          <label className="block text-sm font-semibold text-emerald-950">
-            Quantity
-          </label>
+        {/* Quantity */}
+        <div className="rounded-3xl border border-[#d1e8dd] bg-emerald-50 p-5">
+          <label className="font-semibold">Quantity</label>
           <input
-            className="mt-2 w-full rounded-xl border border-emerald-200 bg-white p-2 focus:border-emerald-500 focus:outline-none"
             type="number"
             min={1}
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
+            onBlur={() => validateField("quantity", quantity)}
+            className="mt-2 w-full rounded-xl border border-[#d1e8dd] p-2"
           />
+          {errors.quantity && (
+            <p className="text-xs text-red-500">{errors.quantity}</p>
+          )}
 
-          <label className="mt-4 block text-sm font-semibold text-emerald-950">
-            Buyer Note
-          </label>
+          <label className="mt-4 font-semibold">Buyer Note</label>
           <textarea
-            className="mt-2 w-full rounded-xl border border-emerald-200 bg-white p-2 focus:border-emerald-500 focus:outline-none"
             value={buyerNote}
             onChange={(e) => setBuyerNote(e.target.value)}
-            placeholder="Optional..."
+            onBlur={() => validateField("buyerNote", buyerNote)}
+            className="mt-2 w-full rounded-xl border border-[#d1e8dd] p-2"
           />
+          {errors.buyerNote && (
+            <p className="text-xs text-red-500">{errors.buyerNote}</p>
+          )}
         </div>
 
         {/* Address */}
-        <div className="mt-5 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-emerald-950">
-            Delivery Address
-          </h2>
+        <div className="mt-5 rounded-3xl border  border-[#d1e8dd] bg-emerald-50 p-5">
+          <h2 className="font-bold">Delivery Address</h2>
 
           {[
             ["full_name", "Full Name"],
@@ -103,27 +165,30 @@ export default function CheckoutPage(){
             ["notes", "Notes (optional)"],
           ].map(([key, label]) => (
             <div key={key} className="mt-4">
-              <label className="block text-xs font-semibold text-emerald-900">
-                {label}
-              </label>
+              <label className="text-xs font-semibold">{label}</label>
               <input
-                className="mt-2 w-full rounded-xl border border-emerald-200 bg-white p-2 focus:border-emerald-500 focus:outline-none"
                 value={address[key]}
                 onChange={(e) =>
                   setAddress((prev) => ({ ...prev, [key]: e.target.value }))
                 }
+                onBlur={() => validateField(`address.${key}`, address[key])}
+                className="mt-2 w-full rounded-xl border border-[#d1e8dd] p-2"
               />
+              {errors[`address.${key}`] && (
+                <p className="text-xs text-red-500">
+                  {errors[`address.${key}`]}
+                </p>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Submit */}
         <button
-          className="mt-6 w-full rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
-          disabled={!canSubmit || createMutation.isPending}
           onClick={submit}
+          disabled={createMutation.isPending}
+          className="mt-6 w-full rounded-full bg-emerald-600 py-3 text-white"
         >
-          {createMutation.isPending ? "Placing order..." : "Place Order"}
+          Place Order
         </button>
       </div>
     </div>

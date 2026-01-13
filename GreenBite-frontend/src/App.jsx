@@ -86,7 +86,11 @@ function App() {
                   </Route>
                   <Route path="buyer" element={<BuyerOrdersPage />} />
                   {/* AdminRoute*/}
-                  <Route element={<AdminRoute />}></Route>
+                  <Route element={<AdminRoute />}>
+                    <Route path="reports">
+                      <Route index element={<ReportsPage />} />
+                    </Route>
+                  </Route>
                 </Route>
                 {/* /User/settings */}
                 <Route path="settings" element={<Settings />} />
@@ -126,14 +130,6 @@ function App() {
                   />
                   <Route path="orders/buyer" element={<BuyerOrdersPage />} />
                   <Route path="orders/seller" element={<SellerOrdersPage />} />
-                </Route>
-
-                <Route path="reports">
-                  <Route index element={<ReportsPage />} />
-                </Route>
-
-                <Route path="reports">
-                  <Route index element={<ReportsPage />} />
                 </Route>
               </Route>
             </Route>

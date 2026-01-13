@@ -15,7 +15,6 @@ export default function ReportsPage() {
     ...filters,
   });
 
-
   const handleFilterChange = (key, value) => {
     setPage(1);
     setFilters((prev) => ({
@@ -24,7 +23,6 @@ export default function ReportsPage() {
     }));
   };
 
-
   const clearFilters = () => {
     setPage(1);
     setFilters({
@@ -32,7 +30,6 @@ export default function ReportsPage() {
       target_type: "",
     });
   };
-
 
   const hasActiveFilters = filters.status || filters.target_type;
 
@@ -50,8 +47,18 @@ export default function ReportsPage() {
   if (isError) {
     return (
       <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl p-6 text-center">
-        <svg className="w-12 h-12 text-red-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="w-12 h-12 text-red-600 mx-auto mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <p className="text-red-800 font-semibold">Error loading reports</p>
       </div>
@@ -59,13 +66,23 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-[90%] m-auto py-8">
       {/* Filters Section */}
       <div className="bg-gradient-to-br from-white to-green-50/30 rounded-xl shadow-lg border border-green-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-green-900 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+              />
             </svg>
             Filters
           </h2>
@@ -74,8 +91,18 @@ export default function ReportsPage() {
               onClick={clearFilters}
               className="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-1 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
               Clear Filters
             </button>
@@ -107,7 +134,9 @@ export default function ReportsPage() {
             </label>
             <select
               value={filters.target_type}
-              onChange={(e) => handleFilterChange("target_type", e.target.value)}
+              onChange={(e) =>
+                handleFilterChange("target_type", e.target.value)
+              }
               className="w-full px-4 py-2.5 bg-white border border-green-200 rounded-lg text-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 hover:border-green-300"
             >
               <option value="">All Types</option>
@@ -127,8 +156,18 @@ export default function ReportsPage() {
                   onClick={() => handleFilterChange("status", "")}
                   className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </span>
@@ -140,8 +179,18 @@ export default function ReportsPage() {
                   onClick={() => handleFilterChange("target_type", "")}
                   className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </span>
@@ -153,15 +202,29 @@ export default function ReportsPage() {
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          Found <span className="font-semibold text-green-700">{data?.count || 0}</span> report(s)
+          Found{" "}
+          <span className="font-semibold text-green-700">
+            {data?.count || 0}
+          </span>{" "}
+          report(s)
         </p>
       </div>
 
       {/* Reports Display */}
       {!data?.results?.length ? (
         <div className="bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-xl p-12 text-center">
-          <svg className="w-16 h-16 text-green-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <svg
+            className="w-16 h-16 text-green-300 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
           <p className="text-gray-600 font-medium">No reports found</p>
           {hasActiveFilters && (
@@ -202,7 +265,7 @@ export default function ReportsPage() {
           </button>
 
           <span className="text-sm text-gray-600 font-medium">
-            Page {page} of {Math.ceil(data.count / 10 )}
+            Page {page} of {Math.ceil(data.count / 10)}
           </span>
 
           <button
@@ -216,7 +279,6 @@ export default function ReportsPage() {
           </button>
         </div>
       )}
-
     </div>
   );
 }
