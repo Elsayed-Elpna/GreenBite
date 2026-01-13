@@ -52,7 +52,6 @@ function App() {
   return (
     <div className="App" data-theme="light">
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} />
         <Toaster position="top-center" reverseOrder={false} />
         <BrowserRouter>
           <Routes>

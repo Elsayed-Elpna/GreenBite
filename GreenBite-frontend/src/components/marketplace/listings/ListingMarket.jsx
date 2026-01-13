@@ -245,7 +245,7 @@ const MarketplaceListings = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto"
+            className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full sm:w-auto"
           >
             {isSubscribed || isAdmin ? (
               <>
