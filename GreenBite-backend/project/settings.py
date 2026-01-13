@@ -106,7 +106,7 @@ S3_PUBLIC_ENDPOINT_URL = os.getenv("S3_PUBLIC_ENDPOINT_URL", S3_ENDPOINT_URL)
 S3_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
 S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
 S3_REGION = os.getenv("S3_REGION", "us-east-1")
-
+S3_BUCKET_FOOD_SCANS = os.getenv("S3_BUCKET_FOOD_SCANS", "greenbite-food-scans")
 S3_BUCKET_MARKET_IMAGES = os.getenv("S3_BUCKET_MARKET_IMAGES", "greenbite-market-images")
 S3_BUCKET_PROFILE_AVATARS = os.getenv("S3_BUCKET_PROFILE_AVATARS", "greenbite-profile-avatars")
 

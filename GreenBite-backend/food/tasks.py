@@ -1,29 +1,25 @@
 import base64
 import json
-import os
-from celery import shared_task
-from PIL import Image
 from io import BytesIO
+
+from celery import shared_task
 from django.conf import settings
-from django.db import transaction
 from openai import OpenAI
+from PIL import Image
 
 from .models import FoodSafetyScanJob
-from food.utils.minio_s3 import s3_client, SPOILAGE_SCHEMA
+from food.utils.minio_s3 import s3_client, SPOILAGE_SCHEMA  
 
 client = OpenAI()
 
-MAX_DIM = 1280          # resize
-JPEG_QUALITY = 82  
+MAX_DIM = 1280
+JPEG_QUALITY = 82
 OUTPUT_CT = "image/jpeg"
 
-# i replaced the path with key in the s3 bucket and its bucket 
+
 def _make_data_url_from_minio(bucket: str, key: str) -> str:
-    s3 = s3_client()
-    obj = s3.get_object(
-        Bucket=bucket,
-        Key=key
-    )
+    s3 = s3_client()  # internal by default
+    obj = s3.get_object(Bucket=bucket, Key=key)
     raw = obj["Body"].read()
 
     with Image.open(BytesIO(raw)) as im:
@@ -41,10 +37,14 @@ def _make_data_url_from_minio(bucket: str, key: str) -> str:
 @shared_task(bind=True, max_retries=2, default_retry_delay=15)
 def process_food_safety_scan(self, job_id: int):
     job = FoodSafetyScanJob.objects.get(id=job_id)
-    # mark running
-    FoodSafetyScanJob.objects.filter(id=job_id).update(status=FoodSafetyScanJob.STATUS_RUNNING)
+
+    FoodSafetyScanJob.objects.filter(id=job_id).update(
+        status=FoodSafetyScanJob.STATUS_RUNNING
+    )
+
     bucket = settings.S3_BUCKET_FOOD_SCANS
     key = job.image_key
+
     try:
         if not key:
             raise ValueError("No image key found for the job.")
@@ -83,14 +83,16 @@ def process_food_safety_scan(self, job_id: int):
 
         raw = (response.output_text or "").strip()
         parsed = json.loads(raw)
+
         FoodSafetyScanJob.objects.filter(id=job_id).update(
             status=FoodSafetyScanJob.STATUS_SUCCESS,
             result=parsed,
             error="",
         )
-        s3 = s3_client()
-        s3.delete_object(Bucket=bucket, Key=key)
+
+        # ✅ clear pointer; deletion happens in finally
         FoodSafetyScanJob.objects.filter(id=job_id).update(image_key="")
+
         return parsed
 
     except Exception as e:
@@ -101,11 +103,10 @@ def process_food_safety_scan(self, job_id: int):
         raise
 
     finally:
-        # discard the file
+        # ✅ discard the file once (best-effort)
         try:
             if key:
                 s3 = s3_client()
                 s3.delete_object(Bucket=bucket, Key=key)
-                FoodSafetyScanJob.objects.filter(id=job_id).update(image_key="")
         except Exception:
             pass
