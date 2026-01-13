@@ -32,6 +32,8 @@ import Marketplace from "./pages/HomePages/Market/MarketPage";
 import CheckoutPage from "./pages/HomePages/Market/CheckoutPage";
 import BuyerOrdersPage from "./pages/HomePages/Market/BuyerOrdersPage";
 import SellerOrdersPage from "./pages/HomePages/Market/SellerOrdersPage";
+import ReportsPage from "./pages/reports/ReportsPage";
+import { Toaster } from "react-hot-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +50,7 @@ function App() {
     <div className="App" data-theme="light">
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
+        <Toaster position="top-center" reverseOrder={false} />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} exact />
@@ -105,6 +108,10 @@ function App() {
                   <Route path="checkout/:listingId" element ={<CheckoutPage/>}/>
                   <Route path="orders/buyer" element={<BuyerOrdersPage/>}/>
                   <Route path="orders/seller" element={<SellerOrdersPage/>}/>
+                </Route>
+
+                <Route path="reports">
+                  <Route index element={<ReportsPage />}/>
                 </Route>
               </Route>
             </Route>

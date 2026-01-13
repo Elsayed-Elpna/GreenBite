@@ -20,10 +20,10 @@ def unban_sellers():
     """
     Unban sellers whose banned_until has passed.
     """
-    now = timezone.now()
+    today = timezone.now().date()
     unbanned_count = CommunityProfile.objects.filter(
         seller_status="SUSPENDED",
-        banned_until__lte=now
+        banned_until__lt=today
     ).update(
         seller_status="ACTIVE",
         banned_until=None

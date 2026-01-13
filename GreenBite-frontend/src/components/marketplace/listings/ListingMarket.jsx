@@ -12,7 +12,9 @@ import { useAuth } from '@/context/AuthProvider';
 import { getListings } from '@/api/marketplace.api';
 import { toast } from 'react-hot-toast';
 import { useListings } from "@/hooks/uselistings";
-import OrderDetailsDialog from '@/pages/HomePages/Market/OrderDetailsDialog'
+import OrderDetailsDialog from '@/pages/HomePages/Market/OrderDetailsDialog';
+import CreateReportDialog from "@/components/marketplace/reports/CreateReportDialog";
+import useDialog from "@/hooks/useDialog";
 import { useNavigate } from 'react-router-dom';
 
 
@@ -34,6 +36,7 @@ const MarketplaceListings = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const reportDialog = useDialog();
   useEffect(() => {
     let cancelled = false;
 
@@ -109,9 +112,9 @@ const MarketplaceListings = () => {
   };
 
   const handleReport = (listing) => {
-    setSelectedListing(listing);
-    toast("Report not wired yet.");
+    reportDialog.open(listing);
   };
+
 
   const refreshListings = async () => {
     const { results, count } = await fetchListings(filters);
@@ -257,7 +260,12 @@ const MarketplaceListings = () => {
         listing={selectedListing}
         onSubmit={handleEditSubmit}
       />
-  
+
+      <CreateReportDialog
+        listing={reportDialog.data[0]}
+        defaultTargetType="MARKET"
+        onClose={reportDialog.close}
+      />
     </section>
   );
 };
