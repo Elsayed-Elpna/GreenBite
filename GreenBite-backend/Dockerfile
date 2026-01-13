@@ -5,8 +5,8 @@ WORKDIR /app
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# COPY entrypoint.sh /app/entrypoint.sh
+# RUN chmod +x /app/entrypoint.sh
 # RUN python manage.py migrate
 # commands in management commands 
 COPY . /app

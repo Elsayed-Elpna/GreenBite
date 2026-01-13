@@ -15,6 +15,7 @@ from community.services.report_service import ReportService
 from community.permissions import IsAdminUser
 from community.pagination import StandardPagination
 from community.serializers.filters import ReportFilterSerializer
+from rest_framework.exceptions import ValidationError
 
 class CommunityReportView(APIView):
     """

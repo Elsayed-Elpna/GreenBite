@@ -26,7 +26,7 @@ export default function FloatingInput({
             : undefined
         }
         className={`peer w-full rounded-lg border px-4 pt-6 pb-2 text-sm outline-none transition
-          ${error ? "border-red-500" : "border-gray-400 focus:border-green-500"}
+          ${error ? "border-red-500" : "border-gray-400 focus:border-green-500 bg-white"}
         `}
         {...props}
       />
