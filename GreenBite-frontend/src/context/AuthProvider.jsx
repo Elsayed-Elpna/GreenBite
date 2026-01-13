@@ -11,7 +11,6 @@ export const AuthProvider = ({ children }) => {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
       } catch (error) {
-        console.log(error);
         setUser(null);
       } finally {
         setLoading(false);

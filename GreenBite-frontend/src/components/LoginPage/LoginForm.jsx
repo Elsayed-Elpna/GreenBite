@@ -48,10 +48,8 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await login(formData);
-      console.log("login succse");
       navigate("/home");
     } catch (error) {
-      console.log(`login failed ${error}`);
       setFormError("Invalid email or password ");
     } finally {
       setLoading(false);

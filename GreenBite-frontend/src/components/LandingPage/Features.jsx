@@ -1,6 +1,9 @@
 import f1 from "@/assets/images/landing/landing1.jpg";
 import f2 from "@/assets/images/landing/landing2.jpeg";
 import f3 from "@/assets/images/landing/landing3.webp";
+import f4 from "@/assets/images/landing/landing4.webp";
+import f5 from "@/assets/images/landing/landing5.avif";
+import f6 from "@/assets/images/landing/landing6.jpg";
 
 export default function Features() {
   const features = [
@@ -18,6 +21,21 @@ export default function Features() {
       image: f3,
       title: "AI suggests the best way to use each item.",
       link: "AI Reuse Recommendations",
+    },
+    {
+      image: f4,
+      title: "Plan meals smarter with what you already have.",
+      link: "Find Meal plans",
+    },
+    {
+      image: f5,
+      title: "Detect spoilage early and save food in time.",
+      link: "Upload photo now",
+    },
+    {
+      image: f6,
+      title: "Buy surplus food from your local community.",
+      link: "View marketplace",
     },
   ];
 

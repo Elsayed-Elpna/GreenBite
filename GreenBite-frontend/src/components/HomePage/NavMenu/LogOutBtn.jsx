@@ -8,7 +8,7 @@ const LogOutBtn = () => {
   const navigate = useNavigate();
   const handelLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/", { replace: true });
   };
   return (
     <div
