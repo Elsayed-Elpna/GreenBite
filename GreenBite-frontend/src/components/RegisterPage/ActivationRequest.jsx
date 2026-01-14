@@ -12,9 +12,13 @@ export default function RegistrationSuccess() {
     try {
       const email = localStorage.getItem("registeredEmail");
 
-      await axios.post("http://localhost:8000/auth/users/resend_activation/", {
-        email,
-      });
+await axios.post(
+  `${import.meta.env.VITE_API_URL}/auth/users/resend_activation/`,
+  {
+    email,
+  }
+);
+
 
       setSuccessMessage(
         "Activation email sent successfully. Please check your inbox."
