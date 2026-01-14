@@ -16,11 +16,17 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      await fetch("http://localhost:8000/auth/users/reset_password/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      await fetch(
+  `${import.meta.env.VITE_API_URL}/auth/users/reset_password/`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  }
+);
+
       setSuccess(true); // always true for security
     } catch (error) {
       console.error("Reset email error:", error);
