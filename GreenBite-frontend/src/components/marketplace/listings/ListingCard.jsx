@@ -63,7 +63,7 @@ const ListingCard = ({
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-emerald-100 via-green-50 to-teal-50">
         {featured_image_url && !imgError ? (
           <img
-            src={featured_image_url}
+            src={listing.featured_image_url || "/images/listing.png"}
             alt={title}
             onError={() => setImgError(true)}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
