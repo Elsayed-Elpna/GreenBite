@@ -66,19 +66,22 @@ export default function SetPassword() {
         if (!passwordValid || !confirmValid) return;
 
         try {
-            const response = await fetch(
-                "http://localhost:8000/auth/users/reset_password_confirm/",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        uid,
-                        token,
-                        new_password: formData.password,
-                        re_new_password: formData.confirmPassword
-                    }),
-                }
-            );
+           const response = await fetch(
+  `${import.meta.env.VITE_API_URL}/auth/users/reset_password_confirm/`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      uid,
+      token,
+      new_password: formData.password,
+      re_new_password: formData.confirmPassword,
+    }),
+  }
+);
+
 
             if (response.ok) navigate("/reset-success");
             else setErrors((prev) => ({ ...prev, form: "This reset link is invalid or expired." }));
