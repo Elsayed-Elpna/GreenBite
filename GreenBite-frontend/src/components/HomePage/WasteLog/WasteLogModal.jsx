@@ -1,5 +1,16 @@
 import { useState } from "react";
 import { GrFormClose } from "react-icons/gr";
+import * as yup from "yup";
+
+/* ---------------- YUP SCHEMA ---------------- */
+const schema = yup.object({
+  name: yup.string().required("Name is required"),
+  estimated_amount: yup
+    .number()
+    .typeError("Estimated amount must be a number")
+    .positive("Estimated amount must be greater than 0")
+    .required("Estimated amount is required"),
+});
 
 const emptyForm = {
   name: "",
@@ -25,37 +36,59 @@ const WasteLogModal = ({
     () => initialData?.reuse_ideas?.join("\n") || ""
   );
 
+  const [errors, setErrors] = useState({});
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    // 🔒 allow only numbers & no negatives for estimated_amount
+    if (name === "estimated_amount") {
+      if (value === "" || /^[0-9]*$/.test(value)) {
+        setForm((prev) => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
-      ...form,
-      reuse_ideas: reuseText
-        .split("\n")
-        .map((i) => i.trim())
-        .filter(Boolean),
-    });
+
+    try {
+      await schema.validate(form, { abortEarly: false });
+      setErrors({});
+
+      onSubmit({
+        ...form,
+        estimated_amount: Number(form.estimated_amount),
+        reuse_ideas: reuseText
+          .split("\n")
+          .map((i) => i.trim())
+          .filter(Boolean),
+      });
+    } catch (err) {
+      const newErrors = {};
+      err.inner.forEach((e) => {
+        newErrors[e.path] = e.message;
+      });
+      setErrors(newErrors);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      {/* Modal */}
       <div
         className="relative bg-white rounded-xl shadow-lg
         w-full max-w-xl mx-4 max-h-[90vh] overflow-y-auto"
       >
-        {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-[#7eb685]">
           <h2 className="text-xl font-semibold">
             {initialData ? "Edit Waste" : "Add Waste"}
@@ -67,7 +100,6 @@ const WasteLogModal = ({
           />
         </div>
 
-        {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <input
             name="name"
@@ -75,8 +107,8 @@ const WasteLogModal = ({
             onChange={handleChange}
             placeholder="Name"
             className="input input-bordered w-full"
-            required
           />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
 
           <textarea
             name="why"
@@ -87,15 +119,22 @@ const WasteLogModal = ({
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              name="estimated_amount"
-              type="number"
-              value={form.estimated_amount}
-              onChange={handleChange}
-              placeholder="Estimated Amount"
-              className="input input-bordered w-full"
-              required
-            />
+            <div>
+              <input
+                name="estimated_amount"
+                type="text"
+                inputMode="numeric"
+                value={form.estimated_amount}
+                onChange={handleChange}
+                placeholder="Estimated Amount"
+                className="input input-bordered w-full"
+              />
+              {errors.estimated_amount && (
+                <p className="text-red-500 text-sm">
+                  {errors.estimated_amount}
+                </p>
+              )}
+            </div>
 
             <select
               name="unit"
@@ -116,6 +155,8 @@ const WasteLogModal = ({
           >
             <option value="trash">Trash</option>
             <option value="compost">Compost</option>
+            <option value="Recycle">Recycle</option>
+            <option value="AnimalFeed">Animal Feed</option>
           </select>
 
           <textarea
@@ -125,11 +166,10 @@ const WasteLogModal = ({
             className="textarea textarea-bordered w-full"
           />
 
-          {/* Footer */}
           <div className="flex justify-end gap-3 pt-4 border-t border-[#7eb685]">
             <button
               type="button"
-              className="text-red-500  bg-[#ff000027] rounded py-2 px-2  hover:bg-[#f83a3a59]"
+              className="text-red-500 bg-[#ff000027] rounded py-2 px-2 hover:bg-[#f83a3a59]"
               onClick={onClose}
             >
               Cancel
@@ -138,8 +178,7 @@ const WasteLogModal = ({
             <button
               type="submit"
               className="px-4 py-2 text-sm font-semibold text-white
-               bg-green-500 rounded-lg
-               hover:bg-green-600
+               bg-green-500 rounded-lg hover:bg-green-600
                focus:outline-none focus:ring-2 focus:ring-green-400
                transition flex items-center"
               disabled={isLoading}
