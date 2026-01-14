@@ -31,7 +31,7 @@ const ListingCard = ({
     currency,
     quantity,
     unit,
-    featured_image,
+    featured_image_url,
     available_until,
     seller,
     status,
@@ -61,9 +61,9 @@ const ListingCard = ({
     >
       {/* Image */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-emerald-100 via-green-50 to-teal-50">
-        {featured_image && !imgError ? (
+        {featured_image_url && !imgError ? (
           <img
-            src={featured_image}
+            src={featured_image_url}
             alt={title}
             onError={() => setImgError(true)}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
