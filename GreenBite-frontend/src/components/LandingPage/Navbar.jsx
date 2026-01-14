@@ -17,7 +17,7 @@ export default function AppNavbar() {
     "!text-white hover:!text-white transform hover:scale-110 transition-transform duration-200 ease-in-out";
   const { isAuthenticated } = useContext(AuthContext);
   return (
-    <Navbar fluid className="!bg-white">
+    <Navbar fluid className="!bg-gray-50">
       <NavbarBrand>
         <img src={logo} className="mr-3 h-10 sm:h-12" alt="GreenBite logo" />
       </NavbarBrand>

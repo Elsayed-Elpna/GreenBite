@@ -139,6 +139,9 @@ const PaymentResult = () => {
         if (paymobSuccess === "true") {
           setStatus("pending");
           return;
+        } else if (paymobSuccess === "false") {
+          setStatus("failure");
+          return;
         }
 
         setStatus("failure");
@@ -150,6 +153,16 @@ const PaymentResult = () => {
 
     syncUser();
   }, [navigate, paymobSuccess, setUser]);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    const timer = setTimeout(() => {
+      navigate("/home");
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [status, navigate]);
 
   if (loading || status === "loading") {
     return (

@@ -1,9 +1,30 @@
+import { motion as Motion } from "framer-motion";
+
 import f1 from "@/assets/images/landing/landing1.jpg";
 import f2 from "@/assets/images/landing/landing2.jpeg";
 import f3 from "@/assets/images/landing/landing3.webp";
 import f4 from "@/assets/images/landing/landing4.webp";
 import f5 from "@/assets/images/landing/landing5.avif";
 import f6 from "@/assets/images/landing/landing6.jpg";
+
+/* ---------------- Animations ---------------- */
+const container = {
+  hidden: { opacity: 1 },
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
 
 export default function Features() {
   const features = [
@@ -40,12 +61,38 @@ export default function Features() {
   ];
 
   return (
-    <section id="offers" className="py-8 text-center max-w-[95vw] mx-auto">
-      <p className="text-green-600 font-semibold">OUR FEATURES</p>
-      <h2 className="text-3xl font-bold mb-10">What we offer to our users.</h2>
-      <div className="grid md:grid-cols-3 gap-12 px-6">
+    <Motion.section
+      id="offers"
+      className="py-8 text-center max-w-[95vw] mx-auto"
+      variants={container}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{
+        once: true,
+        amount: 0.05, // 🔥 VERY IMPORTANT for mobile
+        margin: "-80px", // 🔥 triggers earlier
+      }}
+    >
+      <Motion.p className="text-green-600 font-semibold" variants={fadeUp}>
+        OUR FEATURES
+      </Motion.p>
+
+      <Motion.h2 className="text-3xl font-bold mb-10" variants={fadeUp}>
+        What we offer to our users.
+      </Motion.h2>
+
+      <Motion.div
+        className="grid md:grid-cols-3 gap-12 px-6"
+        variants={container}
+      >
         {features.map((feature, i) => (
-          <div key={i} className="relative rounded-xl overflow-hidden">
+          <Motion.div
+            key={i}
+            className="relative rounded-xl overflow-hidden"
+            variants={fadeUp}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.25 }}
+          >
             <img
               src={feature.image}
               alt={feature.title}
@@ -63,9 +110,9 @@ export default function Features() {
                 {feature.link} →
               </a>
             </div>
-          </div>
+          </Motion.div>
         ))}
-      </div>
-    </section>
+      </Motion.div>
+    </Motion.section>
   );
 }

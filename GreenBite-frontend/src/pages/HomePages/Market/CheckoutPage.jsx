@@ -3,7 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { useCreateOrder } from "@/hooks/orders/useCreateOrder";
 
-/* ---------------- YUP SCHEMA (FIXED) ---------------- */
+/* ---------------- REGEX ---------------- */
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+/* ---------------- YUP SCHEMA ---------------- */
 const schema = yup.object({
   quantity: yup
     .number()
@@ -11,41 +14,66 @@ const schema = yup.object({
     .required("Quantity is required")
     .min(1, "Quantity must be at least 1"),
 
-  buyerNote: yup.string().required("Buyer note is required"),
+  buyerNote: yup.string().notRequired(),
 
-  address: yup.object({
-    full_name: yup
-      .string()
-      .required("Full name is required")
-      .matches(/^[A-Za-z\s]+$/, "Full name must contain letters only")
-      .min(3, "Full name must be at least 3 characters"),
+  address: yup
+    .object({
+      full_name: yup
+        .string()
+        .required("Full name is required")
+        .trim()
+        .min(3, "Full name must be at least 3 characters long")
+        .matches(/^[A-Za-z\s]+$/, "Full name must contain only letters"),
 
-    phone_number: yup
-      .string()
-      .required("Phone number is required")
-      .matches(/^[0-9]+$/, "Phone number must contain numbers only")
-      .min(10, "Phone number must be at least 10 digits")
-      .max(15, "Phone number must be at most 15 digits"),
+      phone_number: yup
+        .string()
+        .required("Phone number is required")
+        .trim()
+        .matches(/^[0-9]+$/, "Phone number must contain only digits")
+        .min(11, "Phone number must be at least 11 digits")
+        .max(15, "Phone number must be at most 15 digits"),
 
-    email: yup
-      .string()
-      .required("Email is required")
-      .email("Please enter a valid email"),
+      email: yup
+        .string()
+        .trim()
+        .lowercase()
+        .notRequired()
+        .test(
+          "email-regex",
+          "Enter a valid email address",
+          (value) => !value || EMAIL_REGEX.test(value)
+        )
+        .max(255, "Email is too long"),
 
-    address_line: yup
-      .string()
-      .required("Address line is required")
-      .min(5, "Address line is too short"),
+      address_line: yup
+        .string()
+        .required("Address line is required")
+        .trim()
+        .min(10, "Address line must be at least 10 characters long"),
 
-    city: yup
-      .string()
-      .required("City is required")
-      .matches(/^[A-Za-z\s]+$/, "City must contain letters only"),
+      city: yup
+        .string()
+        .required("City is required")
+        .trim()
+        .matches(/^[A-Za-z\s]+$/, "City must contain only letters"),
 
-    notes: yup.string().notRequired(),
-  }),
+      notes: yup
+        .string()
+        .trim()
+        .max(500, "Notes must not exceed 500 characters")
+        .notRequired(),
+    })
+    .test(
+      "phone-or-email",
+      "You must provide at least a phone number or an email",
+      (value) => {
+        if (!value) return false;
+        return Boolean(value.phone_number || value.email);
+      }
+    ),
 });
 
+/* ================= COMPONENT ================= */
 export default function CheckoutPage() {
   const { listingId } = useParams();
   const navigate = useNavigate();
@@ -125,7 +153,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#fbf7f2] px-4 py-6">
       <div className="mx-auto max-w-2xl">
-        {/* Quantity */}
+        {/* Quantity + Buyer Note */}
         <div className="rounded-3xl border border-[#d1e8dd] bg-emerald-50 p-5">
           <label className="font-semibold">Quantity</label>
           <input
@@ -153,7 +181,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Address */}
-        <div className="mt-5 rounded-3xl border  border-[#d1e8dd] bg-emerald-50 p-5">
+        <div className="mt-5 rounded-3xl border border-[#d1e8dd] bg-emerald-50 p-5">
           <h2 className="font-bold">Delivery Address</h2>
 
           {[
