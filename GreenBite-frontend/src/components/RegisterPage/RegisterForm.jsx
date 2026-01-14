@@ -108,13 +108,16 @@ export default function RegisterForm() {
     if (Object.keys(newErrors).length) return;
 
     try {
-      await axios.post("http://localhost:8000/auth/users/", {
-        email: formData.email,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        password: formData.password,
-        re_password: formData.confirmPassword,
-      });
+     await axios.post(
+  `${import.meta.env.VITE_API_URL}/auth/users/`,
+  {
+    email: formData.email,
+    first_name: formData.firstName,
+    last_name: formData.lastName,
+    password: formData.password,
+    re_password: formData.confirmPassword,
+  }
+);
 
       localStorage.setItem("registeredEmail", formData.email);
       navigate("/verify");
