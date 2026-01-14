@@ -10,10 +10,13 @@ export default function Activate() {
   useEffect(() => {
     const activateAccount = async () => {
       try {
-        await axios.post("http://localhost:8000/auth/users/activation/", {
-          uid,
-          token,
-        });
+        await axios.post(
+  `${import.meta.env.VITE_API_URL}/auth/users/activation/`,
+  {
+    uid,
+    token,
+  }
+);
 
         setStatus("Account successfully activated! Redirecting to login...");
         setTimeout(() => navigate("/login"), 3000); // redirect after 3s
