@@ -120,7 +120,7 @@ const ListingCard = ({
           </div>
 
           {canOrder && (
-            <p className="text-sm text-gray-600">by {seller?.name}</p>
+            <p className="text-sm text-gray-600">by {seller?.email}</p>
           )}
         </div>
 
